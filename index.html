@@ -3,887 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>赛娜眼镜进销存</title>
+    <title>赛娜眼镜进销存 - 基础测试版</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
-        /* 保持所有CSS样式不变 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; line-height: 1.6; padding-bottom: 80px; }
-        .app-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header-content { display: flex; justify-content: space-between; align-items: center; }
-        .app-title { font-size: 1.2rem; font-weight: 600; }
-        .icon-btn { background: none; border: none; color: white; font-size: 1.1rem; padding: 5px; cursor: pointer; }
-        .app-main { margin-top: 60px; padding: 15px; min-height: calc(100vh - 140px); }
-        .loading { text-align: center; padding: 40px 20px; color: #666; }
-        .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #e0e0e0; z-index: 1000; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #666; font-size: 0.8rem; padding: 5px 10px; transition: all 0.3s ease; }
-        .nav-item i { font-size: 1.2rem; margin-bottom: 4px; }
-        .nav-item.active { color: #667eea; }
-        .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .card-title { font-size: 1.1rem; font-weight: 600; color: #333; }
-        .page { display: none; }
-        .page.active { display: block; }
-        .scan-section { text-align: center; padding: 20px 0; }
-        .scan-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 20px 30px; border-radius: 50%; font-size: 2rem; cursor: pointer; margin: 20px 0; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: all 0.3s ease; }
-        .scan-btn:active { transform: scale(0.95); }
-        .manual-input { margin-top: 20px; }
-        .form-group { margin-bottom: 15px; }
-        .form-label { display: block; margin-bottom: 5px; font-weight: 500; color: #555; text-align: left; }
-        .form-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s ease; }
-        .form-input:focus { outline: none; border-color: #667eea; }
-        .btn { background: #667eea; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
-        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; padding: 20px; }
+        .container { max-width: 400px; margin: 0 auto; }
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .btn { background: #667eea; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 1rem; cursor: pointer; width: 100%; margin: 5px 0; }
         .btn-success { background: #28a745; }
-        .sale-form { margin-top: 10px; }
-        .form-row { display: flex; gap: 10px; margin-bottom: 15px; }
-        .form-row .form-group { flex: 1; margin-bottom: 0; }
-        .item-list { margin-top: 20px; }
-        .item-card { background: #f8f9fa; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .item-info h4 { margin-bottom: 5px; }
-        .item-actions { display: flex; gap: 10px; align-items: center; }
-        .quantity-control { display: flex; align-items: center; gap: 10px; }
-        .qty-btn { background: #ddd; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; }
-        .total-section { background: white; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: center; font-size: 1.2rem; font-weight: bold; }
-        .invoice { background: white; padding: 20px; border-radius: 8px; margin-top: 20px; font-family: 'Microsoft YaHei', sans-serif; }
-        .invoice-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .invoice-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 5px; }
-        .invoice-info { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.9rem; }
-        .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .invoice-table th, .invoice-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .invoice-table th { background: #f8f9fa; font-weight: bold; }
-        .invoice-total { text-align: right; font-size: 1.1rem; font-weight: bold; margin-top: 15px; }
-        .invoice-footer { text-align: center; margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 0.9rem; color: #666; }
-        .message { padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center; }
-        .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .debug-info { background: #f8f9fa; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 0.8rem; color: #666; }
-        .test-data-btn { background: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-left: 10px; }
+        .btn-danger { background: #dc3545; }
+        .form-group { margin-bottom: 15px; }
+        .form-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
+        .debug-info { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 0.9rem; white-space: pre-wrap; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        h2 { margin-bottom: 15px; text-align: center; }
     </style>
 </head>
 <body>
-    <header class="app-header">
-        <div class="header-content">
-            <h1 class="app-title" id="pageTitle">扫码出入库</h1>
-            <div class="header-actions">
-                <button class="icon-btn" id="refreshBtn">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <main class="app-main">
-        <div id="loading" class="loading">
-            <div class="spinner"></div>
-            <p>系统初始化中...</p>
-            <div id="initDebug" class="debug-info"></div>
-        </div>
+    <div class="container">
+        <h2>API连接测试</h2>
         
-        <div id="content" style="display: none;">
-            <!-- 扫码出入库页面 -->
-            <div id="scan-page" class="page active">
-                <div class="card">
-                    <div class="scan-section">
-                        <div class="feature-icon">
-                            <i class="fas fa-qrcode" style="font-size: 3rem; color: #667eea;"></i>
-                        </div>
-                        <h2>扫码快速出入库</h2>
-                        <p style="color: #666; margin: 10px 0;">扫描产品二维码快速处理网店订单</p>
-                        
-                        <button class="scan-btn" id="startScan">
-                            <i class="fas fa-camera"></i>
-                        </button>
-                        <p>点击开始扫码</p>
-                    </div>
-
-                    <div class="manual-input">
-                        <h3 style="margin-bottom: 15px;">手动输入</h3>
-                        <div class="form-group">
-                            <label class="form-label">产品编码</label>
-                            <input type="text" class="form-input" id="variantCode" placeholder="输入V001等产品编码">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">数量</label>
-                            <input type="number" class="form-input" id="scanQuantity" value="1" min="1">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">操作类型</label>
-                            <select class="form-input" id="scanType">
-                                <option value="out">销售出库</option>
-                                <option value="in">采购入库</option>
-                            </select>
-                        </div>
-                        <button class="btn" id="confirmScan">
-                            <i class="fas fa-check"></i>确认操作
-                        </button>
-                    </div>
-                </div>
-
-                <div id="scanMessage"></div>
-                <div id="scanDebug" class="debug-info" style="display: none;"></div>
-            </div>
-
-            <!-- 线下销售页面 -->
-            <div id="sale-page" class="page">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">线下销售出库</h3>
-                        <div>
-                            <button class="test-data-btn" onclick="app.useTestData()">
-                                <i class="fas fa-vial"></i>使用测试数据
-                            </button>
-                            <button class="test-data-btn" onclick="app.debugCustomers()">
-                                <i class="fas fa-bug"></i>调试API
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="sale-form">
-                        <div class="form-group">
-                            <label class="form-label">选择客户</label>
-                            <select class="form-input" id="customerSelect">
-                                <option value="">请选择客户...</option>
-                            </select>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">产品系列</label>
-                                <select class="form-input" id="modelSelect">
-                                    <option value="">请选择系列...</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">颜色</label>
-                                <select class="form-input" id="variantSelect" disabled>
-                                    <option value="">请先选择系列</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">数量</label>
-                                <input type="number" class="form-input" id="saleQuantity" value="1" min="1">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">单价</label>
-                                <input type="number" class="form-input" id="unitPrice" readonly>
-                            </div>
-                        </div>
-
-                        <button class="btn" id="addItemBtn">
-                            <i class="fas fa-plus"></i>添加到销售单
-                        </button>
-                    </div>
-
-                    <div class="item-list" id="saleItems" style="display: none;">
-                        <h4>销售商品清单</h4>
-                        <div id="itemsList"></div>
-                        
-                        <div class="total-section">
-                            总计: ¥<span id="totalAmount">0</span>
-                        </div>
-                        
-                        <button class="btn btn-success" id="confirmSale">
-                            <i class="fas fa-check-circle"></i>确认销售出库
-                        </button>
-                    </div>
-                </div>
-
-                <div id="saleMessage"></div>
-                <div id="saleDebug" class="debug-info" style="display: none;"></div>
-
-                <!-- 销售单预览 -->
-                <div id="invoicePreview" class="card" style="display: none;">
-                    <div class="card-header">
-                        <h3 class="card-title">销售单预览</h3>
-                        <button class="btn" id="downloadInvoice">
-                            <i class="fas fa-download"></i>下载销售单
-                        </button>
-                    </div>
-                    <div id="invoiceContent"></div>
-                </div>
-            </div>
-
-            <!-- 其他页面保持不变 -->
-            <div id="data-page" class="page">
-                <div class="card">
-                    <div class="feature-icon" style="text-align: center; font-size: 2rem; color: #667eea; margin-bottom: 15px;">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    <h3 style="text-align: center;">数据查看</h3>
-                    <p style="text-align: center; color: #666; margin-bottom: 20px;">销售记录、库存查询等功能</p>
-                    <div class="status-badge" style="background: #fff3cd; color: #856404; padding: 8px 12px; border-radius: 6px; text-align: center;">
-                        功能开发中
-                    </div>
-                </div>
-            </div>
-
-            <div id="base-page" class="page">
-                <div class="card">
-                    <div class="feature-icon" style="text-align: center; font-size: 2rem; color: #667eea; margin-bottom: 15px;">
-                        <i class="fas fa-cog"></i>
-                    </div>
-                    <h3 style="text-align: center;">基础数据管理</h3>
-                    <p style="text-align: center; color: #666; margin-bottom: 20px;">产品、客户管理等设置</p>
-                    <div class="status-badge" style="background: #fff3cd; color: #856404; padding: 8px 12px; border-radius: 6px; text-align: center;">
-                        功能开发中
-                    </div>
-                </div>
-            </div>
+        <div class="card">
+            <h3>基础API测试</h3>
+            <button class="btn" onclick="testBasicAPI()">测试基础连接</button>
+            <button class="btn" onclick="testGetCustomers()">测试获取客户</button>
+            <button class="btn" onclick="testGetProducts()">测试获取产品</button>
         </div>
-    </main>
 
-    <nav class="bottom-nav">
-        <a href="#scan" class="nav-item active" data-page="scan">
-            <i class="fas fa-qrcode"></i>
-            <span>扫码出入库</span>
-        </a>
-        <a href="#sale" class="nav-item" data-page="sale">
-            <i class="fas fa-receipt"></i>
-            <span>线下销售</span>
-        </a>
-        <a href="#data" class="nav-item" data-page="data">
-            <i class="fas fa-chart-bar"></i>
-            <span>数据查看</span>
-        </a>
-        <a href="#base" class="nav-item" data-page="base">
-            <i class="fas fa-cog"></i>
-            <span>基础数据</span>
-        </a>
-    </nav>
+        <div class="card">
+            <h3>扫码出入库测试</h3>
+            <div class="form-group">
+                <input type="text" class="form-input" id="testVariantCode" placeholder="产品编码 (如 V001)" value="V001">
+            </div>
+            <div class="form-group">
+                <input type="number" class="form-input" id="testQuantity" value="1" min="1">
+            </div>
+            <button class="btn btn-success" onclick="testScanSale()">测试扫码销售</button>
+            <button class="btn btn-danger" onclick="testNormalSale()">测试普通销售</button>
+        </div>
+
+        <div class="card">
+            <h3>调试信息</h3>
+            <div id="debugOutput" class="debug-info">点击上面的按钮开始测试...</div>
+        </div>
+    </div>
 
     <script>
-        // API配置
         const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbwhElTCOUFTYdGghiQ-WqeQWThPLEZdOs9u5qORLSkHiO1zdtvDl5MLv2NeRTXurf-hqQ/exec';
-        
-        class App {
-            constructor() {
-                this.currentPage = 'scan';
-                this.saleItems = [];
-                this.productVariants = {};
-                this.useTestMode = false; // 测试模式标志
-                this.init();
-            }
+
+        // 基础API测试
+        async function testBasicAPI() {
+            const debug = document.getElementById('debugOutput');
+            debug.innerHTML = '测试基础API连接...';
             
-            init() {
-                this.bindEvents();
-                this.hideLoading();
-                this.loadInitialData();
-            }
-            
-            bindEvents() {
-                document.querySelectorAll('.nav-item').forEach(item => {
-                    item.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        const page = item.getAttribute('data-page');
-                        this.switchPage(page);
-                    });
-                });
+            try {
+                const response = await fetch(`${API_BASE_URL}?action=test`);
+                const data = await response.json();
                 
-                document.getElementById('startScan').addEventListener('click', () => {
-                    this.startScan();
-                });
-                
-                document.getElementById('confirmScan').addEventListener('click', () => {
-                    this.confirmScanOperation();
-                });
-                
-                document.getElementById('modelSelect').addEventListener('change', (e) => {
-                    this.loadVariants(e.target.value);
-                });
-                
-                document.getElementById('variantSelect').addEventListener('change', (e) => {
-                    this.updatePrice(e.target.value);
-                });
-                
-                document.getElementById('addItemBtn').addEventListener('click', () => {
-                    this.addSaleItem();
-                });
-                
-                document.getElementById('confirmSale').addEventListener('click', () => {
-                    this.confirmSale();
-                });
-
-                document.getElementById('downloadInvoice').addEventListener('click', () => {
-                    this.downloadInvoice();
-                });
-
-                document.getElementById('refreshBtn').addEventListener('click', () => {
-                    this.refreshData();
-                });
-            }
-
-            useTestData() {
-                this.useTestMode = true;
-                this.addTestCustomers();
-                this.addTestProducts();
-                this.showMessage('saleMessage', '已切换到测试模式，使用模拟数据', 'success');
-            }
-            
-            async refreshData() {
-                this.showMessage('saleMessage', '重新加载数据中...', 'success');
-                await this.loadInitialData();
-            }
-
-            async debugCustomers() {
-                const debugInfo = document.getElementById('saleDebug');
-                debugInfo.style.display = 'block';
-                debugInfo.innerHTML = '测试客户API连接...';
-                
-                try {
-                    // 使用JSONP方式测试
-                    await this.jsonpRequest('getCustomers', {}, (data) => {
-                        debugInfo.innerHTML = `API响应: ${JSON.stringify(data, null, 2)}`;
-                    });
-                } catch (error) {
-                    debugInfo.innerHTML = `API错误: ${error.message}`;
-                }
-            }
-
-            // JSONP请求方法 - 绕过CORS
-            jsonpRequest(action, params, callback) {
-                return new Promise((resolve, reject) => {
-                    const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-                    const script = document.createElement('script');
-                    
-                    params.callback = callbackName;
-                    const urlParams = new URLSearchParams(params);
-                    
-                    script.src = `${API_BASE_URL}?action=${action}&${urlParams}`;
-                    script.onerror = () => {
-                        reject(new Error('JSONP请求失败'));
-                    };
-                    
-                    window[callbackName] = (data) => {
-                        delete window[callbackName];
-                        document.body.removeChild(script);
-                        callback(data);
-                        resolve(data);
-                    };
-                    
-                    document.body.appendChild(script);
-                });
-            }
-
-            // 普通fetch请求（带CORS处理）
-            async apiRequest(action, params = {}) {
-                try {
-                    const urlParams = new URLSearchParams({action, ...params});
-                    const response = await fetch(`${API_BASE_URL}?${urlParams}`, {
-                        mode: 'cors',
-                        headers: {
-                            'Accept': 'application/json',
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP错误: ${response.status}`);
-                    }
-                    
-                    return await response.json();
-                } catch (error) {
-                    console.error('API请求失败:', error);
-                    throw error;
-                }
-            }
-            
-            switchPage(page) {
-                document.querySelectorAll('.nav-item').forEach(item => {
-                    item.classList.remove('active');
-                });
-                document.querySelector(`[data-page="${page}"]`).classList.add('active');
-                
-                this.showPage(page);
-                this.currentPage = page;
-                this.updatePageTitle(page);
-            }
-            
-            showPage(page) {
-                document.querySelectorAll('.page').forEach(pageEl => {
-                    pageEl.classList.remove('active');
-                });
-                
-                const targetPage = document.getElementById(`${page}-page`);
-                if (targetPage) {
-                    targetPage.classList.add('active');
-                }
-            }
-            
-            updatePageTitle(page) {
-                const titles = {
-                    'scan': '扫码出入库',
-                    'sale': '线下销售', 
-                    'data': '数据查看',
-                    'base': '基础数据'
-                };
-                document.getElementById('pageTitle').textContent = titles[page] || '赛娜眼镜进销存';
-            }
-            
-            hideLoading() {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('content').style.display = 'block';
-            }
-            
-            async loadInitialData() {
-                const debugInfo = document.getElementById('initDebug');
-                debugInfo.innerHTML = '开始加载初始数据...';
-                
-                try {
-                    await this.loadCustomers();
-                    await this.loadProductModels();
-                    debugInfo.innerHTML = '数据加载完成！';
-                } catch (error) {
-                    debugInfo.innerHTML = `数据加载失败: ${error.message}，请点击"使用测试数据"按钮`;
-                    this.useTestData();
-                }
-            }
-            
-            async loadCustomers() {
-                try {
-                    const debugInfo = document.getElementById('initDebug');
-                    debugInfo.innerHTML += '<br>加载客户数据...';
-                    
-                    const data = await this.apiRequest('getCustomers');
-                    
-                    if (data.success) {
-                        const select = document.getElementById('customerSelect');
-                        select.innerHTML = '<option value="">请选择客户...</option>';
-                        
-                        if (data.data && data.data.length > 0) {
-                            data.data.forEach(customer => {
-                                const option = document.createElement('option');
-                                option.value = customer.customer_id;
-                                option.textContent = customer.name;
-                                select.appendChild(option);
-                            });
-                            debugInfo.innerHTML += `<br>成功加载 ${data.data.length} 个客户`;
-                        } else {
-                            throw new Error('客户数据为空');
-                        }
-                    } else {
-                        throw new Error(data.message || '获取客户数据失败');
-                    }
-                } catch (error) {
-                    console.error('加载客户失败:', error);
-                    throw error; // 向上抛出错误
-                }
-            }
-
-            addTestCustomers() {
-                const select = document.getElementById('customerSelect');
-                const testCustomers = [
-                    { customer_id: 'C001', name: '张三贸易' },
-                    { customer_id: 'C002', name: '李四光学' },
-                    { customer_id: 'C003', name: '王五眼镜店' },
-                    { customer_id: 'C004', name: '网店客户' }
-                ];
-                
-                select.innerHTML = '<option value="">请选择客户...</option>';
-                testCustomers.forEach(customer => {
-                    const option = document.createElement('option');
-                    option.value = customer.customer_id;
-                    option.textContent = customer.name;
-                    select.appendChild(option);
-                });
-            }
-            
-            async loadProductModels() {
-                try {
-                    const data = await this.apiRequest('getProducts');
-                    
-                    if (data.success) {
-                        const select = document.getElementById('modelSelect');
-                        select.innerHTML = '<option value="">请选择系列...</option>';
-                        
-                        data.data.forEach(model => {
-                            const option = document.createElement('option');
-                            option.value = model.model_id;
-                            option.textContent = model.model_name;
-                            select.appendChild(option);
-                        });
-                    }
-                } catch (error) {
-                    console.error('加载产品系列失败:', error);
-                    throw error;
-                }
-            }
-
-            addTestProducts() {
-                const select = document.getElementById('modelSelect');
-                const testProducts = [
-                    { model_id: 'M001', model_name: '经典金属系列' },
-                    { model_id: 'M002', model_name: '时尚塑胶系列' },
-                    { model_id: 'M003', model_name: '运动休闲系列' }
-                ];
-                
-                select.innerHTML = '<option value="">请选择系列...</option>';
-                testProducts.forEach(product => {
-                    const option = document.createElement('option');
-                    option.value = product.model_id;
-                    option.textContent = product.model_name;
-                    select.appendChild(option);
-                });
-            }
-            
-            async loadVariants(modelId) {
-                if (!modelId) {
-                    document.getElementById('variantSelect').disabled = true;
-                    document.getElementById('variantSelect').innerHTML = '<option value="">请先选择系列</option>';
-                    return;
-                }
-                
-                try {
-                    const data = await this.apiRequest('getProductVariants', {model_id: modelId});
-                    
-                    if (data.success) {
-                        const select = document.getElementById('variantSelect');
-                        select.innerHTML = '<option value="">请选择颜色...</option>';
-                        
-                        data.data.forEach(variant => {
-                            const option = document.createElement('option');
-                            option.value = variant.variant_id;
-                            option.textContent = `${variant.color} (库存: ${variant.stock})`;
-                            option.dataset.price = variant.price;
-                            this.productVariants[variant.variant_id] = variant;
-                            select.appendChild(option);
-                        });
-                        
-                        select.disabled = false;
-                    }
-                } catch (error) {
-                    console.error('加载产品变体失败:', error);
-                    this.addTestVariants(modelId);
-                }
-            }
-
-            addTestVariants(modelId) {
-                const select = document.getElementById('variantSelect');
-                const testVariants = {
-                    'M001': [
-                        { variant_id: 'V001', color: '黑色', stock: 50, price: 299, model_name: '经典金属系列' },
-                        { variant_id: 'V002', color: '银色', stock: 30, price: 299, model_name: '经典金属系列' }
-                    ],
-                    'M002': [
-                        { variant_id: 'V003', color: '棕色', stock: 25, price: 199, model_name: '时尚塑胶系列' }
-                    ],
-                    'M003': [
-                        { variant_id: 'V004', color: '蓝色', stock: 40, price: 399, model_name: '运动休闲系列' }
-                    ]
-                };
-                
-                select.innerHTML = '<option value="">请选择颜色...</option>';
-                const variants = testVariants[modelId] || [];
-                
-                variants.forEach(variant => {
-                    const option = document.createElement('option');
-                    option.value = variant.variant_id;
-                    option.textContent = `${variant.color} (库存: ${variant.stock})`;
-                    option.dataset.price = variant.price;
-                    this.productVariants[variant.variant_id] = variant;
-                    select.appendChild(option);
-                });
-                
-                select.disabled = false;
-            }
-            
-            updatePrice(variantId) {
-                const select = document.getElementById('variantSelect');
-                const selectedOption = select.options[select.selectedIndex];
-                
-                if (selectedOption && selectedOption.dataset.price) {
-                    document.getElementById('unitPrice').value = selectedOption.dataset.price;
-                } else {
-                    document.getElementById('unitPrice').value = '';
-                }
-            }
-            
-            addSaleItem() {
-                const customerId = document.getElementById('customerSelect').value;
-                const variantId = document.getElementById('variantSelect').value;
-                const quantity = parseInt(document.getElementById('saleQuantity').value);
-                const unitPrice = parseFloat(document.getElementById('unitPrice').value);
-                
-                if (!customerId || !variantId || !quantity || !unitPrice) {
-                    this.showMessage('saleMessage', '请填写完整的销售信息', 'error');
-                    return;
-                }
-
-                const variant = this.productVariants[variantId];
-                if (!variant) {
-                    this.showMessage('saleMessage', '产品信息获取失败', 'error');
-                    return;
-                }
-
-                if (variant.stock < quantity) {
-                    this.showMessage('saleMessage', `库存不足，当前库存: ${variant.stock}`, 'error');
-                    return;
-                }
-                
-                const item = {
-                    customerId,
-                    variantId,
-                    variantName: `${variant.model_name || '产品'} - ${variant.color}`,
-                    quantity,
-                    unitPrice,
-                    total: quantity * unitPrice
-                };
-                
-                this.saleItems.push(item);
-                this.updateSaleItemsDisplay();
-                this.showMessage('saleMessage', '商品已添加到销售单', 'success');
-            }
-            
-            updateSaleItemsDisplay() {
-                const itemsList = document.getElementById('itemsList');
-                const totalAmount = document.getElementById('totalAmount');
-                const saleItemsSection = document.getElementById('saleItems');
-                
-                itemsList.innerHTML = '';
-                let total = 0;
-                
-                this.saleItems.forEach((item, index) => {
-                    total += item.total;
-                    
-                    const itemCard = document.createElement('div');
-                    itemCard.className = 'item-card';
-                    itemCard.innerHTML = `
-                        <div class="item-info">
-                            <h4>${item.variantName}</h4>
-                            <p>数量: ${item.quantity} × ¥${item.unitPrice}</p>
-                        </div>
-                        <div class="item-actions">
-                            <span>¥${item.total}</span>
-                            <button class="qty-btn" onclick="app.removeSaleItem(${index})">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    `;
-                    itemsList.appendChild(itemCard);
-                });
-                
-                totalAmount.textContent = total.toFixed(2);
-                saleItemsSection.style.display = this.saleItems.length > 0 ? 'block' : 'none';
-            }
-            
-            removeSaleItem(index) {
-                this.saleItems.splice(index, 1);
-                this.updateSaleItemsDisplay();
-            }
-            
-            async confirmSale() {
-                if (this.saleItems.length === 0) {
-                    this.showMessage('saleMessage', '请添加销售商品', 'error');
-                    return;
-                }
-
-                if (this.useTestMode) {
-                    // 测试模式 - 模拟成功
-                    const customerSelect = document.getElementById('customerSelect');
-                    const customerName = customerSelect.options[customerSelect.selectedIndex].text;
-                    
-                    this.showMessage('saleMessage', '测试模式: 销售出库成功！', 'success');
-                    this.generateInvoice(customerName);
-                    this.clearSaleForm();
-                    return;
-                }
-
-                const customerId = document.getElementById('customerSelect').value;
-                const customerSelect = document.getElementById('customerSelect');
-                const customerName = customerSelect.options[customerSelect.selectedIndex].text;
-
-                try {
-                    // 创建销售记录
-                    for (const item of this.saleItems) {
-                        const saleData = {
-                            customer_id: item.customerId,
-                            variant_id: item.variantId,
-                            quantity: item.quantity,
-                            operator: '销售员'
-                        };
-
-                        const result = await this.apiRequest('createSale', saleData);
-                        
-                        if (!result.success) {
-                            throw new Error(result.message || '销售失败');
-                        }
-                    }
-
-                    this.showMessage('saleMessage', '销售出库成功！', 'success');
-                    this.generateInvoice(customerName);
-                    this.clearSaleForm();
-                    
-                } catch (error) {
-                    console.error('销售失败:', error);
-                    this.showMessage('saleMessage', '销售失败: ' + error.message, 'error');
-                }
-            }
-
-            clearSaleForm() {
-                this.saleItems = [];
-                this.updateSaleItemsDisplay();
-                document.getElementById('customerSelect').value = '';
-                document.getElementById('modelSelect').value = '';
-                document.getElementById('variantSelect').value = '';
-                document.getElementById('saleQuantity').value = 1;
-                document.getElementById('unitPrice').value = '';
-            }
-
-            generateInvoice(customerName) {
-                const invoiceContent = document.getElementById('invoiceContent');
-                const invoicePreview = document.getElementById('invoicePreview');
-                const now = new Date();
-                const invoiceNumber = 'SN' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
-
-                let itemsHTML = '';
-                let totalAmount = 0;
-
-                this.saleItems.forEach(item => {
-                    totalAmount += item.total;
-                    itemsHTML += `
-                        <tr>
-                            <td>${item.variantName}</td>
-                            <td>${item.quantity}</td>
-                            <td>¥${item.unitPrice}</td>
-                            <td>¥${item.total}</td>
-                        </tr>
-                    `;
-                });
-
-                invoiceContent.innerHTML = `
-                    <div class="invoice" id="invoiceToDownload">
-                        <div class="invoice-header">
-                            <div class="invoice-title">赛娜眼镜销售单</div>
-                        </div>
-                        <div class="invoice-info">
-                            <div>单号: ${invoiceNumber}</div>
-                            <div>日期: ${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}</div>
-                        </div>
-                        <div class="invoice-info">
-                            <div>客户: ${customerName}</div>
-                        </div>
-                        <table class="invoice-table">
-                            <thead>
-                                <tr>
-                                    <th>商品名称</th>
-                                    <th>数量</th>
-                                    <th>单价</th>
-                                    <th>金额</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${itemsHTML}
-                            </tbody>
-                        </table>
-                        <div class="invoice-total">
-                            合计: ¥${totalAmount.toFixed(2)}
-                        </div>
-                        <div class="invoice-footer">
-                            感谢您的惠顾！赛娜眼镜
-                        </div>
-                    </div>
-                `;
-
-                invoicePreview.style.display = 'block';
-            }
-
-            async downloadInvoice() {
-                const invoiceElement = document.getElementById('invoiceToDownload');
-                
-                try {
-                    const canvas = await html2canvas(invoiceElement, {
-                        scale: 2,
-                        useCORS: true,
-                        logging: false
-                    });
-                    
-                    const link = document.createElement('a');
-                    link.download = `赛娜眼镜销售单_${new Date().getTime()}.png`;
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                    
-                    this.showMessage('saleMessage', '销售单下载成功', 'success');
-                } catch (error) {
-                    console.error('下载销售单失败:', error);
-                    this.showMessage('saleMessage', '下载失败: ' + error.message, 'error');
-                }
-            }
-            
-            startScan() {
-                alert('扫码功能开发中...\n\n请使用手动输入功能');
-            }
-            
-            async confirmScanOperation() {
-                const variantCode = document.getElementById('variantCode').value.trim();
-                const quantity = parseInt(document.getElementById('scanQuantity').value);
-                const scanType = document.getElementById('scanType').value;
-                
-                if (!variantCode || !quantity) {
-                    this.showMessage('scanMessage', '请填写完整信息', 'error');
-                    return;
-                }
-
-                const debugInfo = document.getElementById('scanDebug');
-                debugInfo.style.display = 'block';
-                debugInfo.innerHTML = '开始扫码操作...';
-
-                try {
-                    if (this.useTestMode) {
-                        // 测试模式
-                        this.showMessage('scanMessage', `测试模式: ${variantCode} 出库成功！`, 'success');
-                        document.getElementById('variantCode').value = '';
-                        document.getElementById('scanQuantity').value = 1;
-                        return;
-                    }
-
-                    if (scanType === 'out') {
-                        const result = await this.apiRequest('createScanSale', {
-                            items: JSON.stringify([{
-                                variant_id: variantCode,
-                                quantity: quantity,
-                                unit_price: 0
-                            }]),
-                            operator: '网店客服'
-                        });
-
-                        debugInfo.innerHTML += `<br>API响应: ${JSON.stringify(result)}`;
-
-                        if (result.success) {
-                            this.showMessage('scanMessage', `出库成功！销售单号: ${result.results[0].sale_id}`, 'success');
-                            document.getElementById('variantCode').value = '';
-                            document.getElementById('scanQuantity').value = 1;
-                        } else {
-                            throw new Error(result.message);
-                        }
-                    } else {
-                        this.showMessage('scanMessage', '采购入库功能开发中', 'error');
-                    }
-                    
-                } catch (error) {
-                    console.error('操作失败:', error);
-                    this.showMessage('scanMessage', '操作失败: ' + error.message, 'error');
-                    debugInfo.innerHTML += `<br>错误: ${error.message}`;
-                }
-            }
-
-            showMessage(containerId, message, type) {
-                const container = document.getElementById(containerId);
-                container.innerHTML = `<div class="message ${type}">${message}</div>`;
-                
-                setTimeout(() => {
-                    container.innerHTML = '';
-                }, 5000);
+                debug.innerHTML = `✅ API基础连接成功！\n响应: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                debug.innerHTML = `❌ API连接失败\n错误: ${error.message}\n\n建议:\n1. 检查API链接是否正确\n2. 检查Google Apps Script是否已部署\n3. 检查网络连接`;
             }
         }
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            window.app = new App();
-        });
+
+        // 测试获取客户
+        async function testGetCustomers() {
+            const debug = document.getElementById('debugOutput');
+            debug.innerHTML = '获取客户数据...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}?action=getCustomers`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    debug.innerHTML = `✅ 获取客户成功！\n找到 ${data.data.length} 个客户:\n${data.data.map(c => `${c.customer_id}: ${c.name}`).join('\n')}`;
+                } else {
+                    debug.innerHTML = `❌ 获取客户失败\n错误: ${data.message}`;
+                }
+            } catch (error) {
+                debug.innerHTML = `❌ 获取客户失败\n错误: ${error.message}`;
+            }
+        }
+
+        // 测试获取产品
+        async function testGetProducts() {
+            const debug = document.getElementById('debugOutput');
+            debug.innerHTML = '获取产品数据...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}?action=getProducts`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    debug.innerHTML = `✅ 获取产品成功！\n找到 ${data.data.length} 个产品系列:\n${data.data.map(p => `${p.model_id}: ${p.model_name}`).join('\n')}`;
+                    
+                    // 测试获取变体
+                    if (data.data.length > 0) {
+                        const modelId = data.data[0].model_id;
+                        debug.innerHTML += `\n\n获取第一个系列的变体...`;
+                        
+                        const variantResponse = await fetch(`${API_BASE_URL}?action=getProductVariants&model_id=${modelId}`);
+                        const variantData = await variantResponse.json();
+                        
+                        if (variantData.success) {
+                            debug.innerHTML += `\n✅ 获取变体成功！\n找到 ${variantData.data.length} 个变体:\n${variantData.data.map(v => `${v.variant_id}: ${v.color} - 库存: ${v.stock} - 价格: ${v.price}`).join('\n')}`;
+                        } else {
+                            debug.innerHTML += `\n❌ 获取变体失败: ${variantData.message}`;
+                        }
+                    }
+                } else {
+                    debug.innerHTML = `❌ 获取产品失败\n错误: ${data.message}`;
+                }
+            } catch (error) {
+                debug.innerHTML = `❌ 获取产品失败\n错误: ${error.message}`;
+            }
+        }
+
+        // 测试扫码销售
+        async function testScanSale() {
+            const debug = document.getElementById('debugOutput');
+            const variantCode = document.getElementById('testVariantCode').value;
+            const quantity = document.getElementById('testQuantity').value;
+            
+            debug.innerHTML = `测试扫码销售...\n产品: ${variantCode}, 数量: ${quantity}`;
+            
+            try {
+                const scanData = {
+                    items: [{
+                        variant_id: variantCode,
+                        quantity: parseInt(quantity),
+                        unit_price: 0
+                    }],
+                    operator: "测试用户"
+                };
+
+                // 使用URL参数方式
+                const params = new URLSearchParams();
+                params.append('action', 'createScanSale');
+                params.append('items', JSON.stringify(scanData.items));
+                params.append('operator', scanData.operator);
+
+                debug.innerHTML += `\n\n请求URL: ${API_BASE_URL}?${params.toString()}`;
+                
+                const response = await fetch(`${API_BASE_URL}?${params.toString()}`);
+                const data = await response.json();
+                
+                debug.innerHTML += `\n\nAPI响应: ${JSON.stringify(data, null, 2)}`;
+                
+                if (data.success) {
+                    debug.innerHTML = `✅ 扫码销售成功！\n销售单号: ${data.results[0].sale_id}\n总金额: ${data.total_amount}`;
+                } else {
+                    debug.innerHTML = `❌ 扫码销售失败\n错误: ${data.message}`;
+                }
+            } catch (error) {
+                debug.innerHTML = `❌ 扫码销售失败\n错误: ${error.message}`;
+            }
+        }
+
+        // 测试普通销售
+        async function testNormalSale() {
+            const debug = document.getElementById('debugOutput');
+            const variantCode = document.getElementById('testVariantCode').value;
+            const quantity = document.getElementById('testQuantity').value;
+            
+            debug.innerHTML = `测试普通销售...\n产品: ${variantCode}, 数量: ${quantity}`;
+            
+            try {
+                // 先获取客户列表
+                const customerResponse = await fetch(`${API_BASE_URL}?action=getCustomers`);
+                const customerData = await customerResponse.json();
+                
+                if (!customerData.success || customerData.data.length === 0) {
+                    debug.innerHTML = '❌ 没有找到客户数据，无法测试销售';
+                    return;
+                }
+
+                const customerId = customerData.data[0].customer_id;
+                
+                const params = new URLSearchParams();
+                params.append('action', 'createSale');
+                params.append('customer_id', customerId);
+                params.append('variant_id', variantCode);
+                params.append('quantity', quantity);
+                params.append('operator', '测试用户');
+
+                debug.innerHTML += `\n使用客户: ${customerId}\n请求URL: ${API_BASE_URL}?${params.toString()}`;
+                
+                const response = await fetch(`${API_BASE_URL}?${params.toString()}`);
+                const data = await response.json();
+                
+                debug.innerHTML += `\n\nAPI响应: ${JSON.stringify(data, null, 2)}`;
+                
+                if (data.success) {
+                    debug.innerHTML = `✅ 普通销售成功！\n销售单号: ${data.sale_id}\n总金额: ${data.data.total_amount}`;
+                } else {
+                    debug.innerHTML = `❌ 普通销售失败\n错误: ${data.message}`;
+                }
+            } catch (error) {
+                debug.innerHTML = `❌ 普通销售失败\n错误: ${error.message}`;
+            }
+        }
     </script>
 </body>
 </html>
