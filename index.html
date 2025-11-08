@@ -3,332 +3,348 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>销售开单</title>
+    <title>眼镜销售管理系统 - 完整版</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; color: #1d1d1f; line-height: 1.6; padding: 0; }
         
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
-            color: #333;
-        }
+        /* App 布局 */
+        #app { max-width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
         
-        .app-container {
-            max-width: 400px;
-            margin: 0 auto;
-            background: white;
-            min-height: 100vh;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-        }
-        
-        /* 头部样式 */
-        .header {
-            background: linear-gradient(135deg, #007AFF, #0056CC);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-        
-        .header .subtitle {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-        
-        /* 标签页样式 */
-        .tabs {
-            display: flex;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e5e5e5;
-        }
-        
-        .tab {
-            flex: 1;
-            padding: 15px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 500;
-            color: #666;
-            border-bottom: 3px solid transparent;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .tab.active {
-            color: #007AFF;
-            border-bottom-color: #007AFF;
-            background: white;
-        }
+        /* 顶部标题栏 */
+        .header { background: white; padding: 15px 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        .header h1 { font-size: 1.3rem; color: #333; }
         
         /* 内容区域 */
-        .tab-content {
-            display: none;
-            padding: 20px;
-        }
+        .content { flex: 1; padding: 20px; padding-bottom: 80px; }
         
-        .tab-content.active {
-            display: block;
-        }
+        /* 卡片样式 */
+        .card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         
         /* 表单样式 */
-        .form-group {
-            margin-bottom: 20px;
-        }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        input, select, button, textarea { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; }
+        button { background: #007aff; color: white; border: none; font-weight: 600; cursor: pointer; }
+        button:active { background: #0056cc; }
+        button.secondary { background: #8e8e93; }
+        button.success { background: #34c759; }
+        button.danger { background: #ff3b30; }
         
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #333;
-            font-size: 15px;
-        }
+        /* 底部导航 */
+        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; padding: 10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        .tab-item { flex: 1; text-align: center; padding: 10px; color: #8e8e93; cursor: pointer; }
+        .tab-item.active { color: #007aff; }
         
-        select, input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e1e1e1;
-            border-radius: 8px;
-            font-size: 16px;
-            background: white;
-        }
+        /* 页面切换 */
+        .page { display: none; }
+        .page.active { display: block; }
         
-        select:focus, input:focus {
-            outline: none;
-            border-color: #007AFF;
-        }
+        /* 产品型号分组 */
+        .model-group { margin-bottom: 20px; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden; }
+        .model-header { background: #f8f9fa; padding: 15px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .model-variants { background: white; }
+        .variant-item { padding: 12px 15px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .variant-item:last-child { border-bottom: none; }
+        .variant-info { flex: 1; }
+        .variant-actions { display: flex; gap: 8px; }
+        .variant-actions button { padding: 6px 12px; font-size: 0.8rem; width: auto; }
         
-        /* 信息显示 */
-        .info-card {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
+        /* 颜色规格添加样式 */
+        .color-variant-item {
             margin-bottom: 15px;
-        }
-        
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-        
-        .info-label {
-            color: #666;
-        }
-        
-        .info-value {
-            font-weight: 500;
-            color: #333;
-        }
-        
-        .stock-warning {
-            color: #FF3B30;
-        }
-        
-        .price-special {
-            color: #FF9500;
-            font-weight: 600;
-        }
-        
-        /* 按钮样式 */
-        .btn {
-            width: 100%;
             padding: 15px;
-            background: #007AFF;
+            border: 1px dashed #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .color-variant-item label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .remove-color {
+            background: #ff3b30;
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            width: auto;
+            padding: 10px 15px;
         }
         
-        .btn:hover {
-            background: #0056CC;
-        }
+        /* 库存操作表格 */
+        .inventory-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        .inventory-table th, .inventory-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .inventory-table th { background: #f8f8f8; }
+        .inventory-input { width: 70px; padding: 5px; text-align: center; }
         
-        .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
+        /* 隐藏类 */
+        .hidden { display: none; }
+        
+        /* 状态标签 */
+        .stock-badge { background: #34c759; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
+        .price-badge { background: #007aff; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
         
         /* 消息提示 */
-        .message {
-            padding: 12px;
-            border-radius: 8px;
-            margin: 10px 0;
-            text-align: center;
-            font-size: 14px;
-        }
-        
-        .success {
-            background: #D4EDDA;
-            color: #155724;
-            border: 1px solid #C3E6CB;
-        }
-        
-        .error {
-            background: #F8D7DA;
-            color: #721C24;
-            border: 1px solid #F5C6CB;
-        }
-        
-        .info {
-            background: #CCE7FF;
-            color: #004085;
-            border: 1px solid #B3D9FF;
-        }
+        .message { padding: 12px; border-radius: 8px; margin: 10px 0; text-align: center; font-size: 14px; }
+        .success { background: #D4EDDA; color: #155724; border: 1px solid #C3E6CB; }
+        .error { background: #F8D7DA; color: #721C24; border: 1px solid #F5C6CB; }
+        .info { background: #CCE7FF; color: #004085; border: 1px solid #B3D9FF; }
         
         /* 加载状态 */
-        .loading {
-            text-align: center;
-            padding: 40px 20px;
-            color: #666;
+        .loading { text-align: center; padding: 20px; color: #666; }
+        .loading-spinner { 
+            width: 20px; 
+            height: 20px; 
+            border: 2px solid #f3f3f3; 
+            border-top: 2px solid #007aff; 
+            border-radius: 50%; 
+            animation: spin 1s linear infinite; 
+            margin: 0 auto 10px;
         }
-        
-        .loading-spinner {
-            width: 30px;
-            height: 30px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #007AFF;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
-        /* 记录列表 */
-        .record-list {
-            background: white;
-        }
-        
-        .record-item {
-            padding: 15px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .record-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-        }
-        
-        .record-customer {
-            font-weight: 500;
-            color: #333;
-        }
-        
-        .record-date {
-            color: #666;
-            font-size: 12px;
-        }
-        
-        .record-details {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
-        }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- 头部 -->
+    <div id="app">
+        <!-- 顶部标题栏 -->
         <div class="header">
-            <h1>销售开单</h1>
-            <div class="subtitle">专业库存管理</div>
+            <h1 id="pageTitle">销售开单</h1>
         </div>
         
-        <!-- 标签页 -->
-        <div class="tabs">
-            <div class="tab active" data-tab="sale">开单</div>
-            <div class="tab" data-tab="records">记录</div>
-            <div class="tab" data-tab="products">产品</div>
-        </div>
-        
-        <!-- 开单标签页 -->
-        <div class="tab-content active" id="sale-tab">
-            <div class="form-group">
-                <label for="customerSelect">选择客户</label>
-                <select id="customerSelect">
-                    <option value="">加载中...</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="productSelect">选择产品型号</label>
-                <select id="productSelect">
-                    <option value="">请先选择客户</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="variantSelect">选择颜色规格</label>
-                <select id="variantSelect">
-                    <option value="">请先选择产品型号</option>
-                </select>
-            </div>
-            
-            <div class="info-card">
-                <div class="info-row">
-                    <span class="info-label">单价：</span>
-                    <span class="info-value" id="priceDisplay">- 元</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">当前库存：</span>
-                    <span class="info-value" id="stockDisplay">- 个</span>
+        <!-- 内容区域 -->
+        <div class="content">
+            <!-- 首页：销售开单 -->
+            <div id="page-home" class="page active">
+                <div class="card">
+                    <div class="form-group">
+                        <label for="customerSelect">选择客户</label>
+                        <select id="customerSelect">
+                            <option value="">加载中...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="modelSelect">选择产品型号</label>
+                        <select id="modelSelect">
+                            <option value="">请先选择客户</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="variantSelect">选择颜色规格</label>
+                        <select id="variantSelect">
+                            <option value="">请先选择型号</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="priceDisplay">单价 (元)</label>
+                        <input type="text" id="priceDisplay" readonly placeholder="选择颜色后自动显示">
+                    </div>
+                    <div class="form-group">
+                        <label for="stockDisplay">当前库存</label>
+                        <input type="text" id="stockDisplay" readonly placeholder="选择颜色后自动显示">
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity">销售数量</label>
+                        <input type="number" id="quantity" value="1" min="1">
+                    </div>
+                    <div id="saleMessage"></div>
+                    <button id="generateInvoice" class="success">生成销售单</button>
                 </div>
             </div>
             
-            <div class="form-group">
-                <label for="quantityInput">销售数量</label>
-                <input type="number" id="quantityInput" min="1" value="1" placeholder="请输入数量">
+            <!-- 产品管理页 -->
+            <div id="page-products" class="page">
+                <div class="card">
+                    <h3>产品型号管理</h3>
+                    <div id="productsList">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            加载中...
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>添加新产品/颜色</h3>
+                    <div class="form-group">
+                        <label for="newModelName">产品型号</label>
+                        <input type="text" id="newModelName" placeholder="例如: GQF-PU9048">
+                    </div>
+                    
+                    <!-- 颜色规格列表 -->
+                    <div id="colorVariants">
+                        <div class="color-variant-item">
+                            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: end;">
+                                <div>
+                                    <label>颜色名称</label>
+                                    <input type="text" placeholder="例如: 白水银" style="margin-top: 5px;">
+                                </div>
+                                <div>
+                                    <label>价格(元)</label>
+                                    <input type="number" value="0" style="margin-top: 5px;">
+                                </div>
+                                <div>
+                                    <label>库存</label>
+                                    <input type="number" value="0" style="margin-top: 5px;">
+                                </div>
+                                <div>
+                                    <label>&nbsp;</label>
+                                    <button class="danger remove-color" style="width: auto; padding: 10px; margin-top: 5px;">删除</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="addColorBtn" class="secondary" style="margin-bottom: 15px;">➕ 新增颜色规格</button>
+                    <div id="productMessage"></div>
+                    <button class="success" id="saveProductBtn">保存产品</button>
+                </div>
             </div>
             
-            <div id="saleMessage"></div>
+            <!-- 客户管理页 -->
+            <div id="page-customers" class="page">
+                <div class="card">
+                    <h3>客户列表</h3>
+                    <div id="customersList">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            加载中...
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>添加新客户</h3>
+                    <div class="form-group">
+                        <input type="text" id="newCustomerName" placeholder="客户名称">
+                    </div>
+                    <div id="customerMessage"></div>
+                    <button class="success" id="saveCustomerBtn">保存客户</button>
+                </div>
+            </div>
             
-            <button class="btn" id="submitBtn" disabled>确认开单</button>
-        </div>
-        
-        <!-- 记录标签页 -->
-        <div class="tab-content" id="records-tab">
-            <div class="empty-state">
-                销售记录加载中...
+            <!-- 库存管理页 -->
+            <div id="page-inventory" class="page">
+                <div class="card">
+                    <h3>库存操作</h3>
+                    <button class="success" onclick="showPage('scan-demo')">📷 扫码操作</button>
+                    <button class="secondary" style="margin-top: 10px;">📊 库存报表</button>
+                </div>
+                
+                <div class="card">
+                    <h3>库存概览</h3>
+                    <div id="inventoryOverview">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            加载中...
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 扫码演示页 -->
+            <div id="page-scan-demo" class="page">
+                <div class="card">
+                    <h3>📷 扫码操作模拟</h3>
+                    <p>假设您扫描了 <strong>GQF-PU9048 金属猫眼</strong> 的二维码</p>
+                    
+                    <div style="background: #f0f8ff; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                        <h4>GQF-PU9048 金属猫眼 - 库存调整</h4>
+                        <p>请填写各颜色的变更数量（正数表示入库，负数表示出库）：</p>
+                    </div>
+                    
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>颜色</th>
+                                <th>当前库存</th>
+                                <th>变更数量</th>
+                                <th>备注</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>白水银</td>
+                                <td>5</td>
+                                <td><input type="number" value="0" class="inventory-input"></td>
+                                <td><input type="text" placeholder="如: 采购入库" style="padding: 5px; width: 100%;"></td>
+                            </tr>
+                            <tr>
+                                <td>紫水银</td>
+                                <td>16</td>
+                                <td><input type="number" value="0" class="inventory-input"></td>
+                                <td><input type="text" placeholder="如: 销售出库" style="padding: 5px; width: 100%;"></td>
+                            </tr>
+                            <tr>
+                                <td>灰片</td>
+                                <td>9</td>
+                                <td><input type="number" value="0" class="inventory-input"></td>
+                                <td><input type="text" placeholder="如: 盘盈入库" style="padding: 5px; width: 100%;"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <button class="success" style="margin-top: 15px;">✅ 提交库存变更</button>
+                    <button class="secondary" onclick="showPage('inventory')" style="margin-top: 10px;">← 返回库存管理</button>
+                </div>
+            </div>
+            
+            <!-- 销售记录页 -->
+            <div id="page-records" class="page">
+                <div class="card">
+                    <h3>销售记录</h3>
+                    <div id="salesRecords">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            加载中...
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>月度汇总</h3>
+                    <p>本月总销售额: <strong id="monthlyTotal">0 元</strong></p>
+                    <p>销售单数: <strong id="salesCount">0 笔</strong></p>
+                    <button class="secondary">📈 查看详细报表</button>
+                </div>
             </div>
         </div>
         
-        <!-- 产品标签页 -->
-        <div class="tab-content" id="products-tab">
-            <div class="empty-state">
-                产品库存加载中...
+        <!-- 底部导航栏 -->
+        <div class="tab-bar">
+            <div class="tab-item active" onclick="showPage('home')">
+                <div>🧾</div>
+                <span>开单</span>
+            </div>
+            <div class="tab-item" onclick="showPage('products')">
+                <div>📦</div>
+                <span>产品</span>
+            </div>
+            <div class="tab-item" onclick="showPage('customers')">
+                <div>👥</div>
+                <span>客户</span>
+            </div>
+            <div class="tab-item" onclick="showPage('inventory')">
+                <div>🏪</div>
+                <span>库存</span>
+            </div>
+            <div class="tab-item" onclick="showPage('records')">
+                <div>📋</div>
+                <span>记录</span>
             </div>
         </div>
     </div>
 
     <script>
-        // 配置
-        const CONFIG = {
-            API_URL: 'https://script.google.com/macros/s/AKfycbz2zTkBCQD-EGnicMcF_7l_2UIJZAnAhYUmYZVB3xE3ZtUBUFctP-k0Y_9HaiXPsh45_g/exec'
-        };
+        // API配置
+        const API_URL = 'https://script.google.com/macros/s/AKfycbz2zTkBCQD-EGnicMcF_7l_2UIJZAnAhYUmYZVB3xE3ZtUBUFctP-k0Y_9HaiXPsh45_g/exec';
         
-        // 状态管理
+        // 全局状态
         let state = {
             customers: [],
             products: [],
@@ -336,93 +352,116 @@
             selectedProduct: null,
             selectedVariant: null
         };
-        
+
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
         });
-        
+
         function initializeApp() {
-            setupTabNavigation();
             setupEventListeners();
             loadInitialData();
         }
-        
-        function setupTabNavigation() {
-            const tabs = document.querySelectorAll('.tab');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    // 移除所有active类
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                    
-                    // 添加active类
-                    this.classList.add('active');
-                    const tabId = this.getAttribute('data-tab') + '-tab';
-                    document.getElementById(tabId).classList.add('active');
+
+        // 页面切换函数
+        function showPage(pageName) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // 显示目标页面
+            document.getElementById(`page-${pageName}`).classList.add('active');
+            
+            // 更新标题
+            const titles = {
+                'home': '销售开单',
+                'products': '产品管理',
+                'customers': '客户管理',
+                'records': '销售记录',
+                'inventory': '库存管理',
+                'scan-demo': '扫码操作'
+            };
+            document.getElementById('pageTitle').textContent = titles[pageName];
+            
+            // 更新底部导航激活状态
+            if (pageName !== 'scan-demo') {
+                document.querySelectorAll('.tab-item').forEach(tab => {
+                    tab.classList.remove('active');
                 });
-            });
-        }
-        
-        function setupEventListeners() {
-            // 客户选择变化
-            document.getElementById('customerSelect').addEventListener('change', function(e) {
-                state.selectedCustomer = e.target.value;
-                if (state.selectedCustomer) {
-                    loadProducts(state.selectedCustomer);
-                } else {
-                    resetProductSelection();
+                // 找到对应的导航项并激活
+                const tabIndex = ['home', 'products', 'customers', 'inventory', 'records'].indexOf(pageName);
+                if (tabIndex !== -1) {
+                    document.querySelectorAll('.tab-item')[tabIndex].classList.add('active');
                 }
-            });
+            }
             
-            // 产品选择变化
-            document.getElementById('productSelect').addEventListener('change', function(e) {
-                state.selectedProduct = e.target.value;
-                updateVariants();
-            });
-            
-            // 规格选择变化
-            document.getElementById('variantSelect').addEventListener('change', function(e) {
-                state.selectedVariant = e.target.value;
-                updateProductInfo();
-            });
-            
-            // 数量输入变化
-            document.getElementById('quantityInput').addEventListener('input', function() {
-                updateSubmitButton();
-            });
-            
-            // 提交按钮
-            document.getElementById('submitBtn').addEventListener('click', createSale);
-        }
-        
-        async function loadInitialData() {
-            try {
-                showMessage('正在连接数据库...', 'info', 'saleMessage');
-                await loadCustomers();
-            } catch (error) {
-                showMessage('连接失败: ' + error.message, 'error', 'saleMessage');
+            // 加载页面数据
+            if (pageName === 'products') {
+                loadProductsForManagement();
+            } else if (pageName === 'customers') {
+                loadCustomersForManagement();
+            } else if (pageName === 'records') {
+                loadSalesRecords();
+            } else if (pageName === 'inventory') {
+                loadInventoryOverview();
             }
         }
-        
+
+        function setupEventListeners() {
+            // 销售开单页面事件
+            document.getElementById('customerSelect').addEventListener('change', handleCustomerChange);
+            document.getElementById('modelSelect').addEventListener('change', handleModelChange);
+            document.getElementById('variantSelect').addEventListener('change', handleVariantChange);
+            document.getElementById('quantity').addEventListener('input', updateSubmitButton);
+            document.getElementById('generateInvoice').addEventListener('click', createSale);
+            
+            // 产品管理页面事件
+            document.getElementById('addColorBtn').addEventListener('click', addColorVariant);
+            document.getElementById('saveProductBtn').addEventListener('click', saveProduct);
+            
+            // 客户管理页面事件
+            document.getElementById('saveCustomerBtn').addEventListener('click', saveCustomer);
+            
+            // 初始删除按钮事件
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-color')) {
+                    if (document.querySelectorAll('.color-variant-item').length > 1) {
+                        e.target.closest('.color-variant-item').remove();
+                    } else {
+                        showMessage('至少需要保留一个颜色规格', 'error', 'productMessage');
+                    }
+                }
+            });
+        }
+
+        async function loadInitialData() {
+            try {
+                await loadCustomers();
+                await loadProducts();
+            } catch (error) {
+                showMessage('初始化数据失败: ' + error.message, 'error', 'saleMessage');
+            }
+        }
+
+        // API调用函数
+        async function apiCall(params = {}) {
+            const url = new URL(API_URL);
+            Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+            
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        }
+
         async function loadCustomers() {
             try {
-                const response = await fetch(`${CONFIG.API_URL}?action=getCustomers`);
-                const data = await response.json();
-                
+                const data = await apiCall({ action: 'getCustomers' });
                 if (data.success) {
                     state.customers = data.data;
-                    const select = document.getElementById('customerSelect');
-                    select.innerHTML = '<option value="">请选择客户</option>';
-                    
-                    state.customers.forEach(customer => {
-                        const option = document.createElement('option');
-                        option.value = customer.customer_id;
-                        option.textContent = customer.name;
-                        select.appendChild(option);
-                    });
-                    
-                    hideMessage('saleMessage');
+                    updateCustomerSelect();
                 } else {
                     throw new Error(data.error || '加载客户数据失败');
                 }
@@ -430,27 +469,40 @@
                 throw new Error('加载客户列表失败: ' + error.message);
             }
         }
-        
-        async function loadProducts(customerId) {
+
+        async function loadProducts(customerId = '') {
             try {
-                showMessage('正在加载产品信息...', 'info', 'saleMessage');
-                const response = await fetch(`${CONFIG.API_URL}?action=getProducts&customerId=${customerId}`);
-                const data = await response.json();
+                const params = { action: 'getProducts' };
+                if (customerId) params.customerId = customerId;
                 
+                const data = await apiCall(params);
                 if (data.success) {
                     state.products = data.data;
-                    updateProductSelect();
-                    hideMessage('saleMessage');
+                    if (!customerId) {
+                        updateModelSelect();
+                    }
                 } else {
                     throw new Error(data.error || '加载产品数据失败');
                 }
             } catch (error) {
-                showMessage('加载产品失败: ' + error.message, 'error', 'saleMessage');
+                throw new Error('加载产品列表失败: ' + error.message);
             }
         }
-        
-        function updateProductSelect() {
-            const select = document.getElementById('productSelect');
+
+        function updateCustomerSelect() {
+            const select = document.getElementById('customerSelect');
+            select.innerHTML = '<option value="">请选择客户</option>';
+            
+            state.customers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = customer.customer_id;
+                option.textContent = customer.name;
+                select.appendChild(option);
+            });
+        }
+
+        function updateModelSelect() {
+            const select = document.getElementById('modelSelect');
             select.innerHTML = '<option value="">请选择产品型号</option>';
             
             // 去重产品型号
@@ -462,11 +514,26 @@
                 option.textContent = `${modelId} ${product.model_name}`;
                 select.appendChild(option);
             });
-            
-            resetVariantSelection();
-            resetProductInfo();
         }
-        
+
+        function handleCustomerChange(event) {
+            state.selectedCustomer = event.target.value;
+            if (state.selectedCustomer) {
+                loadProducts(state.selectedCustomer).then(() => {
+                    updateModelSelect();
+                }).catch(error => {
+                    showMessage(error.message, 'error', 'saleMessage');
+                });
+            } else {
+                resetProductSelection();
+            }
+        }
+
+        function handleModelChange(event) {
+            state.selectedProduct = event.target.value;
+            updateVariants();
+        }
+
         function updateVariants() {
             const variants = state.products.filter(p => p.model_id === state.selectedProduct);
             const select = document.getElementById('variantSelect');
@@ -483,64 +550,63 @@
                 }
                 
                 option.textContent = `${variant.color} - ${priceText}`;
-                option.dataset.variant = JSON.stringify(variant);
+                option.dataset.price = variant.price;
+                option.dataset.stock = variant.stock;
                 select.appendChild(option);
             });
             
             resetProductInfo();
         }
-        
-        function updateProductInfo() {
-            const select = document.getElementById('variantSelect');
-            const selectedOption = select.options[select.selectedIndex];
-            
-            if (selectedOption.value && selectedOption.dataset.variant) {
-                const variant = JSON.parse(selectedOption.dataset.variant);
-                
-                // 更新价格显示
-                const priceDisplay = document.getElementById('priceDisplay');
-                if (variant.price !== variant.standard_price) {
-                    priceDisplay.textContent = `${variant.price}元 (特价)`;
-                    priceDisplay.className = 'info-value price-special';
-                } else {
-                    priceDisplay.textContent = `${variant.price}元`;
-                    priceDisplay.className = 'info-value';
-                }
-                
-                // 更新库存显示
-                const stockDisplay = document.getElementById('stockDisplay');
-                stockDisplay.textContent = `${variant.stock}个`;
-                if (variant.stock < 3) {
-                    stockDisplay.className = 'info-value stock-warning';
-                } else {
-                    stockDisplay.className = 'info-value';
-                }
-                
-                updateSubmitButton();
+
+        function handleVariantChange(event) {
+            const selectedOption = event.target.options[event.target.selectedIndex];
+            if (selectedOption.value) {
+                state.selectedVariant = selectedOption.value;
+                document.getElementById('priceDisplay').value = selectedOption.dataset.price + ' 元';
+                document.getElementById('stockDisplay').value = selectedOption.dataset.stock + ' 个';
+            } else {
+                resetProductInfo();
             }
+            updateSubmitButton();
         }
-        
+
+        function resetProductSelection() {
+            document.getElementById('modelSelect').innerHTML = '<option value="">请先选择客户</option>';
+            resetVariants();
+        }
+
+        function resetVariants() {
+            document.getElementById('variantSelect').innerHTML = '<option value="">请先选择型号</option>';
+            resetProductInfo();
+        }
+
+        function resetProductInfo() {
+            document.getElementById('priceDisplay').value = '';
+            document.getElementById('stockDisplay').value = '';
+            document.getElementById('quantity').value = 1;
+            updateSubmitButton();
+        }
+
         function updateSubmitButton() {
-            const quantity = parseInt(document.getElementById('quantityInput').value);
-            const select = document.getElementById('variantSelect');
-            const selectedOption = select.options[select.selectedIndex];
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const btn = document.getElementById('generateInvoice');
             
             let hasStock = false;
-            if (selectedOption.value && selectedOption.dataset.variant) {
-                const variant = JSON.parse(selectedOption.dataset.variant);
-                hasStock = quantity > 0 && quantity <= variant.stock;
+            if (state.selectedVariant) {
+                const selectedOption = document.getElementById('variantSelect').options[document.getElementById('variantSelect').selectedIndex];
+                const stock = parseInt(selectedOption.dataset.stock);
+                hasStock = quantity > 0 && quantity <= stock;
             }
             
-            const btn = document.getElementById('submitBtn');
             btn.disabled = !(state.selectedCustomer && state.selectedVariant && hasStock);
         }
-        
+
         async function createSale() {
-            const quantity = parseInt(document.getElementById('quantityInput').value);
-            const select = document.getElementById('variantSelect');
-            const variant = JSON.parse(select.options[select.selectedIndex].dataset.variant);
+            const quantity = parseInt(document.getElementById('quantity').value);
             const customerSelect = document.getElementById('customerSelect');
+            const variantSelect = document.getElementById('variantSelect');
             const customerName = customerSelect.options[customerSelect.selectedIndex].textContent;
+            const variantOption = variantSelect.options[variantSelect.selectedIndex];
             
             const saleData = {
                 action: 'createSale',
@@ -549,17 +615,16 @@
                     customer_name: customerName,
                     variant_id: state.selectedVariant,
                     quantity: quantity,
-                    unit_price: variant.price
+                    unit_price: variantOption.dataset.price
                 }
             };
             
             try {
-                // 禁用按钮并显示加载状态
-                const btn = document.getElementById('submitBtn');
+                const btn = document.getElementById('generateInvoice');
                 btn.disabled = true;
                 btn.textContent = '开单中...';
                 
-                const response = await fetch(CONFIG.API_URL, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     body: JSON.stringify(saleData)
                 });
@@ -568,43 +633,112 @@
                 
                 if (result.success) {
                     showMessage(`开单成功！销售单号: ${result.sale_id}`, 'success', 'saleMessage');
-                    // 重新加载产品信息更新库存
+                    // 重新加载产品信息更新库存显示
                     await loadProducts(state.selectedCustomer);
-                    // 重置数量
-                    document.getElementById('quantityInput').value = 1;
+                    updateModelSelect();
+                    // 重置表单
+                    document.getElementById('quantity').value = 1;
+                    updateSubmitButton();
                 } else {
                     throw new Error(result.error || '开单失败');
                 }
             } catch (error) {
                 showMessage('开单失败: ' + error.message, 'error', 'saleMessage');
             } finally {
-                // 恢复按钮状态
-                const btn = document.getElementById('submitBtn');
+                const btn = document.getElementById('generateInvoice');
                 btn.disabled = false;
-                btn.textContent = '确认开单';
+                btn.textContent = '生成销售单';
                 updateSubmitButton();
             }
         }
-        
-        function resetProductSelection() {
-            document.getElementById('productSelect').innerHTML = '<option value="">请先选择客户</option>';
-            resetVariantSelection();
+
+        // 产品管理功能
+        function addColorVariant() {
+            const colorVariants = document.getElementById('colorVariants');
+            const newVariant = document.createElement('div');
+            newVariant.className = 'color-variant-item';
+            newVariant.innerHTML = `
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: end;">
+                    <div>
+                        <label>颜色名称</label>
+                        <input type="text" placeholder="例如: 白水银" style="margin-top: 5px;">
+                    </div>
+                    <div>
+                        <label>价格(元)</label>
+                        <input type="number" value="0" style="margin-top: 5px;">
+                    </div>
+                    <div>
+                        <label>库存</label>
+                        <input type="number" value="0" style="margin-top: 5px;">
+                    </div>
+                    <div>
+                        <label>&nbsp;</label>
+                        <button class="danger remove-color" style="width: auto; padding: 10px; margin-top: 5px;">删除</button>
+                    </div>
+                </div>
+            `;
+            colorVariants.appendChild(newVariant);
         }
-        
-        function resetVariantSelection() {
-            document.getElementById('variantSelect').innerHTML = '<option value="">请先选择产品型号</option>';
-            resetProductInfo();
+
+        async function saveProduct() {
+            // 产品保存逻辑（需要扩展API支持）
+            showMessage('产品保存功能需要后端API支持', 'info', 'productMessage');
         }
-        
-        function resetProductInfo() {
-            document.getElementById('priceDisplay').textContent = '- 元';
-            document.getElementById('stockDisplay').textContent = '- 个';
-            document.getElementById('stockDisplay').className = 'info-value';
-            document.getElementById('priceDisplay').className = 'info-value';
-            document.getElementById('quantityInput').value = 1;
-            document.getElementById('submitBtn').disabled = true;
+
+        async function saveCustomer() {
+            // 客户保存逻辑（需要扩展API支持）
+            showMessage('客户保存功能需要后端API支持', 'info', 'customerMessage');
         }
-        
+
+        async function loadProductsForManagement() {
+            // 产品管理页面数据加载
+            document.getElementById('productsList').innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    加载产品数据...
+                </div>
+            `;
+            
+            // 这里可以添加产品管理页面的数据加载逻辑
+        }
+
+        async function loadCustomersForManagement() {
+            // 客户管理页面数据加载
+            document.getElementById('customersList').innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    加载客户数据...
+                </div>
+            `;
+            
+            // 这里可以添加客户管理页面的数据加载逻辑
+        }
+
+        async function loadSalesRecords() {
+            // 销售记录页面数据加载
+            document.getElementById('salesRecords').innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    加载销售记录...
+                </div>
+            `;
+            
+            // 这里可以添加销售记录页面的数据加载逻辑
+        }
+
+        async function loadInventoryOverview() {
+            // 库存概览页面数据加载
+            document.getElementById('inventoryOverview').innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    加载库存数据...
+                </div>
+            `;
+            
+            // 这里可以添加库存概览页面的数据加载逻辑
+        }
+
+        // 消息显示函数
         function showMessage(message, type, containerId) {
             const container = document.getElementById(containerId);
             container.innerHTML = `<div class="message ${type}">${message}</div>`;
@@ -614,10 +748,6 @@
                     container.innerHTML = '';
                 }, 5000);
             }
-        }
-        
-        function hideMessage(containerId) {
-            document.getElementById(containerId).innerHTML = '';
         }
     </script>
 </body>
