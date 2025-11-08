@@ -37,24 +37,20 @@
         .nav-icon { font-size: 20px; margin-bottom: 4px; color: #666; }
         .nav-text { font-size: 11px; color: #666; }
         .nav-item.active .nav-icon, .nav-item.active .nav-text { color: #1890ff; }
-        .message { padding: 12px; border-radius: 8px; margin-bottom: 16px; text-align: center; }
+        .message { padding: 12px; border-radius: 8px; margin-bottom: 16px; text-align: center; display: none; }
         .message.success { background: #f6ffed; border: 1px solid #b7eb8f; color: #52c41a; }
         .message.error { background: #fff2f0; border: 1px solid #ffccc7; color: #ff4d4f; }
-        .debug-info { background: #f0f0f0; padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 12px; color: #666; }
+        .loading { text-align: center; padding: 20px; color: #999; }
     </style>
 </head>
 <body>
     <div class="app-container">
         <div class="status-bar">
             <div class="app-title">智能进销存</div>
-            <div id="api-status" class="api-status">检测中...</div>
+            <div id="api-status" class="api-status disconnected">检测中...</div>
         </div>
         
         <div id="home-page" class="page-content active">
-            <div class="debug-info">
-                <strong>连接状态：</strong><span id="debug-status">检测中...</span>
-            </div>
-            
             <div class="function-grid">
                 <button class="function-item" onclick="showPage('sale')">
                     <div class="function-icon">🛒</div>
@@ -64,9 +60,9 @@
                     <div class="function-icon">📷</div>
                     <div class="function-name">扫码出库</div>
                 </button>
-                <button class="function-item" onclick="showPage('sales-records')">
+                <button class="function-item" onclick="showPage('records')">
                     <div class="function-icon">📋</div>
-                    <div class="function-name">销售明细</div>
+                    <div class="function-name">销售记录</div>
                 </button>
             </div>
         </div>
@@ -126,7 +122,7 @@
             </div>
             
             <div class="product-list" id="scan-product-list">
-                <div style="text-align: center; color: #999; padding: 20px;">暂无商品</div>
+                <div class="loading">暂无商品</div>
             </div>
             
             <div style="position: fixed; bottom: 80px; left: 0; right: 0; background: white; padding: 16px; border-top: 1px solid #e8e8e8;">
@@ -134,9 +130,9 @@
             </div>
         </div>
 
-        <div id="sales-records" class="page-content">
-            <div class="page-title">销售明细</div>
-            <div id="sales-table" style="text-align: center; color: #999; padding: 20px;">加载中...</div>
+        <div id="records-page" class="page-content">
+            <div class="page-title">销售记录</div>
+            <div id="records-content" class="loading">加载中...</div>
         </div>
     </div>
     
@@ -156,11 +152,10 @@
     </div>
 
     <script>
-        // 修复的API调用函数
-        const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyV9ibpP3OZikXvExxr6IM7r71y7tQ3HQbsJLDebSL3UPlIjwsOi-xMR6nmB7m9y8_bhg/exec';
+        // API配置
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyV9ibpP3OZikXvExxr6IM7r71y7tQ3HQbsJLDebSL3UPlIjwsOi-xMR6nmB7m9y8_bhg/exec';
         
-        let customers = [];
-        let products = [];
+        // 全局状态
         let scanProducts = [];
 
         // 显示消息
@@ -168,153 +163,150 @@
             const element = document.getElementById(elementId);
             element.textContent = message;
             element.className = `message ${type}`;
-            setTimeout(() => element.textContent = '', 3000);
+            element.style.display = 'block';
+            setTimeout(() => element.style.display = 'none', 3000);
         }
 
-        // 测试API连接 - 修复版本
-        async function testAPIConnection() {
-            try {
-                // 使用更简单的fetch方式
-                const response = await fetch(`${API_BASE_URL}?action=test`);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('api-status').className = 'api-status connected';
-                    document.getElementById('api-status').textContent = '已连接';
-                    document.getElementById('debug-status').textContent = '连接成功';
-                    return true;
-                }
-            } catch (error) {
-                console.error('API连接失败:', error);
-            }
-            
-            document.getElementById('api-status').className = 'api-status disconnected';
-            document.getElementById('api-status').textContent = '未连接';
-            document.getElementById('debug-status').textContent = '连接失败: ' + error.message;
-            return false;
+        // 测试API连接 - 简化版本
+        function testAPIConnection() {
+            fetch(API_URL + '?action=test')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('api-status').className = 'api-status connected';
+                        document.getElementById('api-status').textContent = '已连接';
+                    } else {
+                        throw new Error(data.message);
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('api-status').className = 'api-status disconnected';
+                    document.getElementById('api-status').textContent = '未连接';
+                    console.log('API连接失败:', error);
+                });
         }
 
         // 页面切换
         function showPage(page) {
-            document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            // 隐藏所有页面
+            document.querySelectorAll('.page-content').forEach(p => {
+                p.classList.remove('active');
+            });
             
+            // 显示目标页面
             document.getElementById(page + '-page').classList.add('active');
+            
+            // 更新导航
+            document.querySelectorAll('.nav-item').forEach(nav => {
+                nav.classList.remove('active');
+            });
             event.currentTarget.classList.add('active');
             
+            // 页面初始化
             if (page === 'sale') initSalePage();
             if (page === 'scan') initScanPage();
-            if (page === 'sales-records') loadSalesRecords();
+            if (page === 'records') loadRecords();
         }
 
         // 初始化销售页面
-        async function initSalePage() {
-            await loadCustomers();
-            setupSaleEvents();
+        function initSalePage() {
+            loadCustomers();
         }
 
         // 初始化扫码页面
         function initScanPage() {
             scanProducts = [];
-            updateScanProductList();
+            updateScanList();
         }
 
-        // 加载客户数据 - 修复版本
-        async function loadCustomers() {
-            try {
-                const response = await fetch(`${API_BASE_URL}?action=getCustomers`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    customers = data.data;
-                    const select = document.getElementById('customer-select');
-                    select.innerHTML = '<option value="">请选择客户</option>' +
-                        data.data.map(c => `<option value="${c.customer_id}">${c.name}</option>`).join('');
-                }
-            } catch (error) {
-                showMessage('sale-message', '加载客户失败', 'error');
-            }
-        }
-
-        // 设置销售事件
-        function setupSaleEvents() {
-            document.getElementById('customer-select').addEventListener('change', async function() {
-                const modelSelect = document.getElementById('model-select');
-                if (this.value) {
-                    await loadProducts();
-                    modelSelect.disabled = false;
-                    modelSelect.innerHTML = '<option value="">请选择产品型号</option>' +
-                        products.map(p => `<option value="${p.model_id}">${p.model_name}</option>`).join('');
-                } else {
-                    modelSelect.disabled = true;
-                    modelSelect.innerHTML = '<option value="">请先选择客户</option>';
-                    document.getElementById('variant-select').disabled = true;
-                    document.getElementById('variant-select').innerHTML = '<option value="">请先选择型号</option>';
-                    resetProductInfo();
-                }
-            });
-
-            document.getElementById('model-select').addEventListener('change', async function() {
-                const variantSelect = document.getElementById('variant-select');
-                if (this.value) {
-                    try {
-                        const response = await fetch(`${API_BASE_URL}?action=getProductVariants&model_id=${this.value}`);
-                        const data = await response.json();
+        // 加载客户数据
+        function loadCustomers() {
+            fetch(API_URL + '?action=getCustomers')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const select = document.getElementById('customer-select');
+                        select.innerHTML = '<option value="">请选择客户</option>' +
+                            data.data.map(c => `<option value="${c.customer_id}">${c.name}</option>`).join('');
                         
-                        if (data.success) {
-                            variantSelect.disabled = false;
-                            variantSelect.innerHTML = '<option value="">请选择颜色规格</option>' +
-                                data.data.map(v => `<option value="${v.variant_id}">${v.color} (库存:${v.stock})</option>`).join('');
-                        }
-                    } catch (error) {
-                        variantSelect.innerHTML = '<option value="">加载失败</option>';
+                        // 设置客户选择事件
+                        select.onchange = function() {
+                            if (this.value) {
+                                loadProducts();
+                            }
+                        };
                     }
-                } else {
-                    variantSelect.disabled = true;
-                    variantSelect.innerHTML = '<option value="">请先选择型号</option>';
-                    resetProductInfo();
-                }
-            });
-
-            document.getElementById('variant-select').addEventListener('change', async function() {
-                if (this.value) {
-                    try {
-                        const response = await fetch(`${API_BASE_URL}?action=getVariantDetail&variant_id=${this.value}`);
-                        const data = await response.json();
-                        
-                        if (data.success) {
-                            document.getElementById('price-display').textContent = data.data.price;
-                            document.getElementById('stock-display').textContent = data.data.stock;
-                        }
-                    } catch (error) {
-                        console.error('获取产品详情失败:', error);
-                    }
-                } else {
-                    resetProductInfo();
-                }
-            });
+                })
+                .catch(error => {
+                    showMessage('sale-message', '加载客户失败', 'error');
+                });
         }
 
         // 加载产品数据
-        async function loadProducts() {
-            try {
-                const response = await fetch(`${API_BASE_URL}?action=getProducts`);
-                const data = await response.json();
-                if (data.success) products = data.data;
-            } catch (error) {
-                console.error('加载产品失败:', error);
-            }
+        function loadProducts() {
+            fetch(API_URL + '?action=getProducts')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const modelSelect = document.getElementById('model-select');
+                        modelSelect.disabled = false;
+                        modelSelect.innerHTML = '<option value="">请选择产品型号</option>' +
+                            data.data.map(p => `<option value="${p.model_id}">${p.model_name}</option>`).join('');
+                        
+                        // 设置型号选择事件
+                        modelSelect.onchange = function() {
+                            if (this.value) {
+                                loadVariants(this.value);
+                            }
+                        };
+                    }
+                })
+                .catch(error => {
+                    showMessage('sale-message', '加载产品失败', 'error');
+                });
         }
 
-        // 重置产品信息
-        function resetProductInfo() {
-            document.getElementById('price-display').textContent = '--';
-            document.getElementById('stock-display').textContent = '--';
+        // 加载变体数据
+        function loadVariants(modelId) {
+            fetch(API_URL + '?action=getProductVariants&model_id=' + modelId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const variantSelect = document.getElementById('variant-select');
+                        variantSelect.disabled = false;
+                        variantSelect.innerHTML = '<option value="">请选择颜色规格</option>' +
+                            data.data.map(v => `<option value="${v.variant_id}">${v.color} (库存:${v.stock})</option>`).join('');
+                        
+                        // 设置变体选择事件
+                        variantSelect.onchange = function() {
+                            if (this.value) {
+                                showVariantInfo(this.value);
+                            }
+                        };
+                    }
+                })
+                .catch(error => {
+                    showMessage('sale-message', '加载规格失败', 'error');
+                });
         }
 
-        // 创建销售记录 - 修复版本
-        async function createSale() {
+        // 显示变体信息
+        function showVariantInfo(variantId) {
+            fetch(API_URL + '?action=getVariantDetail&variant_id=' + variantId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('price-display').textContent = data.data.price;
+                        document.getElementById('stock-display').textContent = data.data.stock;
+                    }
+                })
+                .catch(error => {
+                    console.log('获取产品详情失败:', error);
+                });
+        }
+
+        // 创建销售记录
+        function createSale() {
             const customerId = document.getElementById('customer-select').value;
             const variantId = document.getElementById('variant-select').value;
             const quantity = document.getElementById('quantity-input').value;
@@ -324,138 +316,134 @@
                 return;
             }
 
-            try {
-                // 使用URL参数方式发送POST请求（Google Apps Script兼容）
-                const formData = new FormData();
-                formData.append('action', 'createSale');
-                formData.append('customer_id', customerId);
-                formData.append('variant_id', variantId);
-                formData.append('quantity', quantity);
-                formData.append('operator', '系统');
+            // 使用FormData发送
+            const formData = new FormData();
+            formData.append('action', 'createSale');
+            formData.append('customer_id', customerId);
+            formData.append('variant_id', variantId);
+            formData.append('quantity', quantity);
 
-                const response = await fetch(API_BASE_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
+            fetch(API_URL, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
                 if (data.success) {
-                    showMessage('sale-message', `销售成功！单号: ${data.data.sale_id}`, 'success');
+                    showMessage('sale-message', '销售成功! 单号: ' + data.data.sale_id, 'success');
                     // 重置表单
-                    resetForm();
+                    document.getElementById('customer-select').value = '';
+                    document.getElementById('model-select').disabled = true;
+                    document.getElementById('variant-select').disabled = true;
+                    document.getElementById('quantity-input').value = '1';
+                    document.getElementById('price-display').textContent = '--';
+                    document.getElementById('stock-display').textContent = '--';
                 } else {
                     showMessage('sale-message', '销售失败: ' + data.message, 'error');
                 }
-            } catch (error) {
+            })
+            .catch(error => {
                 showMessage('sale-message', '网络错误: ' + error.message, 'error');
-            }
-        }
-
-        // 重置表单
-        function resetForm() {
-            document.getElementById('customer-select').value = '';
-            document.getElementById('model-select').disabled = true;
-            document.getElementById('model-select').innerHTML = '<option value="">请先选择客户</option>';
-            document.getElementById('variant-select').disabled = true;
-            document.getElementById('variant-select').innerHTML = '<option value="">请先选择型号</option>';
-            document.getElementById('quantity-input').value = '1';
-            resetProductInfo();
+            });
         }
 
         // 扫码功能
         function startScan() {
-            const variantId = prompt('请输入产品变体ID (例如: V001):');
+            const variantId = prompt('输入产品ID (如: V001):');
             if (variantId) addScannedProduct(variantId);
         }
 
-        async function addScannedProduct(variantId) {
-            try {
-                const response = await fetch(`${API_BASE_URL}?action=getVariantDetail&variant_id=${variantId}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    scanProducts.push({
-                        variant_id: variantId,
-                        name: `${data.data.model_name}-${data.data.color}`,
-                        price: 0,
-                        quantity: 1
-                    });
-                    updateScanProductList();
-                } else {
-                    alert('产品不存在');
-                }
-            } catch (error) {
-                alert('网络错误');
-            }
+        function addScannedProduct(variantId) {
+            fetch(API_URL + '?action=getVariantDetail&variant_id=' + variantId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        scanProducts.push({
+                            variant_id: variantId,
+                            name: data.data.model_name + '-' + data.data.color,
+                            price: 0
+                        });
+                        updateScanList();
+                    } else {
+                        alert('产品不存在');
+                    }
+                })
+                .catch(error => {
+                    alert('网络错误');
+                });
         }
 
-        function updateScanProductList() {
+        function updateScanList() {
             const list = document.getElementById('scan-product-list');
+            if (scanProducts.length === 0) {
+                list.innerHTML = '<div class="loading">暂无商品</div>';
+                return;
+            }
+            
             list.innerHTML = scanProducts.map((product, index) => `
                 <div class="product-item">
                     <div>${product.name}</div>
                     <input type="number" class="product-price" value="${product.price}" 
-                           onchange="scanProducts[${index}].price = parseFloat(this.value) || 0" placeholder="价格">
+                           onchange="scanProducts[${index}].price = this.value">
                 </div>
             `).join('');
         }
 
-        async function submitScanOrder() {
+        function submitScanOrder() {
             if (scanProducts.length === 0) {
                 showMessage('scan-message', '请先添加商品', 'error');
                 return;
             }
 
-            try {
-                const formData = new FormData();
-                formData.append('action', 'createScanSale');
-                formData.append('items', JSON.stringify(scanProducts));
-                formData.append('operator', '系统');
+            const formData = new FormData();
+            formData.append('action', 'createScanSale');
+            formData.append('items', JSON.stringify(scanProducts));
 
-                const response = await fetch(API_BASE_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
+            fetch(API_URL, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
                 if (data.success) {
-                    showMessage('scan-message', `扫码销售成功！`, 'success');
+                    showMessage('scan-message', '扫码销售成功!', 'success');
                     scanProducts = [];
-                    updateScanProductList();
+                    updateScanList();
                 } else {
-                    showMessage('scan-message', '扫码销售失败: ' + data.message, 'error');
+                    showMessage('scan-message', '销售失败: ' + data.message, 'error');
                 }
-            } catch (error) {
-                showMessage('scan-message', '网络错误: ' + error.message, 'error');
-            }
+            })
+            .catch(error => {
+                showMessage('scan-message', '网络错误', 'error');
+            });
         }
 
         // 加载销售记录
-        async function loadSalesRecords() {
-            try {
-                const response = await fetch(`${API_BASE_URL}?action=getSalesRecords`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    const table = document.getElementById('sales-table');
-                    table.innerHTML = data.data.slice(0, 5).map(record => `
-                        <div style="padding: 16px; background: white; border-radius: 8px; margin-bottom: 8px;">
-                            <div style="font-weight: 500;">${record.sale_id}</div>
-                            <div style="font-size: 14px; color: #666;">${record.date} | 数量: ${record.quantity}</div>
-                            <div style="font-weight: 500; color: #ff4d4f;">¥${record.total_amount}</div>
-                        </div>
-                    `).join('');
-                }
-            } catch (error) {
-                document.getElementById('sales-table').textContent = '加载失败';
-            }
+        function loadRecords() {
+            fetch(API_URL + '?action=getSalesRecords')
+                .then(response => response.json())
+                .then(data => {
+                    const content = document.getElementById('records-content');
+                    if (data.success && data.data.length > 0) {
+                        content.innerHTML = data.data.slice(0, 10).map(record => `
+                            <div style="padding: 12px; background: white; border-radius: 8px; margin-bottom: 8px;">
+                                <div style="font-weight: 500;">${record.sale_id}</div>
+                                <div style="font-size: 14px; color: #666;">${record.date} | 数量: ${record.quantity}</div>
+                                <div style="font-weight: 500; color: #ff4d4f;">¥${record.total_amount}</div>
+                            </div>
+                        `).join('');
+                    } else {
+                        content.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">暂无记录</div>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('records-content').innerHTML = '<div style="color: #ff4d4f; text-align: center;">加载失败</div>';
+                });
         }
 
-        // 初始化
-        document.addEventListener('DOMContentLoaded', async function() {
-            await testAPIConnection();
+        // 初始化 - 不阻塞页面加载
+        document.addEventListener('DOMContentLoaded', function() {
+            testAPIConnection(); // 不await，立即执行
         });
     </script>
 </body>
