@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
-        /* 保持原有的所有CSS样式不变 */
+        /* 保持所有CSS样式不变 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; line-height: 1.6; padding-bottom: 80px; }
         .app-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -61,10 +61,10 @@
         .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .debug-info { background: #f8f9fa; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 0.8rem; color: #666; }
+        .test-data-btn { background: #6c757d; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-left: 10px; }
     </style>
 </head>
 <body>
-    <!-- 页面结构保持不变 -->
     <header class="app-header">
         <div class="header-content">
             <h1 class="app-title" id="pageTitle">扫码出入库</h1>
@@ -132,9 +132,14 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">线下销售出库</h3>
-                        <button class="btn" onclick="app.debugCustomers()" style="width: auto; padding: 8px 12px;">
-                            <i class="fas fa-bug"></i>调试
-                        </button>
+                        <div>
+                            <button class="test-data-btn" onclick="app.useTestData()">
+                                <i class="fas fa-vial"></i>使用测试数据
+                            </button>
+                            <button class="test-data-btn" onclick="app.debugCustomers()">
+                                <i class="fas fa-bug"></i>调试API
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="sale-form">
@@ -262,6 +267,7 @@
                 this.currentPage = 'scan';
                 this.saleItems = [];
                 this.productVariants = {};
+                this.useTestMode = false; // 测试模式标志
                 this.init();
             }
             
@@ -312,6 +318,13 @@
                     this.refreshData();
                 });
             }
+
+            useTestData() {
+                this.useTestMode = true;
+                this.addTestCustomers();
+                this.addTestProducts();
+                this.showMessage('saleMessage', '已切换到测试模式，使用模拟数据', 'success');
+            }
             
             async refreshData() {
                 this.showMessage('saleMessage', '重新加载数据中...', 'success');
@@ -324,11 +337,59 @@
                 debugInfo.innerHTML = '测试客户API连接...';
                 
                 try {
-                    const response = await fetch(`${API_BASE_URL}?action=getCustomers`);
-                    const data = await response.json();
-                    debugInfo.innerHTML = `API响应: ${JSON.stringify(data, null, 2)}`;
+                    // 使用JSONP方式测试
+                    await this.jsonpRequest('getCustomers', {}, (data) => {
+                        debugInfo.innerHTML = `API响应: ${JSON.stringify(data, null, 2)}`;
+                    });
                 } catch (error) {
                     debugInfo.innerHTML = `API错误: ${error.message}`;
+                }
+            }
+
+            // JSONP请求方法 - 绕过CORS
+            jsonpRequest(action, params, callback) {
+                return new Promise((resolve, reject) => {
+                    const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+                    const script = document.createElement('script');
+                    
+                    params.callback = callbackName;
+                    const urlParams = new URLSearchParams(params);
+                    
+                    script.src = `${API_BASE_URL}?action=${action}&${urlParams}`;
+                    script.onerror = () => {
+                        reject(new Error('JSONP请求失败'));
+                    };
+                    
+                    window[callbackName] = (data) => {
+                        delete window[callbackName];
+                        document.body.removeChild(script);
+                        callback(data);
+                        resolve(data);
+                    };
+                    
+                    document.body.appendChild(script);
+                });
+            }
+
+            // 普通fetch请求（带CORS处理）
+            async apiRequest(action, params = {}) {
+                try {
+                    const urlParams = new URLSearchParams({action, ...params});
+                    const response = await fetch(`${API_BASE_URL}?${urlParams}`, {
+                        mode: 'cors',
+                        headers: {
+                            'Accept': 'application/json',
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP错误: ${response.status}`);
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('API请求失败:', error);
+                    throw error;
                 }
             }
             
@@ -378,7 +439,8 @@
                     await this.loadProductModels();
                     debugInfo.innerHTML = '数据加载完成！';
                 } catch (error) {
-                    debugInfo.innerHTML = `数据加载失败: ${error.message}`;
+                    debugInfo.innerHTML = `数据加载失败: ${error.message}，请点击"使用测试数据"按钮`;
+                    this.useTestData();
                 }
             }
             
@@ -387,15 +449,7 @@
                     const debugInfo = document.getElementById('initDebug');
                     debugInfo.innerHTML += '<br>加载客户数据...';
                     
-                    // 添加时间戳避免缓存
-                    const response = await fetch(`${API_BASE_URL}?action=getCustomers&t=${Date.now()}`);
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP错误: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    debugInfo.innerHTML += `<br>客户API响应: ${JSON.stringify(data)}`;
+                    const data = await this.apiRequest('getCustomers');
                     
                     if (data.success) {
                         const select = document.getElementById('customerSelect');
@@ -410,18 +464,14 @@
                             });
                             debugInfo.innerHTML += `<br>成功加载 ${data.data.length} 个客户`;
                         } else {
-                            debugInfo.innerHTML += '<br>客户数据为空';
+                            throw new Error('客户数据为空');
                         }
                     } else {
                         throw new Error(data.message || '获取客户数据失败');
                     }
                 } catch (error) {
                     console.error('加载客户失败:', error);
-                    const debugInfo = document.getElementById('initDebug');
-                    debugInfo.innerHTML += `<br>加载客户失败: ${error.message}`;
-                    
-                    // 添加测试数据以便继续测试
-                    this.addTestCustomers();
+                    throw error; // 向上抛出错误
                 }
             }
 
@@ -430,9 +480,11 @@
                 const testCustomers = [
                     { customer_id: 'C001', name: '张三贸易' },
                     { customer_id: 'C002', name: '李四光学' },
-                    { customer_id: 'C003', name: '王五眼镜店' }
+                    { customer_id: 'C003', name: '王五眼镜店' },
+                    { customer_id: 'C004', name: '网店客户' }
                 ];
                 
+                select.innerHTML = '<option value="">请选择客户...</option>';
                 testCustomers.forEach(customer => {
                     const option = document.createElement('option');
                     option.value = customer.customer_id;
@@ -443,8 +495,7 @@
             
             async loadProductModels() {
                 try {
-                    const response = await fetch(`${API_BASE_URL}?action=getProducts&t=${Date.now()}`);
-                    const data = await response.json();
+                    const data = await this.apiRequest('getProducts');
                     
                     if (data.success) {
                         const select = document.getElementById('modelSelect');
@@ -459,8 +510,7 @@
                     }
                 } catch (error) {
                     console.error('加载产品系列失败:', error);
-                    // 添加测试产品数据
-                    this.addTestProducts();
+                    throw error;
                 }
             }
 
@@ -472,6 +522,7 @@
                     { model_id: 'M003', model_name: '运动休闲系列' }
                 ];
                 
+                select.innerHTML = '<option value="">请选择系列...</option>';
                 testProducts.forEach(product => {
                     const option = document.createElement('option');
                     option.value = product.model_id;
@@ -488,8 +539,7 @@
                 }
                 
                 try {
-                    const response = await fetch(`${API_BASE_URL}?action=getProductVariants&model_id=${modelId}&t=${Date.now()}`);
-                    const data = await response.json();
+                    const data = await this.apiRequest('getProductVariants', {model_id: modelId});
                     
                     if (data.success) {
                         const select = document.getElementById('variantSelect');
@@ -516,14 +566,14 @@
                 const select = document.getElementById('variantSelect');
                 const testVariants = {
                     'M001': [
-                        { variant_id: 'V001', color: '黑色', stock: 50, price: 299 },
-                        { variant_id: 'V002', color: '银色', stock: 30, price: 299 }
+                        { variant_id: 'V001', color: '黑色', stock: 50, price: 299, model_name: '经典金属系列' },
+                        { variant_id: 'V002', color: '银色', stock: 30, price: 299, model_name: '经典金属系列' }
                     ],
                     'M002': [
-                        { variant_id: 'V003', color: '棕色', stock: 25, price: 199 }
+                        { variant_id: 'V003', color: '棕色', stock: 25, price: 199, model_name: '时尚塑胶系列' }
                     ],
                     'M003': [
-                        { variant_id: 'V004', color: '蓝色', stock: 40, price: 399 }
+                        { variant_id: 'V004', color: '蓝色', stock: 40, price: 399, model_name: '运动休闲系列' }
                     ]
                 };
                 
@@ -632,6 +682,17 @@
                     return;
                 }
 
+                if (this.useTestMode) {
+                    // 测试模式 - 模拟成功
+                    const customerSelect = document.getElementById('customerSelect');
+                    const customerName = customerSelect.options[customerSelect.selectedIndex].text;
+                    
+                    this.showMessage('saleMessage', '测试模式: 销售出库成功！', 'success');
+                    this.generateInvoice(customerName);
+                    this.clearSaleForm();
+                    return;
+                }
+
                 const customerId = document.getElementById('customerSelect').value;
                 const customerSelect = document.getElementById('customerSelect');
                 const customerName = customerSelect.options[customerSelect.selectedIndex].text;
@@ -646,14 +707,7 @@
                             operator: '销售员'
                         };
 
-                        // 使用GET方式避免CORS问题
-                        const params = new URLSearchParams({
-                            action: 'createSale',
-                            ...saleData
-                        });
-
-                        const response = await fetch(`${API_BASE_URL}?${params}`);
-                        const result = await response.json();
+                        const result = await this.apiRequest('createSale', saleData);
                         
                         if (!result.success) {
                             throw new Error(result.message || '销售失败');
@@ -661,23 +715,23 @@
                     }
 
                     this.showMessage('saleMessage', '销售出库成功！', 'success');
-                    
-                    // 生成销售单
                     this.generateInvoice(customerName);
-                    
-                    // 清空表单
-                    this.saleItems = [];
-                    this.updateSaleItemsDisplay();
-                    document.getElementById('customerSelect').value = '';
-                    document.getElementById('modelSelect').value = '';
-                    document.getElementById('variantSelect').value = '';
-                    document.getElementById('saleQuantity').value = 1;
-                    document.getElementById('unitPrice').value = '';
+                    this.clearSaleForm();
                     
                 } catch (error) {
                     console.error('销售失败:', error);
                     this.showMessage('saleMessage', '销售失败: ' + error.message, 'error');
                 }
+            }
+
+            clearSaleForm() {
+                this.saleItems = [];
+                this.updateSaleItemsDisplay();
+                document.getElementById('customerSelect').value = '';
+                document.getElementById('modelSelect').value = '';
+                document.getElementById('variantSelect').value = '';
+                document.getElementById('saleQuantity').value = 1;
+                document.getElementById('unitPrice').value = '';
             }
 
             generateInvoice(customerName) {
@@ -779,10 +833,16 @@
                 debugInfo.innerHTML = '开始扫码操作...';
 
                 try {
+                    if (this.useTestMode) {
+                        // 测试模式
+                        this.showMessage('scanMessage', `测试模式: ${variantCode} 出库成功！`, 'success');
+                        document.getElementById('variantCode').value = '';
+                        document.getElementById('scanQuantity').value = 1;
+                        return;
+                    }
+
                     if (scanType === 'out') {
-                        // 使用GET方式避免CORS问题
-                        const params = new URLSearchParams({
-                            action: 'createScanSale',
+                        const result = await this.apiRequest('createScanSale', {
                             items: JSON.stringify([{
                                 variant_id: variantCode,
                                 quantity: quantity,
@@ -791,11 +851,6 @@
                             operator: '网店客服'
                         });
 
-                        debugInfo.innerHTML += `<br>请求参数: ${params}`;
-
-                        const response = await fetch(`${API_BASE_URL}?${params}`);
-                        const result = await response.json();
-                        
                         debugInfo.innerHTML += `<br>API响应: ${JSON.stringify(result)}`;
 
                         if (result.success) {
