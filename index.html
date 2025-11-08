@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>眼镜销售管理系统 - 完整版</title>
+    <title>眼镜销售管理系统</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; color: #1d1d1f; line-height: 1.6; padding: 0; }
@@ -30,6 +30,7 @@
         button.secondary { background: #8e8e93; }
         button.success { background: #34c759; }
         button.danger { background: #ff3b30; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
         
         /* 底部导航 */
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; padding: 10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
@@ -86,6 +87,7 @@
         /* 状态标签 */
         .stock-badge { background: #34c759; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
         .price-badge { background: #007aff; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
+        .low-stock { background: #ff3b30; }
         
         /* 消息提示 */
         .message { padding: 12px; border-radius: 8px; margin: 10px 0; text-align: center; font-size: 14px; }
@@ -107,6 +109,14 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        /* 移动端优化 */
+        @media (max-width: 480px) {
+            .content { padding: 15px; padding-bottom: 70px; }
+            .card { padding: 15px; }
+            .header { padding: 12px 15px; }
+            .header h1 { font-size: 1.2rem; }
         }
     </style>
 </head>
@@ -153,7 +163,13 @@
                         <input type="number" id="quantity" value="1" min="1">
                     </div>
                     <div id="saleMessage"></div>
-                    <button id="generateInvoice" class="success">生成销售单</button>
+                    <button id="generateInvoice" class="success" disabled>生成销售单</button>
+                </div>
+
+                <div class="card">
+                    <h3>快速操作</h3>
+                    <button onclick="loadInitialData()" class="secondary">🔄 刷新数据</button>
+                    <button onclick="testConnection()" class="secondary" style="margin-top: 10px;">📡 测试连接</button>
                 </div>
             </div>
             
@@ -186,11 +202,11 @@
                                 </div>
                                 <div>
                                     <label>价格(元)</label>
-                                    <input type="number" value="0" style="margin-top: 5px;">
+                                    <input type="number" value="0" min="0" style="margin-top: 5px;">
                                 </div>
                                 <div>
                                     <label>库存</label>
-                                    <input type="number" value="0" style="margin-top: 5px;">
+                                    <input type="number" value="0" min="0" style="margin-top: 5px;">
                                 </div>
                                 <div>
                                     <label>&nbsp;</label>
@@ -231,12 +247,6 @@
             <!-- 库存管理页 -->
             <div id="page-inventory" class="page">
                 <div class="card">
-                    <h3>库存操作</h3>
-                    <button class="success" onclick="showPage('scan-demo')">📷 扫码操作</button>
-                    <button class="secondary" style="margin-top: 10px;">📊 库存报表</button>
-                </div>
-                
-                <div class="card">
                     <h3>库存概览</h3>
                     <div id="inventoryOverview">
                         <div class="loading">
@@ -244,6 +254,12 @@
                             加载中...
                         </div>
                     </div>
+                </div>
+
+                <div class="card">
+                    <h3>库存操作</h3>
+                    <button class="success" onclick="showPage('scan-demo')">📷 扫码操作</button>
+                    <button class="secondary" onclick="loadInventoryOverview()" style="margin-top: 10px;">🔄 刷新库存</button>
                 </div>
             </div>
             
@@ -307,10 +323,10 @@
                 </div>
                 
                 <div class="card">
-                    <h3>月度汇总</h3>
-                    <p>本月总销售额: <strong id="monthlyTotal">0 元</strong></p>
+                    <h3>数据统计</h3>
+                    <p>总销售额: <strong id="totalSales">0 元</strong></p>
                     <p>销售单数: <strong id="salesCount">0 笔</strong></p>
-                    <button class="secondary">📈 查看详细报表</button>
+                    <button class="secondary" onclick="loadSalesRecords()">🔄 刷新记录</button>
                 </div>
             </div>
         </div>
@@ -341,8 +357,8 @@
     </div>
 
     <script>
-        // API配置 - 使用您的新URL
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxvjX942NdFcecDkUStQpBkdihFEwrATH1yrVaSI97rKC5HPUDDSIltaYhjZT1AY6dZ-g/exec';
+        // 使用你的新API URL
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyLPkPXTrLydfMorIGWpTtjyZEK4lMV06BLmLfJtec5dGHqh-QV47bZsBdAh9H8qXfPqw/exec';
         
         // 全局状态
         let state = {
@@ -437,16 +453,18 @@
 
         async function loadInitialData() {
             try {
-                showMessage('正在连接数据库...', 'info', 'saleMessage');
+                showMessage('正在加载数据...', 'info', 'saleMessage');
                 await loadCustomers();
                 await loadProducts();
                 hideMessage('saleMessage');
+                showMessage('数据加载完成！', 'success', 'saleMessage');
+                setTimeout(() => hideMessage('saleMessage'), 2000);
             } catch (error) {
                 showMessage('初始化数据失败: ' + error.message, 'error', 'saleMessage');
             }
         }
 
-        // API调用函数
+        // API调用函数 - 优化错误处理
         async function apiCall(params = {}) {
             try {
                 const url = new URL(API_URL);
@@ -469,7 +487,7 @@
                 
             } catch (error) {
                 console.error('API调用错误:', error);
-                throw new Error('网络请求失败: ' + error.message);
+                throw new Error('网络请求失败，请检查网络连接');
             }
         }
 
@@ -528,7 +546,7 @@
                 const product = state.products.find(p => p.model_id === modelId);
                 const option = document.createElement('option');
                 option.value = modelId;
-                option.textContent = `${modelId} ${product.model_name}`;
+                option.textContent = `${product.model_name} (${modelId})`;
                 select.appendChild(option);
             });
         }
@@ -536,7 +554,7 @@
         function handleCustomerChange(event) {
             state.selectedCustomer = event.target.value;
             if (state.selectedCustomer) {
-                showMessage('正在加载产品信息...', 'info', 'saleMessage');
+                showMessage('正在加载客户专属价格...', 'info', 'saleMessage');
                 loadProducts(state.selectedCustomer).then(() => {
                     updateModelSelect();
                     hideMessage('saleMessage');
@@ -564,11 +582,15 @@
                 
                 // 价格显示
                 let priceText = `${variant.price}元`;
+                let stockClass = '';
                 if (variant.price !== variant.standard_price) {
                     priceText = `${variant.price}元 (特价)`;
                 }
+                if (variant.stock < 10) {
+                    stockClass = 'low-stock';
+                }
                 
-                option.textContent = `${variant.color} - ${priceText}`;
+                option.textContent = `${variant.color} - ${priceText} - 库存: ${variant.stock}`;
                 option.dataset.price = variant.price;
                 option.dataset.stock = variant.stock;
                 select.appendChild(option);
@@ -582,7 +604,15 @@
             if (selectedOption.value) {
                 state.selectedVariant = selectedOption.value;
                 document.getElementById('priceDisplay').value = selectedOption.dataset.price + ' 元';
-                document.getElementById('stockDisplay').value = selectedOption.dataset.stock + ' 个';
+                const stock = parseInt(selectedOption.dataset.stock);
+                document.getElementById('stockDisplay').value = stock + ' 个';
+                
+                // 库存预警
+                if (stock < 5) {
+                    document.getElementById('stockDisplay').style.color = '#ff3b30';
+                } else {
+                    document.getElementById('stockDisplay').style.color = '#000';
+                }
             } else {
                 resetProductInfo();
             }
@@ -602,12 +632,13 @@
         function resetProductInfo() {
             document.getElementById('priceDisplay').value = '';
             document.getElementById('stockDisplay').value = '';
+            document.getElementById('stockDisplay').style.color = '#000';
             document.getElementById('quantity').value = 1;
             updateSubmitButton();
         }
 
         function updateSubmitButton() {
-            const quantity = parseInt(document.getElementById('quantity').value);
+            const quantity = parseInt(document.getElementById('quantity').value) || 0;
             const btn = document.getElementById('generateInvoice');
             
             let hasStock = false;
@@ -643,26 +674,38 @@
                 btn.disabled = true;
                 btn.textContent = '开单中...';
                 
+                console.log('发送销售数据:', saleData);
+                
                 const response = await fetch(API_URL, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify(saleData)
                 });
                 
                 const result = await response.json();
+                console.log('销售结果:', result);
                 
                 if (result.success) {
-                    showMessage(`开单成功！销售单号: ${result.sale_id}`, 'success', 'saleMessage');
+                    showMessage(`✅ 开单成功！销售单号: ${result.sale_id}`, 'success', 'saleMessage');
                     // 重新加载产品信息更新库存显示
                     await loadProducts(state.selectedCustomer);
                     updateModelSelect();
                     // 重置表单
                     document.getElementById('quantity').value = 1;
                     updateSubmitButton();
+                    
+                    // 3秒后清空成功消息
+                    setTimeout(() => {
+                        hideMessage('saleMessage');
+                    }, 5000);
                 } else {
                     throw new Error(result.error || '开单失败');
                 }
             } catch (error) {
-                showMessage('开单失败: ' + error.message, 'error', 'saleMessage');
+                console.error('开单错误:', error);
+                showMessage('❌ 开单失败: ' + error.message, 'error', 'saleMessage');
             } finally {
                 const btn = document.getElementById('generateInvoice');
                 btn.disabled = false;
@@ -684,11 +727,11 @@
                     </div>
                     <div>
                         <label>价格(元)</label>
-                        <input type="number" value="0" style="margin-top: 5px;">
+                        <input type="number" value="0" min="0" style="margin-top: 5px;">
                     </div>
                     <div>
                         <label>库存</label>
-                        <input type="number" value="0" style="margin-top: 5px;">
+                        <input type="number" value="0" min="0" style="margin-top: 5px;">
                     </div>
                     <div>
                         <label>&nbsp;</label>
@@ -735,15 +778,22 @@
             };
             
             try {
+                const btn = document.getElementById('saveProductBtn');
+                btn.disabled = true;
+                btn.textContent = '保存中...';
+                
                 const response = await fetch(API_URL, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify(productData)
                 });
                 
                 const result = await response.json();
                 
                 if (result.success) {
-                    showMessage(`产品添加成功！型号ID: ${result.model_id}`, 'success', 'productMessage');
+                    showMessage(`✅ 产品添加成功！型号ID: ${result.model_id}`, 'success', 'productMessage');
                     // 清空表单
                     document.getElementById('newModelName').value = '';
                     document.querySelectorAll('.color-variant-item').forEach(item => {
@@ -763,7 +813,11 @@
                     throw new Error(result.error || '产品添加失败');
                 }
             } catch (error) {
-                showMessage('产品添加失败: ' + error.message, 'error', 'productMessage');
+                showMessage('❌ 产品添加失败: ' + error.message, 'error', 'productMessage');
+            } finally {
+                const btn = document.getElementById('saveProductBtn');
+                btn.disabled = false;
+                btn.textContent = '保存产品';
             }
         }
 
@@ -782,15 +836,22 @@
             };
             
             try {
+                const btn = document.getElementById('saveCustomerBtn');
+                btn.disabled = true;
+                btn.textContent = '保存中...';
+                
                 const response = await fetch(API_URL, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify(customerData)
                 });
                 
                 const result = await response.json();
                 
                 if (result.success) {
-                    showMessage(`客户添加成功！客户ID: ${result.customer_id}`, 'success', 'customerMessage');
+                    showMessage(`✅ 客户添加成功！客户ID: ${result.customer_id}`, 'success', 'customerMessage');
                     // 清空表单
                     document.getElementById('newCustomerName').value = '';
                     // 重新加载客户列表
@@ -801,7 +862,11 @@
                     throw new Error(result.error || '客户添加失败');
                 }
             } catch (error) {
-                showMessage('客户添加失败: ' + error.message, 'error', 'customerMessage');
+                showMessage('❌ 客户添加失败: ' + error.message, 'error', 'customerMessage');
+            } finally {
+                const btn = document.getElementById('saveCustomerBtn');
+                btn.disabled = false;
+                btn.textContent = '保存客户';
             }
         }
 
@@ -826,19 +891,20 @@
                             html += `
                                 <div class="model-group">
                                     <div class="model-header">
-                                        <span>${model.model_id} ${model.model_name}</span>
+                                        <span>${model.model_name} (${model.model_id})</span>
                                         <span>📦</span>
                                     </div>
                                     <div class="model-variants">
                             `;
                             
                             model.variants.forEach(variant => {
+                                const stockClass = variant.stock < 5 ? 'low-stock' : '';
                                 html += `
                                     <div class="variant-item">
                                         <div class="variant-info">
                                             <strong>${variant.color}</strong>
                                             <div style="font-size: 0.9rem; color: #666;">
-                                                价格: ${variant.price}元 | 库存: <span class="stock-badge">${variant.stock}</span>
+                                                价格: ${variant.price}元 | 库存: <span class="stock-badge ${stockClass}">${variant.stock}</span>
                                             </div>
                                         </div>
                                         <div class="variant-actions">
@@ -861,7 +927,7 @@
                     throw new Error(data.error || '加载产品数据失败');
                 }
             } catch (error) {
-                document.getElementById('productsList').innerHTML = `<p class="error">加载失败: ${error.message}</p>`;
+                document.getElementById('productsList').innerHTML = `<div class="message error">加载失败: ${error.message}</div>`;
             }
         }
 
@@ -902,7 +968,7 @@
                     throw new Error(data.error || '加载客户数据失败');
                 }
             } catch (error) {
-                document.getElementById('customersList').innerHTML = `<p class="error">加载失败: ${error.message}</p>`;
+                document.getElementById('customersList').innerHTML = `<div class="message error">加载失败: ${error.message}</div>`;
             }
         }
 
@@ -919,6 +985,8 @@
                 
                 if (data.success) {
                     let html = '';
+                    let totalAmount = 0;
+                    let salesCount = data.data.length;
                     
                     if (data.data.length === 0) {
                         html = '<p>暂无销售记录</p>';
@@ -926,14 +994,16 @@
                         html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
                         data.data.forEach(record => {
                             const date = new Date(record.date).toLocaleDateString();
+                            totalAmount += parseFloat(record.total_amount) || 0;
+                            
                             html += `
                                 <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
                                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                        <strong>销售单: ${record.sale_id}</strong>
+                                        <strong>${record.sale_id}</strong>
                                         <span>${date}</span>
                                     </div>
                                     <div style="font-size: 0.9rem; color: #666;">
-                                        客户: ${record.customer_id} | 产品: ${record.product_id}
+                                        客户: ${record.customer_id} | 规格: ${record.variant_id}
                                     </div>
                                     <div style="font-size: 0.9rem;">
                                         数量: ${record.quantity} | 单价: ${record.unit_price}元 | 总额: <strong>${record.total_amount}元</strong>
@@ -945,11 +1015,13 @@
                     }
                     
                     document.getElementById('salesRecords').innerHTML = html;
+                    document.getElementById('totalSales').textContent = totalAmount.toFixed(2) + ' 元';
+                    document.getElementById('salesCount').textContent = salesCount + ' 笔';
                 } else {
                     throw new Error(data.error || '加载销售记录失败');
                 }
             } catch (error) {
-                document.getElementById('salesRecords').innerHTML = `<p class="error">加载失败: ${error.message}</p>`;
+                document.getElementById('salesRecords').innerHTML = `<div class="message error">加载失败: ${error.message}</div>`;
             }
         }
 
@@ -972,14 +1044,18 @@
                     } else {
                         html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
                         data.data.forEach(item => {
+                            const stockClass = item.stock < 5 ? 'low-stock' : '';
                             html += `
                                 <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
                                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                        <strong>${item.model_id} ${item.model_name}</strong>
-                                        <span class="stock-badge">${item.stock}个</span>
+                                        <strong>${item.model_name}</strong>
+                                        <span class="stock-badge ${stockClass}">${item.stock}个</span>
                                     </div>
                                     <div style="font-size: 0.9rem; color: #666;">
-                                        规格: ${item.color} | 价格: ${item.price}元
+                                        型号: ${item.model_id} | 规格: ${item.color}
+                                    </div>
+                                    <div style="font-size: 0.9rem;">
+                                        价格: ${item.price}元
                                     </div>
                                 </div>
                             `;
@@ -992,7 +1068,22 @@
                     throw new Error(data.error || '加载库存数据失败');
                 }
             } catch (error) {
-                document.getElementById('inventoryOverview').innerHTML = `<p class="error">加载失败: ${error.message}</p>`;
+                document.getElementById('inventoryOverview').innerHTML = `<div class="message error">加载失败: ${error.message}</div>`;
+            }
+        }
+
+        // 测试连接功能
+        async function testConnection() {
+            try {
+                showMessage('测试连接中...', 'info', 'saleMessage');
+                const data = await apiCall({ action: 'getCustomers' });
+                if (data.success) {
+                    showMessage('✅ 连接正常！API工作正常', 'success', 'saleMessage');
+                } else {
+                    throw new Error('API返回错误');
+                }
+            } catch (error) {
+                showMessage('❌ 连接失败: ' + error.message, 'error', 'saleMessage');
             }
         }
 
@@ -1003,7 +1094,9 @@
             
             if (type !== 'info') {
                 setTimeout(() => {
-                    container.innerHTML = '';
+                    if (container.innerHTML.includes(message)) {
+                        container.innerHTML = '';
+                    }
                 }, 5000);
             }
         }
