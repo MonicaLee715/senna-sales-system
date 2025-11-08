@@ -342,7 +342,7 @@
 
     <script>
         // API配置 - 使用您的新URL
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxeVE6TgG2CjU4yavUJqvYYRSXS2XGIGOzBT6ymsKmeQREDEeAwSOndHAeHnunV8VGcvw/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxvjX942NdFcecDkUStQpBkdihFEwrATH1yrVaSI97rKC5HPUDDSIltaYhjZT1AY6dZ-g/exec';
         
         // 全局状态
         let state = {
@@ -448,14 +448,29 @@
 
         // API调用函数
         async function apiCall(params = {}) {
-            const url = new URL(API_URL);
-            Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
-            
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            try {
+                const url = new URL(API_URL);
+                Object.keys(params).forEach(key => {
+                    if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+                        url.searchParams.append(key, params[key]);
+                    }
+                });
+                
+                console.log('API请求:', url.toString());
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP错误! 状态: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return data;
+                
+            } catch (error) {
+                console.error('API调用错误:', error);
+                throw new Error('网络请求失败: ' + error.message);
             }
-            return await response.json();
         }
 
         async function loadCustomers() {
@@ -619,7 +634,7 @@
                     customer_name: customerName,
                     variant_id: state.selectedVariant,
                     quantity: quantity,
-                    unit_price: variantOption.dataset.price
+                    unit_price: parseFloat(variantOption.dataset.price)
                 }
             };
             
@@ -685,61 +700,300 @@
         }
 
         async function saveProduct() {
-            // 产品保存逻辑（需要扩展API支持）
-            showMessage('产品保存功能需要后端API支持', 'info', 'productMessage');
+            const modelName = document.getElementById('newModelName').value.trim();
+            if (!modelName) {
+                showMessage('请输入产品型号名称', 'error', 'productMessage');
+                return;
+            }
+            
+            const colorVariants = document.querySelectorAll('.color-variant-item');
+            const variants = [];
+            
+            for (let item of colorVariants) {
+                const colorInput = item.querySelector('input[type="text"]');
+                const priceInput = item.querySelector('input[type="number"]:nth-of-type(1)');
+                const stockInput = item.querySelector('input[type="number"]:nth-of-type(2)');
+                
+                const color = colorInput.value.trim();
+                const price = parseFloat(priceInput.value) || 0;
+                const stock = parseInt(stockInput.value) || 0;
+                
+                if (!color) {
+                    showMessage('请填写所有颜色名称', 'error', 'productMessage');
+                    return;
+                }
+                
+                variants.push({ color, price, stock });
+            }
+            
+            const productData = {
+                action: 'addProduct',
+                data: {
+                    modelName: modelName,
+                    variants: variants
+                }
+            };
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(productData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(`产品添加成功！型号ID: ${result.model_id}`, 'success', 'productMessage');
+                    // 清空表单
+                    document.getElementById('newModelName').value = '';
+                    document.querySelectorAll('.color-variant-item').forEach(item => {
+                        if (item !== document.querySelector('.color-variant-item')) {
+                            item.remove();
+                        }
+                    });
+                    // 重置第一个颜色规格
+                    const firstItem = document.querySelector('.color-variant-item');
+                    firstItem.querySelector('input[type="text"]').value = '';
+                    firstItem.querySelector('input[type="number"]:nth-of-type(1)').value = '0';
+                    firstItem.querySelector('input[type="number"]:nth-of-type(2)').value = '0';
+                    
+                    // 重新加载产品列表
+                    loadProductsForManagement();
+                } else {
+                    throw new Error(result.error || '产品添加失败');
+                }
+            } catch (error) {
+                showMessage('产品添加失败: ' + error.message, 'error', 'productMessage');
+            }
         }
 
         async function saveCustomer() {
-            // 客户保存逻辑（需要扩展API支持）
-            showMessage('客户保存功能需要后端API支持', 'info', 'customerMessage');
+            const customerName = document.getElementById('newCustomerName').value.trim();
+            if (!customerName) {
+                showMessage('请输入客户名称', 'error', 'customerMessage');
+                return;
+            }
+            
+            const customerData = {
+                action: 'addCustomer',
+                data: {
+                    customerName: customerName
+                }
+            };
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(customerData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(`客户添加成功！客户ID: ${result.customer_id}`, 'success', 'customerMessage');
+                    // 清空表单
+                    document.getElementById('newCustomerName').value = '';
+                    // 重新加载客户列表
+                    loadCustomersForManagement();
+                    // 更新销售页面的客户下拉框
+                    await loadCustomers();
+                } else {
+                    throw new Error(result.error || '客户添加失败');
+                }
+            } catch (error) {
+                showMessage('客户添加失败: ' + error.message, 'error', 'customerMessage');
+            }
         }
 
         async function loadProductsForManagement() {
-            // 产品管理页面数据加载
-            document.getElementById('productsList').innerHTML = `
-                <div class="loading">
-                    <div class="loading-spinner"></div>
-                    加载产品数据...
-                </div>
-            `;
-            
-            // 这里可以添加产品管理页面的数据加载逻辑
+            try {
+                document.getElementById('productsList').innerHTML = `
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        加载产品数据...
+                    </div>
+                `;
+                
+                const data = await apiCall({ action: 'getAllProducts' });
+                
+                if (data.success) {
+                    let html = '';
+                    
+                    if (data.data.length === 0) {
+                        html = '<p>暂无产品数据</p>';
+                    } else {
+                        data.data.forEach(model => {
+                            html += `
+                                <div class="model-group">
+                                    <div class="model-header">
+                                        <span>${model.model_id} ${model.model_name}</span>
+                                        <span>📦</span>
+                                    </div>
+                                    <div class="model-variants">
+                            `;
+                            
+                            model.variants.forEach(variant => {
+                                html += `
+                                    <div class="variant-item">
+                                        <div class="variant-info">
+                                            <strong>${variant.color}</strong>
+                                            <div style="font-size: 0.9rem; color: #666;">
+                                                价格: ${variant.price}元 | 库存: <span class="stock-badge">${variant.stock}</span>
+                                            </div>
+                                        </div>
+                                        <div class="variant-actions">
+                                            <button class="secondary" style="padding: 5px 10px;">编辑</button>
+                                            <button class="danger" style="padding: 5px 10px;">删除</button>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                            
+                            html += `
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    document.getElementById('productsList').innerHTML = html;
+                } else {
+                    throw new Error(data.error || '加载产品数据失败');
+                }
+            } catch (error) {
+                document.getElementById('productsList').innerHTML = `<p class="error">加载失败: ${error.message}</p>`;
+            }
         }
 
         async function loadCustomersForManagement() {
-            // 客户管理页面数据加载
-            document.getElementById('customersList').innerHTML = `
-                <div class="loading">
-                    <div class="loading-spinner"></div>
-                    加载客户数据...
-                </div>
-            `;
-            
-            // 这里可以添加客户管理页面的数据加载逻辑
+            try {
+                document.getElementById('customersList').innerHTML = `
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        加载客户数据...
+                    </div>
+                `;
+                
+                const data = await apiCall({ action: 'getCustomers' });
+                
+                if (data.success) {
+                    let html = '';
+                    
+                    if (data.data.length === 0) {
+                        html = '<p>暂无客户数据</p>';
+                    } else {
+                        html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+                        data.data.forEach(customer => {
+                            html += `
+                                <div style="padding: 15px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <strong>${customer.name}</strong>
+                                        <div style="font-size: 0.9rem; color: #666;">ID: ${customer.customer_id}</div>
+                                    </div>
+                                    <button class="danger" style="width: auto; padding: 5px 10px;">删除</button>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    document.getElementById('customersList').innerHTML = html;
+                } else {
+                    throw new Error(data.error || '加载客户数据失败');
+                }
+            } catch (error) {
+                document.getElementById('customersList').innerHTML = `<p class="error">加载失败: ${error.message}</p>`;
+            }
         }
 
         async function loadSalesRecords() {
-            // 销售记录页面数据加载
-            document.getElementById('salesRecords').innerHTML = `
-                <div class="loading">
-                    <div class="loading-spinner"></div>
-                    加载销售记录...
-                </div>
-            `;
-            
-            // 这里可以添加销售记录页面的数据加载逻辑
+            try {
+                document.getElementById('salesRecords').innerHTML = `
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        加载销售记录...
+                    </div>
+                `;
+                
+                const data = await apiCall({ action: 'getSalesRecords' });
+                
+                if (data.success) {
+                    let html = '';
+                    
+                    if (data.data.length === 0) {
+                        html = '<p>暂无销售记录</p>';
+                    } else {
+                        html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+                        data.data.forEach(record => {
+                            const date = new Date(record.date).toLocaleDateString();
+                            html += `
+                                <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <strong>销售单: ${record.sale_id}</strong>
+                                        <span>${date}</span>
+                                    </div>
+                                    <div style="font-size: 0.9rem; color: #666;">
+                                        客户: ${record.customer_id} | 产品: ${record.product_id}
+                                    </div>
+                                    <div style="font-size: 0.9rem;">
+                                        数量: ${record.quantity} | 单价: ${record.unit_price}元 | 总额: <strong>${record.total_amount}元</strong>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    document.getElementById('salesRecords').innerHTML = html;
+                } else {
+                    throw new Error(data.error || '加载销售记录失败');
+                }
+            } catch (error) {
+                document.getElementById('salesRecords').innerHTML = `<p class="error">加载失败: ${error.message}</p>`;
+            }
         }
 
         async function loadInventoryOverview() {
-            // 库存概览页面数据加载
-            document.getElementById('inventoryOverview').innerHTML = `
-                <div class="loading">
-                    <div class="loading-spinner"></div>
-                    加载库存数据...
-                </div>
-            `;
-            
-            // 这里可以添加库存概览页面的数据加载逻辑
+            try {
+                document.getElementById('inventoryOverview').innerHTML = `
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        加载库存数据...
+                    </div>
+                `;
+                
+                const data = await apiCall({ action: 'getInventoryOverview' });
+                
+                if (data.success) {
+                    let html = '';
+                    
+                    if (data.data.length === 0) {
+                        html = '<p>暂无库存数据</p>';
+                    } else {
+                        html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+                        data.data.forEach(item => {
+                            html += `
+                                <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <strong>${item.model_id} ${item.model_name}</strong>
+                                        <span class="stock-badge">${item.stock}个</span>
+                                    </div>
+                                    <div style="font-size: 0.9rem; color: #666;">
+                                        规格: ${item.color} | 价格: ${item.price}元
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    document.getElementById('inventoryOverview').innerHTML = html;
+                } else {
+                    throw new Error(data.error || '加载库存数据失败');
+                }
+            } catch (error) {
+                document.getElementById('inventoryOverview').innerHTML = `<p class="error">加载失败: ${error.message}</p>`;
+            }
         }
 
         // 消息显示函数
