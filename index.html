@@ -341,8 +341,8 @@
     </div>
 
     <script>
-        // API配置
-        const API_URL = 'https://script.google.com/macros/s/AKfycbz2zTkBCQD-EGnicMcF_7l_2UIJZAnAhYUmYZVB3xE3ZtUBUFctP-k0Y_9HaiXPsh45_g/exec';
+        // API配置 - 使用您的新URL
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzjn630lFQCY1LpQBiW4DAYZOzZCzKRN-C-hp8cdiRKAkiBfYrD1AhNCBbK6GLqfjGPPw/exec';
         
         // 全局状态
         let state = {
@@ -437,8 +437,10 @@
 
         async function loadInitialData() {
             try {
+                showMessage('正在连接数据库...', 'info', 'saleMessage');
                 await loadCustomers();
                 await loadProducts();
+                hideMessage('saleMessage');
             } catch (error) {
                 showMessage('初始化数据失败: ' + error.message, 'error', 'saleMessage');
             }
@@ -519,8 +521,10 @@
         function handleCustomerChange(event) {
             state.selectedCustomer = event.target.value;
             if (state.selectedCustomer) {
+                showMessage('正在加载产品信息...', 'info', 'saleMessage');
                 loadProducts(state.selectedCustomer).then(() => {
                     updateModelSelect();
+                    hideMessage('saleMessage');
                 }).catch(error => {
                     showMessage(error.message, 'error', 'saleMessage');
                 });
@@ -748,6 +752,10 @@
                     container.innerHTML = '';
                 }, 5000);
             }
+        }
+
+        function hideMessage(containerId) {
+            document.getElementById(containerId).innerHTML = '';
         }
     </script>
 </body>
