@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENNA GLASSES</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>智能进销存系统</title>
     <style>
         * {
             margin: 0;
@@ -43,6 +42,23 @@
         .app-title {
             font-size: 18px;
             font-weight: 600;
+        }
+        
+        .api-status {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .api-status.connected {
+            background: #52c41a;
+            color: white;
+        }
+        
+        .api-status.disconnected {
+            background: #ff4d4f;
+            color: white;
         }
         
         /* 页面内容 */
@@ -248,6 +264,7 @@
             padding: 4px 8px;
             margin-left: 8px;
             cursor: pointer;
+            font-size: 12px;
         }
         
         /* 底部导航 */
@@ -292,31 +309,34 @@
             color: #1890ff;
         }
         
+        /* 消息提示 */
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            text-align: center;
+            display: none;
+        }
+        
+        .message.success {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+            display: block;
+        }
+        
+        .message.error {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #ff4d4f;
+            display: block;
+        }
+        
         /* 加载状态 */
         .loading {
             text-align: center;
             padding: 20px;
             color: #999;
-        }
-        
-        .error-message {
-            background: #fff2f0;
-            border: 1px solid #ffccc7;
-            color: #a8071a;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-        
-        .success-message {
-            background: #f6ffed;
-            border: 1px solid #b7eb8f;
-            color: #52c41a;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            text-align: center;
         }
         
         /* 数据表格 */
@@ -345,6 +365,25 @@
         .table-row:last-child {
             border-bottom: none;
         }
+        
+        .table-info {
+            flex: 1;
+        }
+        
+        .table-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .table-desc {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .table-amount {
+            font-weight: 500;
+            color: #ff4d4f;
+        }
     </style>
 </head>
 <body>
@@ -352,7 +391,7 @@
         <!-- 顶部状态栏 -->
         <div class="status-bar">
             <div class="app-title">智能进销存</div>
-            <div style="font-size: 14px;" id="current-time">--:--</div>
+            <div id="api-status" class="api-status disconnected">连接中...</div>
         </div>
         
         <!-- 首页 -->
@@ -403,7 +442,7 @@
         <div id="sale-page" class="page-content">
             <div class="page-title">销售出库</div>
             
-            <div id="sale-message"></div>
+            <div id="sale-message" class="message"></div>
             
             <div class="form-group">
                 <label class="form-label">选择客户</label>
@@ -430,11 +469,11 @@
             <div class="info-row">
                 <div class="info-item">
                     <label class="form-label">单价 (元)</label>
-                    <div class="info-value" id="price-display">选择颜色后自动显示</div>
+                    <div class="info-value" id="price-display">--</div>
                 </div>
                 <div class="info-item">
                     <label class="form-label">当前库存</label>
-                    <div class="info-value" id="stock-display">选择颜色后自动显示</div>
+                    <div class="info-value" id="stock-display">--</div>
                 </div>
             </div>
             
@@ -450,7 +489,7 @@
         <div id="scan-page" class="page-content">
             <div class="page-title">扫码出库</div>
             
-            <div id="scan-message"></div>
+            <div id="scan-message" class="message"></div>
             
             <div class="scan-section">
                 <div style="color: #666; margin-bottom: 10px;">默认客户：网店客户</div>
@@ -481,7 +520,7 @@
             </div>
         </div>
 
-        <!-- 其他页面骨架 -->
+        <!-- 其他功能页面 -->
         <div id="inventory-logs" class="page-content">
             <div class="page-title">出入库明细</div>
             <div class="loading">功能开发中...</div>
@@ -540,8 +579,8 @@
     </div>
 
     <script>
-        // API基础URL
-        const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbwcyxWsfrd7bYoaDtWYk8C9Z8fGvZrYBdpDYqjmNORMW3c-NiEOghnOKHxY5F4FnWFoVQ/exec';
+        // API配置
+        const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyV9ibpP3OZikXvExxr6IM7r71y7tQ3HQbsJLDebSL3UPlIjwsOi-xMR6nmB7m9y8_bhg/exec';
         
         // 全局数据
         let customers = [];
@@ -551,10 +590,32 @@
         // 显示消息
         function showMessage(elementId, message, type = 'error') {
             const element = document.getElementById(elementId);
-            element.innerHTML = `<div class="${type === 'error' ? 'error-message' : 'success-message'}">${message}</div>`;
+            element.textContent = message;
+            element.className = `message ${type}`;
+            
             setTimeout(() => {
-                element.innerHTML = '';
+                element.className = 'message';
             }, 5000);
+        }
+        
+        // 测试API连接
+        async function testAPIConnection() {
+            try {
+                const response = await fetch(`${API_BASE_URL}?action=test`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('api-status').className = 'api-status connected';
+                    document.getElementById('api-status').textContent = '已连接';
+                    return true;
+                }
+            } catch (error) {
+                console.error('API连接失败:', error);
+            }
+            
+            document.getElementById('api-status').className = 'api-status disconnected';
+            document.getElementById('api-status').textContent = '未连接';
+            return false;
         }
         
         // 页面切换
@@ -585,6 +646,11 @@
         
         // 初始化销售出库页面
         async function initSalePage() {
+            if (!await testAPIConnection()) {
+                showMessage('sale-message', 'API连接失败，请检查网络', 'error');
+                return;
+            }
+            
             await loadCustomers();
             await loadProducts();
             setupSaleEventListeners();
@@ -610,10 +676,10 @@
                             `<option value="${customer.customer_id}">${customer.name}</option>`
                         ).join('');
                 } else {
-                    showMessage('sale-message', '加载客户列表失败: ' + data.message);
+                    showMessage('sale-message', '加载客户列表失败: ' + data.message, 'error');
                 }
             } catch (error) {
-                showMessage('sale-message', '网络错误: ' + error.message);
+                showMessage('sale-message', '网络错误: ' + error.message, 'error');
             }
         }
         
@@ -626,10 +692,10 @@
                 if (data.success) {
                     products = data.data;
                 } else {
-                    showMessage('sale-message', '加载产品列表失败: ' + data.message);
+                    showMessage('sale-message', '加载产品列表失败: ' + data.message, 'error');
                 }
             } catch (error) {
-                showMessage('sale-message', '网络错误: ' + error.message);
+                showMessage('sale-message', '网络错误: ' + error.message, 'error');
             }
         }
         
@@ -671,9 +737,11 @@
                                 ).join('');
                         } else {
                             variantSelect.innerHTML = '<option value="">加载失败</option>';
+                            showMessage('sale-message', '加载产品规格失败: ' + data.message, 'error');
                         }
                     } catch (error) {
                         variantSelect.innerHTML = '<option value="">网络错误</option>';
+                        showMessage('sale-message', '网络错误: ' + error.message, 'error');
                     }
                 } else {
                     variantSelect.disabled = true;
@@ -716,8 +784,8 @@
         
         // 重置产品信息显示
         function resetProductInfo() {
-            document.getElementById('price-display').textContent = '选择颜色后自动显示';
-            document.getElementById('stock-display').textContent = '选择颜色后自动显示';
+            document.getElementById('price-display').textContent = '--';
+            document.getElementById('stock-display').textContent = '--';
         }
         
         // 创建销售记录
@@ -727,7 +795,7 @@
             const quantity = document.getElementById('quantity-input').value;
             
             if (!customerId || !variantId || !quantity) {
-                showMessage('sale-message', '请填写完整的销售信息');
+                showMessage('sale-message', '请填写完整的销售信息', 'error');
                 return;
             }
             
@@ -763,10 +831,10 @@
                     document.getElementById('quantity-input').value = '1';
                     resetProductInfo();
                 } else {
-                    showMessage('sale-message', '销售失败: ' + data.message);
+                    showMessage('sale-message', '销售失败: ' + data.message, 'error');
                 }
             } catch (error) {
-                showMessage('sale-message', '网络错误: ' + error.message);
+                showMessage('sale-message', '网络错误: ' + error.message, 'error');
             } finally {
                 submitButton.disabled = false;
                 submitButton.textContent = '确认出库';
@@ -849,7 +917,7 @@
         // 提交扫码订单
         async function submitScanOrder() {
             if (scanProducts.length === 0) {
-                showMessage('scan-message', '请先扫码添加商品');
+                showMessage('scan-message', '请先扫码添加商品', 'error');
                 return;
             }
             
@@ -877,10 +945,10 @@
                     scanProducts = [];
                     updateScanProductList();
                 } else {
-                    showMessage('scan-message', '扫码销售失败: ' + data.message);
+                    showMessage('scan-message', '扫码销售失败: ' + data.message, 'error');
                 }
             } catch (error) {
-                showMessage('scan-message', '网络错误: ' + error.message);
+                showMessage('scan-message', '网络错误: ' + error.message, 'error');
             } finally {
                 submitButton.disabled = false;
                 submitButton.innerHTML = `确认出库 (共 <span id="total-amount">0</span> 元)`;
@@ -903,43 +971,38 @@
                     
                     table.innerHTML = `
                         <div class="table-header">最近销售记录</div>
-                        ${data.data.slice(0, 20).map(record => `
+                        ${data.data.slice(0, 10).map(record => `
                             <div class="table-row">
-                                <div>
-                                    <div style="font-weight: 500;">${record.sale_id}</div>
-                                    <div style="font-size: 12px; color: #666;">${record.date}</div>
+                                <div class="table-info">
+                                    <div class="table-title">${record.sale_id} - ${getCustomerName(record.customer_id)}</div>
+                                    <div class="table-desc">${record.date} | 数量: ${record.quantity}</div>
                                 </div>
-                                <div style="text-align: right;">
-                                    <div style="font-weight: 500; color: #ff4d4f;">¥${record.total_amount}</div>
-                                    <div style="font-size: 12px; color: #666;">数量: ${record.quantity}</div>
-                                </div>
+                                <div class="table-amount">¥${record.total_amount}</div>
                             </div>
                         `).join('')}
                     `;
                 } else {
-                    table.innerHTML = '<div class="error-message">加载失败: ' + data.message + '</div>';
+                    table.innerHTML = '<div class="message error">加载失败: ' + data.message + '</div>';
                 }
             } catch (error) {
-                document.getElementById('sales-table').innerHTML = '<div class="error-message">网络错误: ' + error.message + '</div>';
+                document.getElementById('sales-table').innerHTML = '<div class="message error">网络错误: ' + error.message + '</div>';
             }
         }
         
-        // 更新时间
-        function updateTime() {
-            const now = new Date();
-            document.getElementById('current-time').textContent = 
-                now.getHours().toString().padStart(2, '0') + ':' + 
-                now.getMinutes().toString().padStart(2, '0');
+        // 根据客户ID获取客户名称
+        function getCustomerName(customerId) {
+            const customer = customers.find(c => c.customer_id === customerId);
+            return customer ? customer.name : customerId;
         }
         
         // 初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            updateTime();
-            setInterval(updateTime, 60000);
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 测试API连接
+            await testAPIConnection();
             
-            // 初始加载数据
-            loadCustomers();
-            loadProducts();
+            // 预加载数据
+            await loadCustomers();
+            await loadProducts();
         });
     </script>
 </body>
