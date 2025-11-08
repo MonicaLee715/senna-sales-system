@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智能进销存</title>
+    <title>SENNA GLASSES</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * {
@@ -45,9 +45,86 @@
             font-weight: 600;
         }
         
-        /* 首页内容 */
-        .home-content {
+        /* 页面内容 */
+        .page-content {
             padding: 16px;
+            display: none;
+        }
+        
+        .page-content.active {
+            display: block;
+        }
+        
+        .page-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-select, .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+        
+        .form-select:disabled {
+            background: #f5f5f5;
+            color: #999;
+        }
+        
+        .info-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .info-item {
+            flex: 1;
+        }
+        
+        .info-value {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .submit-button {
+            background: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            width: 100%;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        .submit-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
         }
         
         /* 功能网格 */
@@ -101,6 +178,78 @@
             color: #333;
         }
         
+        /* 扫码出库样式 */
+        .scan-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        .scan-button {
+            background: linear-gradient(135deg, #1890ff, #096dd9);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 15px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        
+        .product-list {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 80px;
+        }
+        
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .product-item:last-child {
+            border-bottom: none;
+        }
+        
+        .product-info {
+            flex: 1;
+        }
+        
+        .product-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .product-sku {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .product-price {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .remove-product {
+            background: #ff4d4f;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+        
         /* 底部导航 */
         .bottom-nav {
             position: fixed;
@@ -143,94 +292,58 @@
             color: #1890ff;
         }
         
-        /* 页面内容 */
-        .page-content {
-            padding: 16px;
-        }
-        
-        .page-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-        
-        /* 扫码出库样式 */
-        .scan-section {
-            background: white;
-            border-radius: 12px;
+        /* 加载状态 */
+        .loading {
+            text-align: center;
             padding: 20px;
+            color: #999;
+        }
+        
+        .error-message {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #a8071a;
+            padding: 12px;
+            border-radius: 8px;
             margin-bottom: 16px;
             text-align: center;
         }
         
-        .scan-button {
-            background: linear-gradient(135deg, #1890ff, #096dd9);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            padding: 15px 30px;
-            font-size: 16px;
-            cursor: pointer;
-            margin: 10px 0;
+        .success-message {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            text-align: center;
         }
         
-        .product-list {
+        /* 数据表格 */
+        .data-table {
             background: white;
             border-radius: 12px;
-            padding: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
-        .product-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
+        .table-header {
+            background: #fafafa;
+            padding: 12px 16px;
+            font-weight: 500;
             border-bottom: 1px solid #f0f0f0;
         }
         
-        .product-info {
-            flex: 1;
+        .table-row {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        .product-name {
-            font-weight: 500;
-            margin-bottom: 4px;
-        }
-        
-        .product-sku {
-            font-size: 12px;
-            color: #666;
-        }
-        
-        .product-price {
-            width: 80px;
-            padding: 4px 8px;
-            border: 1px solid #e8e8e8;
-            border-radius: 4px;
-            text-align: center;
-        }
-        
-        .submit-section {
-            position: fixed;
-            bottom: 80px;
-            left: 0;
-            right: 0;
-            background: white;
-            padding: 16px;
-            border-top: 1px solid #e8e8e8;
-            max-width: 500px;
-            margin: 0 auto;
-        }
-        
-        .submit-button {
-            background: #52c41a;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 12px;
-            width: 100%;
-            font-size: 16px;
-            cursor: pointer;
+        .table-row:last-child {
+            border-bottom: none;
         }
     </style>
 </head>
@@ -239,59 +352,105 @@
         <!-- 顶部状态栏 -->
         <div class="status-bar">
             <div class="app-title">智能进销存</div>
-            <div style="font-size: 14px;">管理员</div>
+            <div style="font-size: 14px;" id="current-time">--:--</div>
         </div>
         
-        <!-- 首页内容 -->
-        <div id="home-page" class="home-content">
+        <!-- 首页 -->
+        <div id="home-page" class="page-content active">
             <div class="function-grid">
-                <!-- 销售相关 -->
-                <button class="function-item" onclick="openModule('sales-records')">
+                <button class="function-item" onclick="showPage('sales-records')">
                     <div class="function-icon">📋</div>
                     <div class="function-name">销售明细</div>
                 </button>
-                <button class="function-item" onclick="openModule('inventory-logs')">
+                <button class="function-item" onclick="showPage('inventory-logs')">
                     <div class="function-icon">📖</div>
                     <div class="function-name">出入库明细</div>
                 </button>
-                <button class="function-item" onclick="openModule('monthly-bills')">
+                <button class="function-item" onclick="showPage('monthly-bills')">
                     <div class="function-icon">🧾</div>
                     <div class="function-name">月度账单</div>
                 </button>
                 
-                <!-- 基础数据 -->
-                <button class="function-item secondary" onclick="openModule('customer-management')">
+                <button class="function-item secondary" onclick="showPage('customer-management')">
                     <div class="function-icon">👥</div>
                     <div class="function-name">客户管理</div>
                 </button>
-                <button class="function-item secondary" onclick="openModule('product-management')">
+                <button class="function-item secondary" onclick="showPage('product-management')">
                     <div class="function-icon">🏷️</div>
                     <div class="function-name">产品管理</div>
                 </button>
-                <button class="function-item secondary" onclick="openModule('inventory-management')">
+                <button class="function-item secondary" onclick="showPage('inventory-management')">
                     <div class="function-icon">📦</div>
                     <div class="function-name">库存管理</div>
                 </button>
                 
-                <!-- 系统功能 -->
-                <button class="function-item warning" onclick="openModule('reports')">
+                <button class="function-item warning" onclick="showPage('reports')">
                     <div class="function-icon">📊</div>
                     <div class="function-name">数据报表</div>
                 </button>
-                <button class="function-item warning" onclick="openModule('qrcode-print')">
+                <button class="function-item warning" onclick="showPage('qrcode-print')">
                     <div class="function-icon">🎫</div>
                     <div class="function-name">二维码打印</div>
                 </button>
-                <button class="function-item warning" onclick="openModule('system-settings')">
+                <button class="function-item warning" onclick="showPage('system-settings')">
                     <div class="function-icon">⚙️</div>
                     <div class="function-name">系统设置</div>
                 </button>
             </div>
         </div>
 
+        <!-- 销售出库页面 -->
+        <div id="sale-page" class="page-content">
+            <div class="page-title">销售出库</div>
+            
+            <div id="sale-message"></div>
+            
+            <div class="form-group">
+                <label class="form-label">选择客户</label>
+                <select class="form-select" id="customer-select">
+                    <option value="">加载中...</option>
+                </select>
+            </div>
+            
+            <div class="info-row">
+                <div class="info-item">
+                    <label class="form-label">选择产品型号</label>
+                    <select class="form-select" id="model-select" disabled>
+                        <option value="">请先选择客户</option>
+                    </select>
+                </div>
+                <div class="info-item">
+                    <label class="form-label">选择颜色规格</label>
+                    <select class="form-select" id="variant-select" disabled>
+                        <option value="">请先选择型号</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="info-row">
+                <div class="info-item">
+                    <label class="form-label">单价 (元)</label>
+                    <div class="info-value" id="price-display">选择颜色后自动显示</div>
+                </div>
+                <div class="info-item">
+                    <label class="form-label">当前库存</label>
+                    <div class="info-value" id="stock-display">选择颜色后自动显示</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">销售数量</label>
+                <input type="number" class="form-input" id="quantity-input" value="1" min="1">
+            </div>
+            
+            <button class="submit-button" id="submit-sale" onclick="createSale()">确认出库</button>
+        </div>
+
         <!-- 扫码出库页面 -->
-        <div id="scan-page" class="page-content" style="display: none;">
+        <div id="scan-page" class="page-content">
             <div class="page-title">扫码出库</div>
+            
+            <div id="scan-message"></div>
             
             <div class="scan-section">
                 <div style="color: #666; margin-bottom: 10px;">默认客户：网店客户</div>
@@ -303,33 +462,64 @@
                 </div>
             </div>
             
-            <div class="product-list">
-                <div class="product-item">
-                    <div class="product-info">
-                        <div class="product-name">经典金属系列-黑色</div>
-                        <div class="product-sku">V001 | 库存: 50</div>
-                    </div>
-                    <input type="number" class="product-price" value="0" placeholder="价格">
-                </div>
-                <!-- 扫描的产品会动态添加到这里 -->
+            <div class="product-list" id="scan-product-list">
+                <div class="loading">暂无商品，请扫码添加</div>
             </div>
             
-            <div class="submit-section">
-                <button class="submit-button" onclick="submitScanOrder()">
-                    确认出库 (共 0 元)
+            <div style="position: fixed; bottom: 80px; left: 0; right: 0; background: white; padding: 16px; border-top: 1px solid #e8e8e8; max-width: 500px; margin: 0 auto;">
+                <button class="submit-button" onclick="submitScanOrder()" id="submit-scan">
+                    确认出库 (共 <span id="total-amount">0</span> 元)
                 </button>
             </div>
         </div>
 
-        <!-- 销售出库页面 -->
-        <div id="sale-page" class="page-content" style="display: none;">
-            <div class="page-title">销售出库</div>
-            <div style="text-align: center; padding: 40px 20px; color: #666;">
-                销售出库页面 - 完整销售流程
-                <div style="margin-top: 20px; font-size: 14px;">
-                    选择客户 → 选择产品 → 自动应用专属价格 → 生成销售单
-                </div>
+        <!-- 销售明细页面 -->
+        <div id="sales-records" class="page-content">
+            <div class="page-title">销售明细</div>
+            <div class="data-table" id="sales-table">
+                <div class="loading">加载中...</div>
             </div>
+        </div>
+
+        <!-- 其他页面骨架 -->
+        <div id="inventory-logs" class="page-content">
+            <div class="page-title">出入库明细</div>
+            <div class="loading">功能开发中...</div>
+        </div>
+        
+        <div id="monthly-bills" class="page-content">
+            <div class="page-title">月度账单</div>
+            <div class="loading">功能开发中...</div>
+        </div>
+        
+        <div id="customer-management" class="page-content">
+            <div class="page-title">客户管理</div>
+            <div class="loading">功能开发中...</div>
+        </div>
+        
+        <div id="product-management" class="page-content">
+            <div class="page-title">产品管理</div>
+            <div class="loading">功能开发中...</div>
+        </div>
+        
+        <div id="inventory-management" class="page-content">
+            <div class="page-title">库存管理</div>
+            <div class="loading">功能开发中...</div>
+        </div>
+        
+        <div id="reports" class="page-content">
+            <div class="page-title">数据报表</div>
+            <div class="loading">功能开发中...</div>
+        </div>
+        
+        <div id="qrcode-print" class="page-content">
+            <div class="page-title">二维码打印</div>
+            <div class="loading">功能开发中...</div>
+        </div>
+        
+        <div id="system-settings" class="page-content">
+            <div class="page-title">系统设置</div>
+            <div class="loading">功能开发中...</div>
         </div>
     </div>
     
@@ -350,74 +540,407 @@
     </div>
 
     <script>
+        // API基础URL
+        const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbwcyxWsfrd7bYoaDtWYk8C9Z8fGvZrYBdpDYqjmNORMW3c-NiEOghnOKHxY5F4FnWFoVQ/exec';
+        
+        // 全局数据
+        let customers = [];
+        let products = [];
+        let scanProducts = [];
+        
+        // 显示消息
+        function showMessage(elementId, message, type = 'error') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${type === 'error' ? 'error-message' : 'success-message'}">${message}</div>`;
+            setTimeout(() => {
+                element.innerHTML = '';
+            }, 5000);
+        }
+        
         // 页面切换
         function showPage(page) {
             // 隐藏所有页面
-            document.getElementById('home-page').style.display = 'none';
-            document.getElementById('scan-page').style.display = 'none';
-            document.getElementById('sale-page').style.display = 'none';
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active');
+            });
             
             // 显示目标页面
-            document.getElementById(page + '-page').style.display = 'block';
+            document.getElementById(page + '-page').classList.add('active');
             
             // 更新导航状态
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
             });
             event.currentTarget.classList.add('active');
-        }
-
-        // 打开功能模块
-        function openModule(moduleName) {
-            alert('正在打开: ' + getModuleName(moduleName));
+            
+            // 页面特定的初始化
+            if (page === 'sale') {
+                initSalePage();
+            } else if (page === 'scan') {
+                initScanPage();
+            } else if (page === 'sales-records') {
+                loadSalesRecords();
+            }
         }
         
-        // 获取模块中文名
-        function getModuleName(key) {
-            const names = {
-                'sales-records': '销售明细',
-                'inventory-logs': '出入库明细', 
-                'monthly-bills': '月度账单',
-                'customer-management': '客户管理',
-                'product-management': '产品管理',
-                'inventory-management': '库存管理',
-                'reports': '数据报表',
-                'qrcode-print': '二维码打印',
-                'system-settings': '系统设置'
-            };
-            return names[key] || key;
+        // 初始化销售出库页面
+        async function initSalePage() {
+            await loadCustomers();
+            await loadProducts();
+            setupSaleEventListeners();
         }
-
-        // 扫码功能
-        function startScan() {
-            alert('模拟扫码：扫描产品二维码后会自动带出产品信息和库存\n\n实际开发中会调用摄像头扫码API');
+        
+        // 初始化扫码出库页面
+        function initScanPage() {
+            scanProducts = [];
+            updateScanProductList();
+        }
+        
+        // 加载客户数据
+        async function loadCustomers() {
+            try {
+                const response = await fetch(`${API_BASE_URL}?action=getCustomers`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    customers = data.data;
+                    const select = document.getElementById('customer-select');
+                    select.innerHTML = '<option value="">请选择客户</option>' +
+                        data.data.map(customer => 
+                            `<option value="${customer.customer_id}">${customer.name}</option>`
+                        ).join('');
+                } else {
+                    showMessage('sale-message', '加载客户列表失败: ' + data.message);
+                }
+            } catch (error) {
+                showMessage('sale-message', '网络错误: ' + error.message);
+            }
+        }
+        
+        // 加载产品数据
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_BASE_URL}?action=getProducts`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    products = data.data;
+                } else {
+                    showMessage('sale-message', '加载产品列表失败: ' + data.message);
+                }
+            } catch (error) {
+                showMessage('sale-message', '网络错误: ' + error.message);
+            }
+        }
+        
+        // 设置销售页面事件监听
+        function setupSaleEventListeners() {
+            // 客户选择变化
+            document.getElementById('customer-select').addEventListener('change', function() {
+                const modelSelect = document.getElementById('model-select');
+                if (this.value) {
+                    modelSelect.disabled = false;
+                    modelSelect.innerHTML = '<option value="">请选择产品型号</option>' +
+                        products.map(product => 
+                            `<option value="${product.model_id}">${product.model_name}</option>`
+                        ).join('');
+                } else {
+                    modelSelect.disabled = true;
+                    modelSelect.innerHTML = '<option value="">请先选择客户</option>';
+                    document.getElementById('variant-select').disabled = true;
+                    document.getElementById('variant-select').innerHTML = '<option value="">请先选择型号</option>';
+                    resetProductInfo();
+                }
+            });
             
-            // 模拟扫码添加产品
-            addScannedProduct({
-                variant_id: 'V002',
-                name: '经典金属系列-银色',
-                stock: 30,
-                price: 0
+            // 型号选择变化
+            document.getElementById('model-select').addEventListener('change', async function() {
+                const variantSelect = document.getElementById('variant-select');
+                if (this.value) {
+                    variantSelect.disabled = false;
+                    variantSelect.innerHTML = '<option value="">加载中...</option>';
+                    
+                    try {
+                        const response = await fetch(`${API_BASE_URL}?action=getProductVariants&model_id=${this.value}`);
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            variantSelect.innerHTML = '<option value="">请选择颜色规格</option>' +
+                                data.data.map(variant => 
+                                    `<option value="${variant.variant_id}">${variant.color} (库存: ${variant.stock})</option>`
+                                ).join('');
+                        } else {
+                            variantSelect.innerHTML = '<option value="">加载失败</option>';
+                        }
+                    } catch (error) {
+                        variantSelect.innerHTML = '<option value="">网络错误</option>';
+                    }
+                } else {
+                    variantSelect.disabled = true;
+                    variantSelect.innerHTML = '<option value="">请先选择型号</option>';
+                    resetProductInfo();
+                }
+            });
+            
+            // 变体选择变化
+            document.getElementById('variant-select').addEventListener('change', async function() {
+                if (this.value) {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}?action=getVariantDetail&variant_id=${this.value}`);
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            const variant = data.data;
+                            document.getElementById('price-display').textContent = variant.price;
+                            document.getElementById('stock-display').textContent = variant.stock;
+                            
+                            // 获取客户专属价格
+                            const customerId = document.getElementById('customer-select').value;
+                            if (customerId) {
+                                const priceResponse = await fetch(`${API_BASE_URL}?action=getCustomerPrice&customer_id=${customerId}&variant_id=${this.value}`);
+                                const priceData = await priceResponse.json();
+                                
+                                if (priceData.success && priceData.data !== null) {
+                                    document.getElementById('price-display').textContent = priceData.data + ' (专属价)';
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error('获取变体详情失败:', error);
+                    }
+                } else {
+                    resetProductInfo();
+                }
             });
         }
-
-        function addScannedProduct(product) {
-            const productList = document.querySelector('.product-list');
-            const newItem = document.createElement('div');
-            newItem.className = 'product-item';
-            newItem.innerHTML = `
-                <div class="product-info">
-                    <div class="product-name">${product.name}</div>
-                    <div class="product-sku">${product.variant_id} | 库存: ${product.stock}</div>
+        
+        // 重置产品信息显示
+        function resetProductInfo() {
+            document.getElementById('price-display').textContent = '选择颜色后自动显示';
+            document.getElementById('stock-display').textContent = '选择颜色后自动显示';
+        }
+        
+        // 创建销售记录
+        async function createSale() {
+            const customerId = document.getElementById('customer-select').value;
+            const variantId = document.getElementById('variant-select').value;
+            const quantity = document.getElementById('quantity-input').value;
+            
+            if (!customerId || !variantId || !quantity) {
+                showMessage('sale-message', '请填写完整的销售信息');
+                return;
+            }
+            
+            const submitButton = document.getElementById('submit-sale');
+            submitButton.disabled = true;
+            submitButton.textContent = '提交中...';
+            
+            try {
+                const response = await fetch(API_BASE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'createSale',
+                        customer_id: customerId,
+                        variant_id: variantId,
+                        quantity: parseInt(quantity),
+                        operator: '系统'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('sale-message', `销售成功！单号: ${data.data.sale_id}`, 'success');
+                    // 重置表单
+                    document.getElementById('customer-select').value = '';
+                    document.getElementById('model-select').disabled = true;
+                    document.getElementById('model-select').innerHTML = '<option value="">请先选择客户</option>';
+                    document.getElementById('variant-select').disabled = true;
+                    document.getElementById('variant-select').innerHTML = '<option value="">请先选择型号</option>';
+                    document.getElementById('quantity-input').value = '1';
+                    resetProductInfo();
+                } else {
+                    showMessage('sale-message', '销售失败: ' + data.message);
+                }
+            } catch (error) {
+                showMessage('sale-message', '网络错误: ' + error.message);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = '确认出库';
+            }
+        }
+        
+        // 扫码功能
+        function startScan() {
+            // 模拟扫码 - 实际应该调用摄像头API
+            const variantId = prompt('请输入或扫描产品变体ID (例如: V001):');
+            if (variantId) {
+                addScannedProduct(variantId);
+            }
+        }
+        
+        // 添加扫码产品
+        async function addScannedProduct(variantId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}?action=getVariantDetail&variant_id=${variantId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const variant = data.data;
+                    scanProducts.push({
+                        variant_id: variant.variant_id,
+                        name: `${variant.model_name}-${variant.color}`,
+                        stock: variant.stock,
+                        price: 0, // 默认价格0，可手动修改
+                        quantity: 1
+                    });
+                    updateScanProductList();
+                } else {
+                    alert('产品不存在: ' + data.message);
+                }
+            } catch (error) {
+                alert('网络错误: ' + error.message);
+            }
+        }
+        
+        // 更新扫码产品列表
+        function updateScanProductList() {
+            const list = document.getElementById('scan-product-list');
+            const totalAmount = scanProducts.reduce((sum, product) => sum + (product.price * product.quantity), 0);
+            
+            document.getElementById('total-amount').textContent = totalAmount;
+            
+            if (scanProducts.length === 0) {
+                list.innerHTML = '<div class="loading">暂无商品，请扫码添加</div>';
+                return;
+            }
+            
+            list.innerHTML = scanProducts.map((product, index) => `
+                <div class="product-item">
+                    <div class="product-info">
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-sku">${product.variant_id} | 库存: ${product.stock}</div>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <input type="number" class="product-price" value="${product.price}" 
+                               onchange="updateScanProductPrice(${index}, this.value)" 
+                               placeholder="价格">
+                        <button class="remove-product" onclick="removeScanProduct(${index})">删除</button>
+                    </div>
                 </div>
-                <input type="number" class="product-price" value="${product.price}" placeholder="价格">
-            `;
-            productList.appendChild(newItem);
+            `).join('');
         }
-
-        function submitScanOrder() {
-            alert('确认出库：将保存到sales_records表，客户为"网店客户"，价格手动填写');
+        
+        // 更新扫码产品价格
+        function updateScanProductPrice(index, price) {
+            scanProducts[index].price = parseFloat(price) || 0;
+            updateScanProductList();
         }
+        
+        // 移除扫码产品
+        function removeScanProduct(index) {
+            scanProducts.splice(index, 1);
+            updateScanProductList();
+        }
+        
+        // 提交扫码订单
+        async function submitScanOrder() {
+            if (scanProducts.length === 0) {
+                showMessage('scan-message', '请先扫码添加商品');
+                return;
+            }
+            
+            const submitButton = document.getElementById('submit-scan');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '提交中...';
+            
+            try {
+                const response = await fetch(API_BASE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'createScanSale',
+                        items: scanProducts,
+                        operator: '系统'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('scan-message', `扫码销售成功！总金额: ${data.total_amount}元`, 'success');
+                    scanProducts = [];
+                    updateScanProductList();
+                } else {
+                    showMessage('scan-message', '扫码销售失败: ' + data.message);
+                }
+            } catch (error) {
+                showMessage('scan-message', '网络错误: ' + error.message);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = `确认出库 (共 <span id="total-amount">0</span> 元)`;
+            }
+        }
+        
+        // 加载销售记录
+        async function loadSalesRecords() {
+            try {
+                const response = await fetch(`${API_BASE_URL}?action=getSalesRecords`);
+                const data = await response.json();
+                
+                const table = document.getElementById('sales-table');
+                
+                if (data.success) {
+                    if (data.data.length === 0) {
+                        table.innerHTML = '<div class="loading">暂无销售记录</div>';
+                        return;
+                    }
+                    
+                    table.innerHTML = `
+                        <div class="table-header">最近销售记录</div>
+                        ${data.data.slice(0, 20).map(record => `
+                            <div class="table-row">
+                                <div>
+                                    <div style="font-weight: 500;">${record.sale_id}</div>
+                                    <div style="font-size: 12px; color: #666;">${record.date}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 500; color: #ff4d4f;">¥${record.total_amount}</div>
+                                    <div style="font-size: 12px; color: #666;">数量: ${record.quantity}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    `;
+                } else {
+                    table.innerHTML = '<div class="error-message">加载失败: ' + data.message + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('sales-table').innerHTML = '<div class="error-message">网络错误: ' + error.message + '</div>';
+            }
+        }
+        
+        // 更新时间
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = 
+                now.getHours().toString().padStart(2, '0') + ':' + 
+                now.getMinutes().toString().padStart(2, '0');
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTime();
+            setInterval(updateTime, 60000);
+            
+            // 初始加载数据
+            loadCustomers();
+            loadProducts();
+        });
     </script>
 </body>
 </html>
