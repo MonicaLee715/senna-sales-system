@@ -7,376 +7,64 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
-        /* 基础重置 */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
-            color: #333;
-            line-height: 1.6;
-            padding-bottom: 80px;
-        }
-
-        /* 顶部导航 */
-        .app-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .app-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-
-        .icon-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.1rem;
-            padding: 5px;
-            cursor: pointer;
-        }
-
-        /* 主内容区 */
-        .app-main {
-            margin-top: 60px;
-            padding: 15px;
-            min-height: calc(100vh - 140px);
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px 20px;
-            color: #666;
-        }
-
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* 底部导航 */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            border-top: 1px solid #e0e0e0;
-            z-index: 1000;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: #666;
-            font-size: 0.8rem;
-            padding: 5px 10px;
-            transition: all 0.3s ease;
-        }
-
-        .nav-item i {
-            font-size: 1.2rem;
-            margin-bottom: 4px;
-        }
-
-        .nav-item.active {
-            color: #667eea;
-        }
-
-        /* 卡片样式 */
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #333;
-        }
-
-        /* 功能页面基础样式 */
-        .page {
-            display: none;
-        }
-
-        .page.active {
-            display: block;
-        }
-
-        /* 扫码页面样式 */
-        .scan-section {
-            text-align: center;
-            padding: 20px 0;
-        }
-
-        .scan-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 20px 30px;
-            border-radius: 50%;
-            font-size: 2rem;
-            cursor: pointer;
-            margin: 20px 0;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s ease;
-        }
-
-        .scan-btn:active {
-            transform: scale(0.95);
-        }
-
-        .manual-input {
-            margin-top: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #555;
-            text-align: left;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            width: 100%;
-        }
-
-        .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .btn-success {
-            background: #28a745;
-        }
-
-        /* 销售表单样式 */
-        .sale-form {
-            margin-top: 10px;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .form-row .form-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
-
-        .item-list {
-            margin-top: 20px;
-        }
-
-        .item-card {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .item-info h4 {
-            margin-bottom: 5px;
-        }
-
-        .item-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .quantity-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .qty-btn {
-            background: #ddd;
-            border: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        .total-section {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        /* 销售单样式 */
-        .invoice {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-            font-family: 'Microsoft YaHei', sans-serif;
-        }
-
-        .invoice-header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-        }
-
-        .invoice-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .invoice-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-        }
-
-        .invoice-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-        }
-
-        .invoice-table th,
-        .invoice-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-
-        .invoice-table th {
-            background: #f8f9fa;
-            font-weight: bold;
-        }
-
-        .invoice-total {
-            text-align: right;
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-top: 15px;
-        }
-
-        .invoice-footer {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #ddd;
-            font-size: 0.9rem;
-            color: #666;
-        }
-
-        /* 消息提示 */
-        .message {
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
+        /* 保持原有的所有CSS样式不变 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; line-height: 1.6; padding-bottom: 80px; }
+        .app-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .app-title { font-size: 1.2rem; font-weight: 600; }
+        .icon-btn { background: none; border: none; color: white; font-size: 1.1rem; padding: 5px; cursor: pointer; }
+        .app-main { margin-top: 60px; padding: 15px; min-height: calc(100vh - 140px); }
+        .loading { text-align: center; padding: 40px 20px; color: #666; }
+        .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #e0e0e0; z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #666; font-size: 0.8rem; padding: 5px 10px; transition: all 0.3s ease; }
+        .nav-item i { font-size: 1.2rem; margin-bottom: 4px; }
+        .nav-item.active { color: #667eea; }
+        .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .card-title { font-size: 1.1rem; font-weight: 600; color: #333; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .scan-section { text-align: center; padding: 20px 0; }
+        .scan-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 20px 30px; border-radius: 50%; font-size: 2rem; cursor: pointer; margin: 20px 0; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: all 0.3s ease; }
+        .scan-btn:active { transform: scale(0.95); }
+        .manual-input { margin-top: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; margin-bottom: 5px; font-weight: 500; color: #555; text-align: left; }
+        .form-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s ease; }
+        .form-input:focus { outline: none; border-color: #667eea; }
+        .btn { background: #667eea; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-success { background: #28a745; }
+        .sale-form { margin-top: 10px; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .form-row .form-group { flex: 1; margin-bottom: 0; }
+        .item-list { margin-top: 20px; }
+        .item-card { background: #f8f9fa; border-radius: 8px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .item-info h4 { margin-bottom: 5px; }
+        .item-actions { display: flex; gap: 10px; align-items: center; }
+        .quantity-control { display: flex; align-items: center; gap: 10px; }
+        .qty-btn { background: #ddd; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; }
+        .total-section { background: white; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: center; font-size: 1.2rem; font-weight: bold; }
+        .invoice { background: white; padding: 20px; border-radius: 8px; margin-top: 20px; font-family: 'Microsoft YaHei', sans-serif; }
+        .invoice-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .invoice-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 5px; }
+        .invoice-info { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.9rem; }
+        .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .invoice-table th, .invoice-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .invoice-table th { background: #f8f9fa; font-weight: bold; }
+        .invoice-total { text-align: right; font-size: 1.1rem; font-weight: bold; margin-top: 15px; }
+        .invoice-footer { text-align: center; margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 0.9rem; color: #666; }
+        .message { padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center; }
+        .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .debug-info { background: #f8f9fa; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 0.8rem; color: #666; }
     </style>
 </head>
 <body>
-    <!-- 顶部导航栏 -->
+    <!-- 页面结构保持不变 -->
     <header class="app-header">
         <div class="header-content">
             <h1 class="app-title" id="pageTitle">扫码出入库</h1>
@@ -388,15 +76,13 @@
         </div>
     </header>
 
-    <!-- 主内容区 -->
     <main class="app-main">
-        <!-- 加载状态 -->
         <div id="loading" class="loading">
             <div class="spinner"></div>
             <p>系统初始化中...</p>
+            <div id="initDebug" class="debug-info"></div>
         </div>
         
-        <!-- 动态内容区 -->
         <div id="content" style="display: none;">
             <!-- 扫码出入库页面 -->
             <div id="scan-page" class="page active">
@@ -438,6 +124,7 @@
                 </div>
 
                 <div id="scanMessage"></div>
+                <div id="scanDebug" class="debug-info" style="display: none;"></div>
             </div>
 
             <!-- 线下销售页面 -->
@@ -445,6 +132,9 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">线下销售出库</h3>
+                        <button class="btn" onclick="app.debugCustomers()" style="width: auto; padding: 8px 12px;">
+                            <i class="fas fa-bug"></i>调试
+                        </button>
                     </div>
                     
                     <div class="sale-form">
@@ -501,6 +191,7 @@
                 </div>
 
                 <div id="saleMessage"></div>
+                <div id="saleDebug" class="debug-info" style="display: none;"></div>
 
                 <!-- 销售单预览 -->
                 <div id="invoicePreview" class="card" style="display: none;">
@@ -514,7 +205,7 @@
                 </div>
             </div>
 
-            <!-- 数据查看页面 -->
+            <!-- 其他页面保持不变 -->
             <div id="data-page" class="page">
                 <div class="card">
                     <div class="feature-icon" style="text-align: center; font-size: 2rem; color: #667eea; margin-bottom: 15px;">
@@ -528,7 +219,6 @@
                 </div>
             </div>
 
-            <!-- 基础数据页面 -->
             <div id="base-page" class="page">
                 <div class="card">
                     <div class="feature-icon" style="text-align: center; font-size: 2rem; color: #667eea; margin-bottom: 15px;">
@@ -544,7 +234,6 @@
         </div>
     </main>
 
-    <!-- 底部导航 -->
     <nav class="bottom-nav">
         <a href="#scan" class="nav-item active" data-page="scan">
             <i class="fas fa-qrcode"></i>
@@ -572,7 +261,7 @@
             constructor() {
                 this.currentPage = 'scan';
                 this.saleItems = [];
-                this.productVariants = {}; // 缓存产品变体信息
+                this.productVariants = {};
                 this.init();
             }
             
@@ -583,7 +272,6 @@
             }
             
             bindEvents() {
-                // 底部导航点击事件
                 document.querySelectorAll('.nav-item').forEach(item => {
                     item.addEventListener('click', (e) => {
                         e.preventDefault();
@@ -592,7 +280,6 @@
                     });
                 });
                 
-                // 扫码页面事件
                 document.getElementById('startScan').addEventListener('click', () => {
                     this.startScan();
                 });
@@ -601,7 +288,6 @@
                     this.confirmScanOperation();
                 });
                 
-                // 销售页面事件
                 document.getElementById('modelSelect').addEventListener('change', (e) => {
                     this.loadVariants(e.target.value);
                 });
@@ -621,6 +307,29 @@
                 document.getElementById('downloadInvoice').addEventListener('click', () => {
                     this.downloadInvoice();
                 });
+
+                document.getElementById('refreshBtn').addEventListener('click', () => {
+                    this.refreshData();
+                });
+            }
+            
+            async refreshData() {
+                this.showMessage('saleMessage', '重新加载数据中...', 'success');
+                await this.loadInitialData();
+            }
+
+            async debugCustomers() {
+                const debugInfo = document.getElementById('saleDebug');
+                debugInfo.style.display = 'block';
+                debugInfo.innerHTML = '测试客户API连接...';
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}?action=getCustomers`);
+                    const data = await response.json();
+                    debugInfo.innerHTML = `API响应: ${JSON.stringify(data, null, 2)}`;
+                } catch (error) {
+                    debugInfo.innerHTML = `API错误: ${error.message}`;
+                }
             }
             
             switchPage(page) {
@@ -661,34 +370,80 @@
             }
             
             async loadInitialData() {
-                await this.loadCustomers();
-                await this.loadProductModels();
+                const debugInfo = document.getElementById('initDebug');
+                debugInfo.innerHTML = '开始加载初始数据...';
+                
+                try {
+                    await this.loadCustomers();
+                    await this.loadProductModels();
+                    debugInfo.innerHTML = '数据加载完成！';
+                } catch (error) {
+                    debugInfo.innerHTML = `数据加载失败: ${error.message}`;
+                }
             }
             
             async loadCustomers() {
                 try {
-                    const response = await fetch(`${API_BASE_URL}?action=getCustomers`);
+                    const debugInfo = document.getElementById('initDebug');
+                    debugInfo.innerHTML += '<br>加载客户数据...';
+                    
+                    // 添加时间戳避免缓存
+                    const response = await fetch(`${API_BASE_URL}?action=getCustomers&t=${Date.now()}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP错误: ${response.status}`);
+                    }
+                    
                     const data = await response.json();
+                    debugInfo.innerHTML += `<br>客户API响应: ${JSON.stringify(data)}`;
                     
                     if (data.success) {
                         const select = document.getElementById('customerSelect');
                         select.innerHTML = '<option value="">请选择客户...</option>';
                         
-                        data.data.forEach(customer => {
-                            const option = document.createElement('option');
-                            option.value = customer.customer_id;
-                            option.textContent = customer.name;
-                            select.appendChild(option);
-                        });
+                        if (data.data && data.data.length > 0) {
+                            data.data.forEach(customer => {
+                                const option = document.createElement('option');
+                                option.value = customer.customer_id;
+                                option.textContent = customer.name;
+                                select.appendChild(option);
+                            });
+                            debugInfo.innerHTML += `<br>成功加载 ${data.data.length} 个客户`;
+                        } else {
+                            debugInfo.innerHTML += '<br>客户数据为空';
+                        }
+                    } else {
+                        throw new Error(data.message || '获取客户数据失败');
                     }
                 } catch (error) {
                     console.error('加载客户失败:', error);
+                    const debugInfo = document.getElementById('initDebug');
+                    debugInfo.innerHTML += `<br>加载客户失败: ${error.message}`;
+                    
+                    // 添加测试数据以便继续测试
+                    this.addTestCustomers();
                 }
+            }
+
+            addTestCustomers() {
+                const select = document.getElementById('customerSelect');
+                const testCustomers = [
+                    { customer_id: 'C001', name: '张三贸易' },
+                    { customer_id: 'C002', name: '李四光学' },
+                    { customer_id: 'C003', name: '王五眼镜店' }
+                ];
+                
+                testCustomers.forEach(customer => {
+                    const option = document.createElement('option');
+                    option.value = customer.customer_id;
+                    option.textContent = customer.name;
+                    select.appendChild(option);
+                });
             }
             
             async loadProductModels() {
                 try {
-                    const response = await fetch(`${API_BASE_URL}?action=getProducts`);
+                    const response = await fetch(`${API_BASE_URL}?action=getProducts&t=${Date.now()}`);
                     const data = await response.json();
                     
                     if (data.success) {
@@ -704,7 +459,25 @@
                     }
                 } catch (error) {
                     console.error('加载产品系列失败:', error);
+                    // 添加测试产品数据
+                    this.addTestProducts();
                 }
+            }
+
+            addTestProducts() {
+                const select = document.getElementById('modelSelect');
+                const testProducts = [
+                    { model_id: 'M001', model_name: '经典金属系列' },
+                    { model_id: 'M002', model_name: '时尚塑胶系列' },
+                    { model_id: 'M003', model_name: '运动休闲系列' }
+                ];
+                
+                testProducts.forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.model_id;
+                    option.textContent = product.model_name;
+                    select.appendChild(option);
+                });
             }
             
             async loadVariants(modelId) {
@@ -715,7 +488,7 @@
                 }
                 
                 try {
-                    const response = await fetch(`${API_BASE_URL}?action=getProductVariants&model_id=${modelId}`);
+                    const response = await fetch(`${API_BASE_URL}?action=getProductVariants&model_id=${modelId}&t=${Date.now()}`);
                     const data = await response.json();
                     
                     if (data.success) {
@@ -727,7 +500,6 @@
                             option.value = variant.variant_id;
                             option.textContent = `${variant.color} (库存: ${variant.stock})`;
                             option.dataset.price = variant.price;
-                            // 缓存变体信息
                             this.productVariants[variant.variant_id] = variant;
                             select.appendChild(option);
                         });
@@ -736,7 +508,38 @@
                     }
                 } catch (error) {
                     console.error('加载产品变体失败:', error);
+                    this.addTestVariants(modelId);
                 }
+            }
+
+            addTestVariants(modelId) {
+                const select = document.getElementById('variantSelect');
+                const testVariants = {
+                    'M001': [
+                        { variant_id: 'V001', color: '黑色', stock: 50, price: 299 },
+                        { variant_id: 'V002', color: '银色', stock: 30, price: 299 }
+                    ],
+                    'M002': [
+                        { variant_id: 'V003', color: '棕色', stock: 25, price: 199 }
+                    ],
+                    'M003': [
+                        { variant_id: 'V004', color: '蓝色', stock: 40, price: 399 }
+                    ]
+                };
+                
+                select.innerHTML = '<option value="">请选择颜色...</option>';
+                const variants = testVariants[modelId] || [];
+                
+                variants.forEach(variant => {
+                    const option = document.createElement('option');
+                    option.value = variant.variant_id;
+                    option.textContent = `${variant.color} (库存: ${variant.stock})`;
+                    option.dataset.price = variant.price;
+                    this.productVariants[variant.variant_id] = variant;
+                    select.appendChild(option);
+                });
+                
+                select.disabled = false;
             }
             
             updatePrice(variantId) {
@@ -775,7 +578,7 @@
                 const item = {
                     customerId,
                     variantId,
-                    variantName: `${variant.model_name} - ${variant.color}`,
+                    variantName: `${variant.model_name || '产品'} - ${variant.color}`,
                     quantity,
                     unitPrice,
                     total: quantity * unitPrice
@@ -843,17 +646,13 @@
                             operator: '销售员'
                         };
 
-                        const response = await fetch(API_BASE_URL, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                action: 'createSale',
-                                ...saleData
-                            })
+                        // 使用GET方式避免CORS问题
+                        const params = new URLSearchParams({
+                            action: 'createSale',
+                            ...saleData
                         });
 
+                        const response = await fetch(`${API_BASE_URL}?${params}`);
                         const result = await response.json();
                         
                         if (!result.success) {
@@ -975,47 +774,45 @@
                     return;
                 }
 
+                const debugInfo = document.getElementById('scanDebug');
+                debugInfo.style.display = 'block';
+                debugInfo.innerHTML = '开始扫码操作...';
+
                 try {
                     if (scanType === 'out') {
-                        // 销售出库 - 调用扫码销售API
-                        const scanData = {
-                            items: [{
+                        // 使用GET方式避免CORS问题
+                        const params = new URLSearchParams({
+                            action: 'createScanSale',
+                            items: JSON.stringify([{
                                 variant_id: variantCode,
                                 quantity: quantity,
-                                unit_price: 0 // 网店客户使用专属价格
-                            }],
+                                unit_price: 0
+                            }]),
                             operator: '网店客服'
-                        };
-
-                        const response = await fetch(API_BASE_URL, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                action: 'createScanSale',
-                                ...scanData
-                            })
                         });
 
+                        debugInfo.innerHTML += `<br>请求参数: ${params}`;
+
+                        const response = await fetch(`${API_BASE_URL}?${params}`);
                         const result = await response.json();
                         
+                        debugInfo.innerHTML += `<br>API响应: ${JSON.stringify(result)}`;
+
                         if (result.success) {
                             this.showMessage('scanMessage', `出库成功！销售单号: ${result.results[0].sale_id}`, 'success');
-                            // 清空表单
                             document.getElementById('variantCode').value = '';
                             document.getElementById('scanQuantity').value = 1;
                         } else {
                             throw new Error(result.message);
                         }
                     } else {
-                        // 采购入库 - 这里需要调用入库API（需要后端支持）
                         this.showMessage('scanMessage', '采购入库功能开发中', 'error');
                     }
                     
                 } catch (error) {
                     console.error('操作失败:', error);
                     this.showMessage('scanMessage', '操作失败: ' + error.message, 'error');
+                    debugInfo.innerHTML += `<br>错误: ${error.message}`;
                 }
             }
 
@@ -1023,14 +820,12 @@
                 const container = document.getElementById(containerId);
                 container.innerHTML = `<div class="message ${type}">${message}</div>`;
                 
-                // 3秒后自动消失
                 setTimeout(() => {
                     container.innerHTML = '';
-                }, 3000);
+                }, 5000);
             }
         }
         
-        // 初始化应用
         document.addEventListener('DOMContentLoaded', () => {
             window.app = new App();
         });
