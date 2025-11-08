@@ -26,7 +26,6 @@
             padding-bottom: 80px;
         }
         
-        /* 顶部状态栏 */
         .status-bar {
             background: #001529;
             color: white;
@@ -61,7 +60,6 @@
             color: white;
         }
         
-        /* 页面内容 */
         .page-content {
             padding: 16px;
             display: none;
@@ -78,7 +76,6 @@
             text-align: center;
         }
         
-        /* 表单样式 */
         .form-group {
             margin-bottom: 20px;
         }
@@ -97,11 +94,6 @@
             border-radius: 8px;
             font-size: 16px;
             background: white;
-        }
-        
-        .form-select:disabled {
-            background: #f5f5f5;
-            color: #999;
         }
         
         .info-row {
@@ -138,12 +130,6 @@
             margin-top: 20px;
         }
         
-        .submit-button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        /* 功能网格 */
         .function-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -180,21 +166,6 @@
             color: white;
         }
         
-        .secondary .function-icon {
-            background: linear-gradient(135deg, #52c41a, #389e0d);
-        }
-        
-        .warning .function-icon {
-            background: linear-gradient(135deg, #faad14, #d48806);
-        }
-        
-        .function-name {
-            font-size: 13px;
-            font-weight: 500;
-            color: #333;
-        }
-        
-        /* 扫码出库样式 */
         .scan-section {
             background: white;
             border-radius: 12px;
@@ -229,24 +200,6 @@
             border-bottom: 1px solid #f0f0f0;
         }
         
-        .product-item:last-child {
-            border-bottom: none;
-        }
-        
-        .product-info {
-            flex: 1;
-        }
-        
-        .product-name {
-            font-weight: 500;
-            margin-bottom: 4px;
-        }
-        
-        .product-sku {
-            font-size: 12px;
-            color: #666;
-        }
-        
         .product-price {
             width: 80px;
             padding: 8px;
@@ -256,18 +209,6 @@
             font-size: 14px;
         }
         
-        .remove-product {
-            background: #ff4d4f;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 4px 8px;
-            margin-left: 8px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        
-        /* 底部导航 */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -309,7 +250,6 @@
             color: #1890ff;
         }
         
-        /* 消息提示 */
         .message {
             padding: 12px;
             border-radius: 8px;
@@ -332,116 +272,54 @@
             display: block;
         }
         
-        /* 加载状态 */
         .loading {
             text-align: center;
             padding: 20px;
             color: #999;
         }
         
-        /* 数据表格 */
-        .data-table {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .table-header {
-            background: #fafafa;
-            padding: 12px 16px;
-            font-weight: 500;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .table-row {
-            padding: 12px 16px;
-            border-bottom: 1px solid #f0f0f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .table-row:last-child {
-            border-bottom: none;
-        }
-        
-        .table-info {
-            flex: 1;
-        }
-        
-        .table-title {
-            font-weight: 500;
-            margin-bottom: 4px;
-        }
-        
-        .table-desc {
+        .debug-info {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
             font-size: 12px;
             color: #666;
-        }
-        
-        .table-amount {
-            font-weight: 500;
-            color: #ff4d4f;
         }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- 顶部状态栏 -->
         <div class="status-bar">
             <div class="app-title">智能进销存</div>
-            <div id="api-status" class="api-status disconnected">连接中...</div>
+            <div id="api-status" class="api-status disconnected">检测中...</div>
         </div>
         
-        <!-- 首页 -->
         <div id="home-page" class="page-content active">
             <div class="function-grid">
                 <button class="function-item" onclick="showPage('sales-records')">
                     <div class="function-icon">📋</div>
                     <div class="function-name">销售明细</div>
                 </button>
-                <button class="function-item" onclick="showPage('inventory-logs')">
-                    <div class="function-icon">📖</div>
-                    <div class="function-name">出入库明细</div>
-                </button>
-                <button class="function-item" onclick="showPage('monthly-bills')">
-                    <div class="function-icon">🧾</div>
-                    <div class="function-name">月度账单</div>
-                </button>
-                
-                <button class="function-item secondary" onclick="showPage('customer-management')">
+                <button class="function-item" onclick="showPage('customer-management')">
                     <div class="function-icon">👥</div>
                     <div class="function-name">客户管理</div>
                 </button>
-                <button class="function-item secondary" onclick="showPage('product-management')">
+                <button class="function-item" onclick="showPage('product-management')">
                     <div class="function-icon">🏷️</div>
                     <div class="function-name">产品管理</div>
                 </button>
-                <button class="function-item secondary" onclick="showPage('inventory-management')">
-                    <div class="function-icon">📦</div>
-                    <div class="function-name">库存管理</div>
-                </button>
-                
-                <button class="function-item warning" onclick="showPage('reports')">
-                    <div class="function-icon">📊</div>
-                    <div class="function-name">数据报表</div>
-                </button>
-                <button class="function-item warning" onclick="showPage('qrcode-print')">
-                    <div class="function-icon">🎫</div>
-                    <div class="function-name">二维码打印</div>
-                </button>
-                <button class="function-item warning" onclick="showPage('system-settings')">
-                    <div class="function-icon">⚙️</div>
-                    <div class="function-name">系统设置</div>
-                </button>
+            </div>
+            
+            <div class="debug-info" id="debug-info" style="display: none;">
+                <strong>调试信息：</strong><br>
+                API状态: <span id="debug-status">未知</span><br>
+                最后错误: <span id="debug-error">无</span>
             </div>
         </div>
 
-        <!-- 销售出库页面 -->
         <div id="sale-page" class="page-content">
             <div class="page-title">销售出库</div>
-            
             <div id="sale-message" class="message"></div>
             
             <div class="form-group">
@@ -485,50 +363,28 @@
             <button class="submit-button" id="submit-sale" onclick="createSale()">确认出库</button>
         </div>
 
-        <!-- 扫码出库页面 -->
         <div id="scan-page" class="page-content">
             <div class="page-title">扫码出库</div>
-            
             <div id="scan-message" class="message"></div>
             
             <div class="scan-section">
                 <div style="color: #666; margin-bottom: 10px;">默认客户：网店客户</div>
-                <button class="scan-button" onclick="startScan()">
-                    📷 开始扫码
-                </button>
-                <div style="font-size: 12px; color: #999; margin-top: 8px;">
-                    扫描产品二维码自动添加
-                </div>
+                <button class="scan-button" onclick="startScan()">📷 开始扫码</button>
+                <div style="font-size: 12px; color: #999; margin-top: 8px;">扫描产品二维码自动添加</div>
             </div>
             
             <div class="product-list" id="scan-product-list">
                 <div class="loading">暂无商品，请扫码添加</div>
             </div>
             
-            <div style="position: fixed; bottom: 80px; left: 0; right: 0; background: white; padding: 16px; border-top: 1px solid #e8e8e8; max-width: 500px; margin: 0 auto;">
-                <button class="submit-button" onclick="submitScanOrder()" id="submit-scan">
-                    确认出库 (共 <span id="total-amount">0</span> 元)
-                </button>
+            <div style="position: fixed; bottom: 80px; left: 0; right: 0; background: white; padding: 16px; border-top: 1px solid #e8e8e8;">
+                <button class="submit-button" onclick="submitScanOrder()">确认出库</button>
             </div>
         </div>
 
-        <!-- 销售明细页面 -->
         <div id="sales-records" class="page-content">
             <div class="page-title">销售明细</div>
-            <div class="data-table" id="sales-table">
-                <div class="loading">加载中...</div>
-            </div>
-        </div>
-
-        <!-- 其他功能页面 -->
-        <div id="inventory-logs" class="page-content">
-            <div class="page-title">出入库明细</div>
-            <div class="loading">功能开发中...</div>
-        </div>
-        
-        <div id="monthly-bills" class="page-content">
-            <div class="page-title">月度账单</div>
-            <div class="loading">功能开发中...</div>
+            <div id="sales-table" class="loading">加载中...</div>
         </div>
         
         <div id="customer-management" class="page-content">
@@ -540,29 +396,8 @@
             <div class="page-title">产品管理</div>
             <div class="loading">功能开发中...</div>
         </div>
-        
-        <div id="inventory-management" class="page-content">
-            <div class="page-title">库存管理</div>
-            <div class="loading">功能开发中...</div>
-        </div>
-        
-        <div id="reports" class="page-content">
-            <div class="page-title">数据报表</div>
-            <div class="loading">功能开发中...</div>
-        </div>
-        
-        <div id="qrcode-print" class="page-content">
-            <div class="page-title">二维码打印</div>
-            <div class="loading">功能开发中...</div>
-        </div>
-        
-        <div id="system-settings" class="page-content">
-            <div class="page-title">系统设置</div>
-            <div class="loading">功能开发中...</div>
-        </div>
     </div>
     
-    <!-- 底部导航 -->
     <div class="bottom-nav">
         <button class="nav-item active" onclick="showPage('home')">
             <div class="nav-icon">📁</div>
@@ -582,11 +417,36 @@
         // API配置
         const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyV9ibpP3OZikXvExxr6IM7r71y7tQ3HQbsJLDebSL3UPlIjwsOi-xMR6nmB7m9y8_bhg/exec';
         
-        // 全局数据
-        let customers = [];
-        let products = [];
+        // 模拟数据（备用）
+        const MOCK_DATA = {
+            customers: [
+                { customer_id: "C001", name: "张三贸易" },
+                { customer_id: "C002", name: "李四光学" },
+                { customer_id: "C003", name: "王五眼镜店" },
+                { customer_id: "C004", name: "网店客户" }
+            ],
+            products: [
+                { model_id: "M001", model_name: "经典金属系列" },
+                { model_id: "M002", model_name: "时尚塑胶系列" },
+                { model_id: "M003", model_name: "运动休闲系列" }
+            ],
+            variants: {
+                "M001": [
+                    { variant_id: "V001", model_id: "M001", color: "黑色", price: 299, stock: 50 },
+                    { variant_id: "V002", model_id: "M001", color: "银色", price: 299, stock: 30 }
+                ],
+                "M002": [
+                    { variant_id: "V003", model_id: "M002", color: "棕色", price: 199, stock: 25 }
+                ],
+                "M003": [
+                    { variant_id: "V004", model_id: "M003", color: "蓝色", price: 399, stock: 40 }
+                ]
+            }
+        };
+
+        let useMockData = false;
         let scanProducts = [];
-        
+
         // 显示消息
         function showMessage(elementId, message, type = 'error') {
             const element = document.getElementById(elementId);
@@ -597,119 +457,109 @@
                 element.className = 'message';
             }, 5000);
         }
-        
+
+        // 更新调试信息
+        function updateDebugInfo(status, error = '') {
+            document.getElementById('debug-status').textContent = status;
+            document.getElementById('debug-error').textContent = error;
+            document.getElementById('debug-info').style.display = 'block';
+        }
+
         // 测试API连接
         async function testAPIConnection() {
             try {
+                updateDebugInfo('测试连接中...');
+                
                 const response = await fetch(`${API_BASE_URL}?action=test`);
                 const data = await response.json();
                 
                 if (data.success) {
                     document.getElementById('api-status').className = 'api-status connected';
                     document.getElementById('api-status').textContent = '已连接';
+                    useMockData = false;
+                    updateDebugInfo('连接成功', 'API正常工作');
                     return true;
                 }
             } catch (error) {
                 console.error('API连接失败:', error);
+                document.getElementById('api-status').className = 'api-status disconnected';
+                document.getElementById('api-status').textContent = '未连接';
+                useMockData = true;
+                updateDebugInfo('连接失败', error.message);
+                
+                // 显示使用模拟数据的提示
+                showMessage('sale-message', '使用模拟数据模式（API连接失败）', 'error');
             }
-            
-            document.getElementById('api-status').className = 'api-status disconnected';
-            document.getElementById('api-status').textContent = '未连接';
             return false;
         }
-        
+
         // 页面切换
         function showPage(page) {
-            // 隐藏所有页面
-            document.querySelectorAll('.page-content').forEach(page => {
-                page.classList.remove('active');
-            });
+            document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             
-            // 显示目标页面
             document.getElementById(page + '-page').classList.add('active');
-            
-            // 更新导航状态
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
             event.currentTarget.classList.add('active');
             
-            // 页面特定的初始化
-            if (page === 'sale') {
-                initSalePage();
-            } else if (page === 'scan') {
-                initScanPage();
-            } else if (page === 'sales-records') {
-                loadSalesRecords();
-            }
+            if (page === 'sale') initSalePage();
+            if (page === 'scan') initScanPage();
+            if (page === 'sales-records') loadSalesRecords();
         }
-        
-        // 初始化销售出库页面
+
+        // 初始化销售页面
         async function initSalePage() {
-            if (!await testAPIConnection()) {
-                showMessage('sale-message', 'API连接失败，请检查网络', 'error');
-                return;
-            }
-            
             await loadCustomers();
             await loadProducts();
-            setupSaleEventListeners();
+            setupSaleEvents();
         }
-        
-        // 初始化扫码出库页面
+
+        // 初始化扫码页面
         function initScanPage() {
             scanProducts = [];
             updateScanProductList();
         }
-        
+
         // 加载客户数据
         async function loadCustomers() {
+            if (useMockData) {
+                // 使用模拟数据
+                const select = document.getElementById('customer-select');
+                select.innerHTML = '<option value="">请选择客户</option>' +
+                    MOCK_DATA.customers.map(c => `<option value="${c.customer_id}">${c.name}</option>`).join('');
+                return;
+            }
+
             try {
                 const response = await fetch(`${API_BASE_URL}?action=getCustomers`);
                 const data = await response.json();
                 
                 if (data.success) {
-                    customers = data.data;
                     const select = document.getElementById('customer-select');
                     select.innerHTML = '<option value="">请选择客户</option>' +
-                        data.data.map(customer => 
-                            `<option value="${customer.customer_id}">${customer.name}</option>`
-                        ).join('');
-                } else {
-                    showMessage('sale-message', '加载客户列表失败: ' + data.message, 'error');
+                        data.data.map(c => `<option value="${c.customer_id}">${c.name}</option>`).join('');
                 }
             } catch (error) {
-                showMessage('sale-message', '网络错误: ' + error.message, 'error');
+                showMessage('sale-message', '加载客户失败，使用模拟数据', 'error');
+                // 回退到模拟数据
+                const select = document.getElementById('customer-select');
+                select.innerHTML = '<option value="">请选择客户</option>' +
+                    MOCK_DATA.customers.map(c => `<option value="${c.customer_id}">${c.name}</option>`).join('');
             }
         }
-        
+
         // 加载产品数据
         async function loadProducts() {
-            try {
-                const response = await fetch(`${API_BASE_URL}?action=getProducts`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    products = data.data;
-                } else {
-                    showMessage('sale-message', '加载产品列表失败: ' + data.message, 'error');
-                }
-            } catch (error) {
-                showMessage('sale-message', '网络错误: ' + error.message, 'error');
-            }
+            // 模拟数据模式下不需要API调用
         }
-        
-        // 设置销售页面事件监听
-        function setupSaleEventListeners() {
-            // 客户选择变化
+
+        // 设置销售事件
+        function setupSaleEvents() {
             document.getElementById('customer-select').addEventListener('change', function() {
                 const modelSelect = document.getElementById('model-select');
                 if (this.value) {
                     modelSelect.disabled = false;
                     modelSelect.innerHTML = '<option value="">请选择产品型号</option>' +
-                        products.map(product => 
-                            `<option value="${product.model_id}">${product.model_name}</option>`
-                        ).join('');
+                        MOCK_DATA.products.map(p => `<option value="${p.model_id}">${p.model_name}</option>`).join('');
                 } else {
                     modelSelect.disabled = true;
                     modelSelect.innerHTML = '<option value="">请先选择客户</option>';
@@ -718,103 +568,74 @@
                     resetProductInfo();
                 }
             });
-            
-            // 型号选择变化
-            document.getElementById('model-select').addEventListener('change', async function() {
+
+            document.getElementById('model-select').addEventListener('change', function() {
                 const variantSelect = document.getElementById('variant-select');
                 if (this.value) {
                     variantSelect.disabled = false;
-                    variantSelect.innerHTML = '<option value="">加载中...</option>';
-                    
-                    try {
-                        const response = await fetch(`${API_BASE_URL}?action=getProductVariants&model_id=${this.value}`);
-                        const data = await response.json();
-                        
-                        if (data.success) {
-                            variantSelect.innerHTML = '<option value="">请选择颜色规格</option>' +
-                                data.data.map(variant => 
-                                    `<option value="${variant.variant_id}">${variant.color} (库存: ${variant.stock})</option>`
-                                ).join('');
-                        } else {
-                            variantSelect.innerHTML = '<option value="">加载失败</option>';
-                            showMessage('sale-message', '加载产品规格失败: ' + data.message, 'error');
-                        }
-                    } catch (error) {
-                        variantSelect.innerHTML = '<option value="">网络错误</option>';
-                        showMessage('sale-message', '网络错误: ' + error.message, 'error');
-                    }
+                    const variants = MOCK_DATA.variants[this.value] || [];
+                    variantSelect.innerHTML = '<option value="">请选择颜色规格</option>' +
+                        variants.map(v => `<option value="${v.variant_id}">${v.color} (库存:${v.stock})</option>`).join('');
                 } else {
                     variantSelect.disabled = true;
                     variantSelect.innerHTML = '<option value="">请先选择型号</option>';
                     resetProductInfo();
                 }
             });
-            
-            // 变体选择变化
-            document.getElementById('variant-select').addEventListener('change', async function() {
+
+            document.getElementById('variant-select').addEventListener('change', function() {
                 if (this.value) {
-                    try {
-                        const response = await fetch(`${API_BASE_URL}?action=getVariantDetail&variant_id=${this.value}`);
-                        const data = await response.json();
-                        
-                        if (data.success) {
-                            const variant = data.data;
-                            document.getElementById('price-display').textContent = variant.price;
-                            document.getElementById('stock-display').textContent = variant.stock;
-                            
-                            // 获取客户专属价格
-                            const customerId = document.getElementById('customer-select').value;
-                            if (customerId) {
-                                const priceResponse = await fetch(`${API_BASE_URL}?action=getCustomerPrice&customer_id=${customerId}&variant_id=${this.value}`);
-                                const priceData = await priceResponse.json();
-                                
-                                if (priceData.success && priceData.data !== null) {
-                                    document.getElementById('price-display').textContent = priceData.data + ' (专属价)';
-                                }
-                            }
-                        }
-                    } catch (error) {
-                        console.error('获取变体详情失败:', error);
+                    const modelId = document.getElementById('model-select').value;
+                    const variants = MOCK_DATA.variants[modelId] || [];
+                    const variant = variants.find(v => v.variant_id === this.value);
+                    if (variant) {
+                        document.getElementById('price-display').textContent = variant.price;
+                        document.getElementById('stock-display').textContent = variant.stock;
                     }
                 } else {
                     resetProductInfo();
                 }
             });
         }
-        
-        // 重置产品信息显示
+
+        // 重置产品信息
         function resetProductInfo() {
             document.getElementById('price-display').textContent = '--';
             document.getElementById('stock-display').textContent = '--';
         }
-        
+
         // 创建销售记录
         async function createSale() {
             const customerId = document.getElementById('customer-select').value;
             const variantId = document.getElementById('variant-select').value;
             const quantity = document.getElementById('quantity-input').value;
-            
+
             if (!customerId || !variantId || !quantity) {
                 showMessage('sale-message', '请填写完整的销售信息', 'error');
                 return;
             }
-            
-            const submitButton = document.getElementById('submit-sale');
-            submitButton.disabled = true;
-            submitButton.textContent = '提交中...';
-            
+
+            if (useMockData) {
+                showMessage('sale-message', '模拟销售成功！(模拟数据模式)', 'success');
+                // 重置表单
+                document.getElementById('customer-select').value = '';
+                document.getElementById('model-select').disabled = true;
+                document.getElementById('variant-select').disabled = true;
+                document.getElementById('quantity-input').value = '1';
+                resetProductInfo();
+                return;
+            }
+
+            // 真实API调用
             try {
                 const response = await fetch(API_BASE_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         action: 'createSale',
                         customer_id: customerId,
                         variant_id: variantId,
-                        quantity: parseInt(quantity),
-                        operator: '系统'
+                        quantity: parseInt(quantity)
                     })
                 });
                 
@@ -825,9 +646,7 @@
                     // 重置表单
                     document.getElementById('customer-select').value = '';
                     document.getElementById('model-select').disabled = true;
-                    document.getElementById('model-select').innerHTML = '<option value="">请先选择客户</option>';
                     document.getElementById('variant-select').disabled = true;
-                    document.getElementById('variant-select').innerHTML = '<option value="">请先选择型号</option>';
                     document.getElementById('quantity-input').value = '1';
                     resetProductInfo();
                 } else {
@@ -835,106 +654,88 @@
                 }
             } catch (error) {
                 showMessage('sale-message', '网络错误: ' + error.message, 'error');
-            } finally {
-                submitButton.disabled = false;
-                submitButton.textContent = '确认出库';
             }
         }
-        
+
         // 扫码功能
         function startScan() {
-            // 模拟扫码 - 实际应该调用摄像头API
-            const variantId = prompt('请输入或扫描产品变体ID (例如: V001):');
+            const variantId = prompt('请输入产品变体ID (例如: V001):');
             if (variantId) {
                 addScannedProduct(variantId);
             }
         }
-        
-        // 添加扫码产品
-        async function addScannedProduct(variantId) {
-            try {
-                const response = await fetch(`${API_BASE_URL}?action=getVariantDetail&variant_id=${variantId}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    const variant = data.data;
-                    scanProducts.push({
-                        variant_id: variant.variant_id,
-                        name: `${variant.model_name}-${variant.color}`,
-                        stock: variant.stock,
-                        price: 0, // 默认价格0，可手动修改
-                        quantity: 1
-                    });
-                    updateScanProductList();
-                } else {
-                    alert('产品不存在: ' + data.message);
+
+        function addScannedProduct(variantId) {
+            // 在模拟数据中查找产品
+            let foundVariant = null;
+            for (const modelId in MOCK_DATA.variants) {
+                const variant = MOCK_DATA.variants[modelId].find(v => v.variant_id === variantId);
+                if (variant) {
+                    foundVariant = variant;
+                    break;
                 }
-            } catch (error) {
-                alert('网络错误: ' + error.message);
+            }
+
+            if (foundVariant) {
+                const model = MOCK_DATA.products.find(p => p.model_id === foundVariant.model_id);
+                scanProducts.push({
+                    variant_id: foundVariant.variant_id,
+                    name: `${model.model_name}-${foundVariant.color}`,
+                    stock: foundVariant.stock,
+                    price: 0,
+                    quantity: 1
+                });
+                updateScanProductList();
+            } else {
+                alert('产品不存在: ' + variantId);
             }
         }
-        
-        // 更新扫码产品列表
+
         function updateScanProductList() {
             const list = document.getElementById('scan-product-list');
-            const totalAmount = scanProducts.reduce((sum, product) => sum + (product.price * product.quantity), 0);
-            
-            document.getElementById('total-amount').textContent = totalAmount;
             
             if (scanProducts.length === 0) {
-                list.innerHTML = '<div class="loading">暂无商品，请扫码添加</div>';
+                list.innerHTML = '<div class="loading">暂无商品</div>';
                 return;
             }
-            
+
             list.innerHTML = scanProducts.map((product, index) => `
                 <div class="product-item">
-                    <div class="product-info">
-                        <div class="product-name">${product.name}</div>
-                        <div class="product-sku">${product.variant_id} | 库存: ${product.stock}</div>
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <input type="number" class="product-price" value="${product.price}" 
-                               onchange="updateScanProductPrice(${index}, this.value)" 
-                               placeholder="价格">
-                        <button class="remove-product" onclick="removeScanProduct(${index})">删除</button>
+                    <div>${product.name}</div>
+                    <div>
+                        <input type="number" value="${product.price}" 
+                               onchange="updateScanPrice(${index}, this.value)" 
+                               class="product-price" placeholder="价格">
                     </div>
                 </div>
             `).join('');
         }
-        
-        // 更新扫码产品价格
-        function updateScanProductPrice(index, price) {
+
+        function updateScanPrice(index, price) {
             scanProducts[index].price = parseFloat(price) || 0;
-            updateScanProductList();
         }
-        
-        // 移除扫码产品
-        function removeScanProduct(index) {
-            scanProducts.splice(index, 1);
-            updateScanProductList();
-        }
-        
-        // 提交扫码订单
+
         async function submitScanOrder() {
             if (scanProducts.length === 0) {
-                showMessage('scan-message', '请先扫码添加商品', 'error');
+                showMessage('scan-message', '请先添加商品', 'error');
                 return;
             }
-            
-            const submitButton = document.getElementById('submit-scan');
-            submitButton.disabled = true;
-            submitButton.innerHTML = '提交中...';
-            
+
+            if (useMockData) {
+                showMessage('scan-message', '模拟扫码销售成功！(模拟数据模式)', 'success');
+                scanProducts = [];
+                updateScanProductList();
+                return;
+            }
+
+            // 真实API调用
             try {
                 const response = await fetch(API_BASE_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         action: 'createScanSale',
-                        items: scanProducts,
-                        operator: '系统'
+                        items: scanProducts
                     })
                 });
                 
@@ -949,60 +750,51 @@
                 }
             } catch (error) {
                 showMessage('scan-message', '网络错误: ' + error.message, 'error');
-            } finally {
-                submitButton.disabled = false;
-                submitButton.innerHTML = `确认出库 (共 <span id="total-amount">0</span> 元)`;
             }
         }
-        
+
         // 加载销售记录
         async function loadSalesRecords() {
+            if (useMockData) {
+                document.getElementById('sales-table').innerHTML = `
+                    <div class="message">模拟数据模式 - 销售记录功能</div>
+                    <div style="padding: 16px; background: white; border-radius: 8px; margin-top: 10px;">
+                        <div style="font-weight: 500; margin-bottom: 8px;">S001 - 张三贸易</div>
+                        <div style="font-size: 14px; color: #666;">2024-01-15 | 数量: 2</div>
+                        <div style="font-weight: 500; color: #ff4d4f; text-align: right;">¥598</div>
+                    </div>
+                `;
+                return;
+            }
+
             try {
                 const response = await fetch(`${API_BASE_URL}?action=getSalesRecords`);
                 const data = await response.json();
                 
-                const table = document.getElementById('sales-table');
-                
                 if (data.success) {
+                    const table = document.getElementById('sales-table');
                     if (data.data.length === 0) {
                         table.innerHTML = '<div class="loading">暂无销售记录</div>';
                         return;
                     }
                     
-                    table.innerHTML = `
-                        <div class="table-header">最近销售记录</div>
-                        ${data.data.slice(0, 10).map(record => `
-                            <div class="table-row">
-                                <div class="table-info">
-                                    <div class="table-title">${record.sale_id} - ${getCustomerName(record.customer_id)}</div>
-                                    <div class="table-desc">${record.date} | 数量: ${record.quantity}</div>
-                                </div>
-                                <div class="table-amount">¥${record.total_amount}</div>
-                            </div>
-                        `).join('')}
-                    `;
-                } else {
-                    table.innerHTML = '<div class="message error">加载失败: ' + data.message + '</div>';
+                    table.innerHTML = data.data.slice(0, 5).map(record => `
+                        <div style="padding: 16px; background: white; border-radius: 8px; margin-bottom: 8px;">
+                            <div style="font-weight: 500; margin-bottom: 8px;">${record.sale_id}</div>
+                            <div style="font-size: 14px; color: #666;">${record.date} | 数量: ${record.quantity}</div>
+                            <div style="font-weight: 500; color: #ff4d4f; text-align: right;">¥${record.total_amount}</div>
+                        </div>
+                    `).join('');
                 }
             } catch (error) {
-                document.getElementById('sales-table').innerHTML = '<div class="message error">网络错误: ' + error.message + '</div>';
+                document.getElementById('sales-table').innerHTML = '<div class="message error">加载失败</div>';
             }
         }
-        
-        // 根据客户ID获取客户名称
-        function getCustomerName(customerId) {
-            const customer = customers.find(c => c.customer_id === customerId);
-            return customer ? customer.name : customerId;
-        }
-        
+
         // 初始化
         document.addEventListener('DOMContentLoaded', async function() {
-            // 测试API连接
             await testAPIConnection();
-            
-            // 预加载数据
             await loadCustomers();
-            await loadProducts();
         });
     </script>
 </body>
