@@ -1194,17 +1194,23 @@ document.addEventListener('click', (e) => {
                 });
             }
 
-           // 在弹窗中选择产品
+// 在弹窗中选择产品
 selectProductInModal(modelId) {
+    console.log('selectProductInModal 被调用，modelId:', modelId);
+    console.log('productModalSource:', this.productModalSource);
+    
     this.selectedProduct = this.products.find(p => p.model_id === modelId);
+    console.log('找到的产品:', this.selectedProduct);
+    
     this.closeProductModal();
     
     // 根据来源更新对应的界面
     if (this.productModalSource === 'scan') {
+        console.log('进入scan分支');
         this.updateScanProductDisplay();
     } else if (this.productModalSource === 'sale') {
+        console.log('进入sale分支');
         this.updateSaleProductDisplay();
-        // 确保调用预览显示函数
         this.showSelectedProductPreview();
     }
     
