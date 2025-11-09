@@ -921,8 +921,6 @@
                         </div>
                         <div class="preview-info">
                             <h5 id="previewProductName">产品名称</h5>
-                            <p id="previewProductModel">型号: </p>
-                            <p id="previewProductDetails">颜色: 未选择 | 价格: ¥0 | 库存: 0</p>
                         </div>
                     </div>
                 </div>
@@ -1201,12 +1199,17 @@ selectProductInModal(modelId) {
     this.selectedProduct = this.products.find(p => p.model_id === modelId);
     this.closeProductModal();
     
-    // 根据来源更新对应的界面
     if (this.productModalSource === 'scan') {
         this.updateScanProductDisplay();
     } else if (this.productModalSource === 'sale') {
-        this.updateSaleProductDisplay(); // 只调用这一个方法
+        // 强制显示产品预览区域
+        document.getElementById('selectedProductPreview').style.display = 'block';
+        document.getElementById('previewProductName').textContent = this.selectedProduct.model_name;
+        this.updateSaleProductDisplay();
     }
+    
+    this.showColorSelection(this.productModalSource);
+}
     
     // 显示颜色选择
     this.showColorSelection(this.productModalSource);
