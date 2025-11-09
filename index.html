@@ -1205,13 +1205,7 @@ selectProductInModal(modelId) {
     if (this.productModalSource === 'scan') {
         this.updateScanProductDisplay();
     } else if (this.productModalSource === 'sale') {
-        console.log('强制显示预览区域');
-        // 强制显示预览区域进行测试
-        document.getElementById('selectedProductPreview').style.display = 'block';
-        document.getElementById('saleProductSelectBtn').style.display = 'none';
-        
-        this.updateSaleProductDisplay();
-        this.showSelectedProductPreview();
+        this.updateSaleProductDisplay(); // 直接调用这个方法
     }
     
     // 显示颜色选择
@@ -1260,10 +1254,6 @@ updateSaleProductDisplay() {
     const productModelElement = document.getElementById('previewProductModel');
     const productDetailsElement = document.getElementById('previewProductDetails');
     
-    console.log('previewElement:', previewElement);
-    console.log('productNameElement:', productNameElement);
-    console.log('productDetailsElement:', productDetailsElement);
-    
     if (this.selectedProduct) {
         console.log('有选中产品，开始更新显示');
         
@@ -1271,11 +1261,16 @@ updateSaleProductDisplay() {
         previewElement.style.display = 'block';
         document.getElementById('saleProductSelectBtn').style.display = 'none';
         
-        console.log('样式已设置，应该显示预览了');
+        // 更新产品信息
+        productNameElement.textContent = this.selectedProduct.model_name;
+        productModelElement.textContent = `型号: ${this.selectedProduct.model_id}`;
+        productDetailsElement.textContent = '颜色: 未选择 | 价格: ¥0 | 库存: 0';
         
-        // ... 其余代码保持不变
+        console.log('产品信息已更新，预览区域应该显示');
     } else {
-        console.log('没有选中产品');
+        console.log('没有选中产品，隐藏预览区域');
+        previewElement.style.display = 'none';
+        document.getElementById('saleProductSelectBtn').style.display = 'block';
     }
     
     console.log('=== updateSaleProductDisplay 结束 ===');
@@ -1342,6 +1337,7 @@ async selectVariant(variantId, source) {
             }
         }
         
+        // 更新预览区域的产品详情
         productDetailsElement.textContent = 
             `颜色: ${this.selectedVariant.color} | 价格: ¥${displayPrice} | 库存: ${this.selectedVariant.stock}`;
         
