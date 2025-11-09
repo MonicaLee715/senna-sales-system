@@ -1194,32 +1194,34 @@ document.addEventListener('click', (e) => {
                 });
             }
 
-            // 在弹窗中选择产品
-            selectProductInModal(modelId) {
-                this.selectedProduct = this.products.find(p => p.model_id === modelId);
-                this.closeProductModal();
-                
-                // 根据来源更新对应的界面
-                if (this.productModalSource === 'scan') {
-                    this.updateScanProductDisplay();
-                } else if (this.productModalSource === 'sale') {
-                    this.updateSaleProductDisplay();
-                            // === 新增：显示已选产品预览 ===
+           // 在弹窗中选择产品
+selectProductInModal(modelId) {
+    this.selectedProduct = this.products.find(p => p.model_id === modelId);
+    this.closeProductModal();
+    
+    // 根据来源更新对应的界面
+    if (this.productModalSource === 'scan') {
+        this.updateScanProductDisplay();
+    } else if (this.productModalSource === 'sale') {
+        this.updateSaleProductDisplay();
+        // 确保调用预览显示函数
         this.showSelectedProductPreview();
-                }
-                
-                // 显示颜色选择
-                this.showColorSelection(this.productModalSource);
-            }
+    }
+    
+    // 显示颜色选择
+    this.showColorSelection(this.productModalSource);
+}
 // 显示已选产品预览
 showSelectedProductPreview() {
     const previewElement = document.getElementById('selectedProductPreview');
     const productNameElement = document.getElementById('previewProductName');
     const productModelElement = document.getElementById('previewProductModel');
+    const productDetailsElement = document.getElementById('previewProductDetails');
     
     if (this.selectedProduct) {
         productNameElement.textContent = this.selectedProduct.model_name;
         productModelElement.textContent = `型号: ${this.selectedProduct.model_id}`;
+        productDetailsElement.textContent = '颜色: 未选择 | 价格: ¥0 | 库存: 0';
         previewElement.style.display = 'block';
     } else {
         previewElement.style.display = 'none';
@@ -1646,7 +1648,7 @@ clearSaleForm() {
     this.selectedProduct = null;
     this.selectedVariant = null;
     
-    // 重置产品选择
+    // 重置产品选择 - 确保使用正确的显示控制
     document.getElementById('selectedProductPreview').style.display = 'none';
     document.getElementById('saleProductSelectBtn').style.display = 'block';
     document.getElementById('saleColorSelection').style.display = 'none';
