@@ -257,13 +257,73 @@
             margin-bottom: 8px;
         }
 
-        .selected-product {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--primary-color);
-        }
+.selected-product {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 4px solid var(--primary-color);
+}
+
+/* === 新增样式 === */
+.selected-product-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.product-image-small {
+    width: 50px;
+    height: 50px;
+    background: #f0f0f0;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.product-info {
+    flex: 1;
+}
+
+.product-info h4 {
+    margin-bottom: 5px;
+    color: var(--text-color);
+}
+
+.product-info p {
+    color: var(--text-muted);
+    margin-bottom: 3px;
+    font-size: 0.9rem;
+}
+
+.add-item-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+.add-item-section h4 {
+    margin-bottom: 15px;
+    color: var(--text-color);
+}
+
+/* 销售商品清单样式优化 */
+.item-list {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.item-list h4 {
+    margin-bottom: 15px;
+    color: var(--text-color);
+}
 
         .selected-product h4 {
             margin-bottom: 5px;
@@ -749,96 +809,109 @@
             </div>
 
             <!-- 线下销售页面 -->
-            <div id="sale-page" class="page">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">线下销售出库</h3>
-                        <button class="btn btn-warning" onclick="app.useTestData()" style="padding: 8px 12px;">
-                            <i class="fas fa-vial"></i>测试数据
-                        </button>
-                    </div>
-                    
-                    <div class="sale-form">
-                        <!-- 客户选择与欠款显示 -->
-                        <div class="form-group">
-                            <label class="form-label">选择客户</label>
-                            <select class="form-select" id="customerSelect">
-                                <option value="">请选择客户...</option>
-                            </select>
-                            <div id="customerBalance" class="customer-balance hidden">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <span class="balance-warning">该客户有待收款金额: ¥<span id="balanceAmount">0</span></span>
-                            </div>
-                        </div>
+<div id="sale-page" class="page">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">线下销售出库</h3>
+            <button class="btn btn-warning" onclick="app.useTestData()" style="padding: 8px 12px;">
+                <i class="fas fa-vial"></i>测试数据
+            </button>
+        </div>
+        
+        <div class="sale-form">
+            <!-- 1. 客户选择 -->
+            <div class="form-group">
+                <label class="form-label">选择客户</label>
+                <select class="form-select" id="customerSelect">
+                    <option value="">请选择客户...</option>
+                </select>
+                <div id="customerBalance" class="customer-balance hidden">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span class="balance-warning">该客户有待收款金额: ¥<span id="balanceAmount">0</span></span>
+                </div>
+            </div>
 
-                        <!-- 产品选择 -->
-                        <div class="product-select-btn" id="saleProductSelectBtn">
-                            <i class="fas fa-plus-circle"></i>
-                            <div>点击选择产品</div>
-                        </div>
+            <!-- 2. 当前销售商品清单（放在上面） -->
+            <div class="item-list" id="saleItems" style="display: none;">
+                <h4>当前销售商品</h4>
+                <div id="itemsList"></div>
+                
+                <div class="total-section">
+                    总计: ¥<span id="totalAmount">0</span>
+                </div>
+            </div>
 
-                        <!-- 选中的产品显示 -->
-                        <div id="saleSelectedProduct" class="selected-product hidden">
+            <!-- 3. 添加新商品区域 -->
+            <div class="add-item-section">
+                <h4>添加新商品</h4>
+                
+                <!-- 产品选择 -->
+                <div class="product-select-btn" id="saleProductSelectBtn">
+                    <i class="fas fa-plus-circle"></i>
+                    <div>点击选择产品</div>
+                </div>
+
+                <!-- 选中的产品显示 -->
+                <div id="saleSelectedProduct" class="selected-product hidden">
+                    <div class="selected-product-header">
+                        <div class="product-image-small">
+                            <i class="fas fa-glasses"></i>
+                        </div>
+                        <div class="product-info">
                             <h4 id="saleProductName"></h4>
                             <p id="saleProductColor"></p>
                             <p id="saleProductPrice"></p>
                             <p id="saleProductStock"></p>
                             <div id="priceNote" class="price-note"></div>
                         </div>
-
-                        <!-- 颜色选择 -->
-                        <div class="color-selection" id="saleColorSelection" style="display: none;">
-                            <label class="form-label">选择颜色</label>
-                            <div class="color-options" id="saleColorOptions">
-                                <!-- 颜色选项将通过JS动态生成 -->
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">数量</label>
-                                <input type="number" class="form-input" id="saleQuantity" value="1" min="1">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">单价</label>
-                                <input type="number" class="form-input" id="unitPrice" placeholder="输入单价">
-                                <div class="price-note">可手动修改为客户专属价格</div>
-                            </div>
-                        </div>
-
-                        <button class="btn btn-block" id="addItemBtn">
-                            <i class="fas fa-plus"></i>添加到销售单
-                        </button>
-                    </div>
-
-                    <!-- 销售商品清单 -->
-                    <div class="item-list" id="saleItems" style="display: none;">
-                        <h4>销售商品清单</h4>
-                        <div id="itemsList"></div>
-                        
-                        <div class="total-section">
-                            总计: ¥<span id="totalAmount">0</span>
-                        </div>
-                        
-                        <button class="btn btn-success btn-block" id="confirmSale">
-                            <i class="fas fa-check-circle"></i>确认销售出库
-                        </button>
                     </div>
                 </div>
 
-                <div id="saleMessage"></div>
-
-                <!-- 销售单预览 -->
-                <div id="invoicePreview" class="card" style="display: none;">
-                    <div class="card-header">
-                        <h3 class="card-title">销售单预览</h3>
-                        <button class="btn" id="downloadInvoice">
-                            <i class="fas fa-download"></i>下载销售单
-                        </button>
+                <!-- 颜色选择 -->
+                <div class="color-selection" id="saleColorSelection" style="display: none;">
+                    <label class="form-label">选择颜色</label>
+                    <div class="color-options" id="saleColorOptions">
+                        <!-- 颜色选项将通过JS动态生成 -->
                     </div>
-                    <div id="invoiceContent"></div>
                 </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">数量</label>
+                        <input type="number" class="form-input" id="saleQuantity" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">单价</label>
+                        <input type="number" class="form-input" id="unitPrice" placeholder="输入单价">
+                        <div class="price-note">可手动修改为客户专属价格</div>
+                    </div>
+                </div>
+
+                <button class="btn btn-block" id="addItemBtn">
+                    <i class="fas fa-plus"></i>添加到销售单
+                </button>
             </div>
+            
+            <!-- 4. 确认销售按钮 -->
+            <button class="btn btn-success btn-block" id="confirmSale" style="display: none;">
+                <i class="fas fa-check-circle"></i>确认销售出库
+            </button>
+        </div>
+    </div>
+
+    <div id="saleMessage"></div>
+
+    <!-- 销售单预览 -->
+    <div id="invoicePreview" class="card" style="display: none;">
+        <div class="card-header">
+            <h3 class="card-title">销售单预览</h3>
+            <button class="btn" id="downloadInvoice">
+                <i class="fas fa-download"></i>下载销售单
+            </button>
+        </div>
+        <div id="invoiceContent"></div>
+    </div>
+</div>
 
             <!-- 数据查看页面 -->
             <div id="data-page" class="page">
@@ -1093,24 +1166,27 @@ document.addEventListener('click', (e) => {
                 this.selectedVariant = null;
             }
 
-            // 更新销售页面的产品显示
-            updateSaleProductDisplay() {
-                const container = document.getElementById('saleSelectedProduct');
-                const productName = document.getElementById('saleProductName');
-                
-                // 显示选中产品区域，隐藏选择按钮
-                container.classList.remove('hidden');
-                document.getElementById('saleProductSelectBtn').style.display = 'none';
-                productName.textContent = this.selectedProduct.model_name;
-                
-                // 重置颜色选择
-                document.getElementById('saleProductColor').textContent = '';
-                document.getElementById('saleProductPrice').textContent = '';
-                document.getElementById('saleProductStock').textContent = '';
-                document.getElementById('unitPrice').value = '';
-                document.getElementById('priceNote').innerHTML = '';
-                this.selectedVariant = null;
-            }
+// 更新销售页面的产品显示
+updateSaleProductDisplay() {
+    const container = document.getElementById('saleSelectedProduct');
+    const productName = document.getElementById('saleProductName');
+    
+    // 显示选中产品区域，隐藏选择按钮
+    container.classList.remove('hidden');
+    document.getElementById('saleProductSelectBtn').style.display = 'none';
+    productName.textContent = this.selectedProduct.model_name;
+    
+    // 重置颜色选择
+    document.getElementById('saleProductColor').textContent = '';
+    document.getElementById('saleProductPrice').textContent = '';
+    document.getElementById('saleProductStock').textContent = '';
+    document.getElementById('unitPrice').value = '';
+    document.getElementById('priceNote').innerHTML = '';
+    this.selectedVariant = null;
+    
+    // 更新产品图片显示（如果有图片的话）
+    // 这里可以后续添加真实的产品图片
+}
 
 
 // 显示颜色选择
@@ -1598,37 +1674,42 @@ async updateCustomerBalance(customerId) {
                 document.getElementById('saleQuantity').value = 1;
             }
             
-            updateSaleItemsDisplay() {
-                const itemsList = document.getElementById('itemsList');
-                const totalAmount = document.getElementById('totalAmount');
-                const saleItemsSection = document.getElementById('saleItems');
-                
-                itemsList.innerHTML = '';
-                let total = 0;
-                
-                this.saleItems.forEach((item, index) => {
-                    total += item.total;
-                    
-                    const itemCard = document.createElement('div');
-                    itemCard.className = 'item-card';
-                    itemCard.innerHTML = `
-                        <div class="item-info">
-                            <h4>${item.variantName}</h4>
-                            <p>数量: ${item.quantity} × ¥${item.unitPrice}</p>
-                        </div>
-                        <div class="item-actions">
-                            <span>¥${item.total}</span>
-                            <button class="qty-btn" onclick="app.removeSaleItem(${index})">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    `;
-                    itemsList.appendChild(itemCard);
-                });
-                
-                totalAmount.textContent = total.toFixed(2);
-                saleItemsSection.style.display = this.saleItems.length > 0 ? 'block' : 'none';
-            }
+updateSaleItemsDisplay() {
+    const itemsList = document.getElementById('itemsList');
+    const totalAmount = document.getElementById('totalAmount');
+    const saleItemsSection = document.getElementById('saleItems');
+    const confirmSaleBtn = document.getElementById('confirmSale');
+    
+    itemsList.innerHTML = '';
+    let total = 0;
+    
+    this.saleItems.forEach((item, index) => {
+        total += item.total;
+        
+        const itemCard = document.createElement('div');
+        itemCard.className = 'item-card';
+        itemCard.innerHTML = `
+            <div class="item-info">
+                <h4>${item.variantName}</h4>
+                <p>数量: ${item.quantity} × ¥${item.unitPrice}</p>
+            </div>
+            <div class="item-actions">
+                <span>¥${item.total}</span>
+                <button class="qty-btn" onclick="app.removeSaleItem(${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        itemsList.appendChild(itemCard);
+    });
+    
+    totalAmount.textContent = total.toFixed(2);
+    
+    // 控制显示
+    const hasItems = this.saleItems.length > 0;
+    saleItemsSection.style.display = hasItems ? 'block' : 'none';
+    confirmSaleBtn.style.display = hasItems ? 'block' : 'none';
+}
             
             removeSaleItem(index) {
                 this.saleItems.splice(index, 1);
