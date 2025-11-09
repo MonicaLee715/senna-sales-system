@@ -1199,11 +1199,14 @@ selectProductInModal(modelId) {
     this.selectedProduct = this.products.find(p => p.model_id === modelId);
     this.closeProductModal();
     
-    // 直接显示产品预览，不管来源
+    // 显示产品预览
     document.getElementById('selectedProductPreview').style.display = 'block';
     document.getElementById('previewProductName').textContent = this.selectedProduct.model_name;
     
-    // 显示颜色选择
+    // 显示颜色选择区域
+    document.getElementById('saleColorSelection').style.display = 'block';
+    
+    // 生成颜色选项
     this.showColorSelection(this.productModalSource);
 }
             
