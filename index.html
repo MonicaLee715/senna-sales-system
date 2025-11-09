@@ -1194,19 +1194,12 @@ document.addEventListener('click', (e) => {
 
 // 在弹窗中选择产品
 selectProductInModal(modelId) {
-    console.log('selectProductInModal 被调用，modelId:', modelId);
-    
     this.selectedProduct = this.products.find(p => p.model_id === modelId);
     this.closeProductModal();
     
-    // 显示产品预览
     document.getElementById('selectedProductPreview').style.display = 'block';
     document.getElementById('previewProductName').textContent = this.selectedProduct.model_name;
-    
-    // 显示颜色选择区域
     document.getElementById('saleColorSelection').style.display = 'block';
-    
-    // 强制指定 source 为 'sale'
     this.showColorSelection('sale');
 }
             
