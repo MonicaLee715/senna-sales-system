@@ -920,6 +920,11 @@ const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzk28_Sa2LdS0ztE-W
                 this.selectedVariant = null;
                 this.useTestMode = false;
                 this.productModalSource = null;
+                    // === 添加价格缓存 ===
+    this.priceCache = {}; // 价格缓存对象
+    this.currentCustomerId = null;
+    this.customerChangeTimeout = null; // 防抖用的定时器
+    // ==================
                 this.init();
             }
             
@@ -952,18 +957,23 @@ const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzk28_Sa2LdS0ztE-W
                     this.openProductModal('scan');
                 });
                 
-                // 销售页面事件
-                document.getElementById('customerSelect').addEventListener('change', (e) => {
-    this.clearSaleForm();
-    this.updateCustomerBalance(e.target.value);
-    // 如果已选择产品，重新显示颜色选项以更新价格
-    if (this.selectedProduct) {
-        this.showColorSelection('sale');
-    }
-    // 如果已选择变体，立即更新价格显示
-    if (this.selectedVariant) {
-        this.updateProductPrice();
-    }
+// 销售页面事件
+document.getElementById('customerSelect').addEventListener('change', (e) => {
+    // === 添加防抖处理 ===
+    clearTimeout(this.customerChangeTimeout);
+    this.customerChangeTimeout = setTimeout(() => {
+        this.clearSaleForm();
+        this.updateCustomerBalance(e.target.value);
+        // 如果已选择产品，重新显示颜色选项以更新价格
+        if (this.selectedProduct) {
+            this.showColorSelection('sale');
+        }
+        // 如果已选择变体，立即更新价格显示
+        if (this.selectedVariant) {
+            this.updateProductPrice();
+        }
+    }, 300); // 延迟300ms执行，避免频繁触发
+    // ==================
 });
                 
                 document.getElementById('saleProductSelectBtn').addEventListener('click', () => {
@@ -1225,18 +1235,49 @@ async updateProductPrice() {
     
     console.log('单价输入框值已设置为:', document.getElementById('unitPrice').value);
 }
-            // 获取客户专属价格
+// 获取客户专属价格（带缓存版本）
 async getCustomerPrice(customerId, variantId) {
     console.log('getCustomerPrice被调用:', customerId, variantId);
+    
+    if (!customerId) return null;
+    
+    // === 缓存逻辑开始 ===
+    // 客户切换时清理缓存
+    if (customerId !== this.currentCustomerId) {
+        this.priceCache = {};
+        this.currentCustomerId = customerId;
+        console.log('切换到新客户，清理缓存');
+    }
+    
+    const cacheKey = variantId;
+    
+    // 检查缓存（5分钟内有效）
+    if (this.priceCache[cacheKey] && 
+        Date.now() - this.priceCache[cacheKey].timestamp < 300000) {
+        console.log('使用缓存价格:', this.priceCache[cacheKey].price);
+        return this.priceCache[cacheKey].price;
+    }
+    // === 缓存逻辑结束 ===
+    
     try {
         const response = await fetch(`${API_BASE_URL}?action=getCustomerPrice&customer_id=${customerId}&variant_id=${variantId}`);
         const data = await response.json();
         console.log('客户价格API返回:', data);
-        return data.success ? data.data : null;
+        
+        if (data.success && data.data !== null) {
+            // === 缓存结果 ===
+            this.priceCache[cacheKey] = {
+                price: data.data,
+                timestamp: Date.now()
+            };
+            // ==============
+            return data.data;
+        }
     } catch (error) {
         console.error('获取客户价格失败:', error);
-        return null;
     }
+    
+    return null;
 }
 
             // 使用测试数据
