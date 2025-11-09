@@ -1001,6 +1001,16 @@ const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzk28_Sa2LdS0ztE-W
                         this.closeProductModal();
                     }
                 });
+                // 颜色选项的事件委托（处理动态生成的元素）
+document.addEventListener('click', (e) => {
+    if (e.target.closest('.color-option')) {
+        const colorOption = e.target.closest('.color-option');
+        const variantId = colorOption.dataset.variantId;
+        // 判断是扫码页面还是销售页面的颜色选项
+        const source = colorOption.closest('#scanColorOptions') ? 'scan' : 'sale';
+        this.selectVariant(variantId, source);
+    }
+});
             }
 
             // 打开产品选择弹窗
