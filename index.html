@@ -954,13 +954,13 @@ const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzk28_Sa2LdS0ztE-W
                 
                 // 销售页面事件
                 document.getElementById('customerSelect').addEventListener('change', (e) => {
-                    this.clearSaleForm();
-                    this.updateCustomerBalance(e.target.value);
-                    // 如果已选择产品，重新获取价格
-                    if (this.selectedVariant) {
-                        this.updateProductPrice();
-                    }
-                });
+    this.clearSaleForm();
+    this.updateCustomerBalance(e.target.value);
+    // 如果已选择产品，重新显示颜色选项以更新价格
+    if (this.selectedProduct) {
+        this.showColorSelection('sale');
+    }
+});
                 
                 document.getElementById('saleProductSelectBtn').addEventListener('click', () => {
                     this.openProductModal('sale');
@@ -1088,38 +1088,52 @@ const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzk28_Sa2LdS0ztE-W
                 this.selectedVariant = null;
             }
 
+
             // 显示颜色选择
-            showColorSelection(source) {
-                const colorSelection = source === 'scan' ? 
-                    document.getElementById('scanColorSelection') : 
-                    document.getElementById('saleColorSelection');
-                
-                const colorOptions = source === 'scan' ? 
-                    document.getElementById('scanColorOptions') : 
-                    document.getElementById('saleColorOptions');
-                
-                colorSelection.style.display = 'block';
-                colorOptions.innerHTML = '';
-                
-                const variants = this.productVariants[this.selectedProduct.model_id] || [];
-                variants.forEach(variant => {
-                    const colorOption = document.createElement('div');
-                    colorOption.className = 'color-option';
-                    colorOption.dataset.variantId = variant.variant_id;
-                    colorOption.innerHTML = `
-                        ${variant.color} 
-                        <span style="font-size: 0.8rem; color: #666;">
-                            (库存: ${variant.stock}, ¥${variant.price})
-                        </span>
-                    `;
-                    
-                    colorOption.addEventListener('click', () => {
-                        this.selectVariant(variant.variant_id, source);
-                    });
-                    
-                    colorOptions.appendChild(colorOption);
-                });
+async showColorSelection(source) {
+    const colorSelection = source === 'scan' ? 
+        document.getElementById('scanColorSelection') : 
+        document.getElementById('saleColorSelection');
+    
+    const colorOptions = source === 'scan' ? 
+        document.getElementById('scanColorOptions') : 
+        document.getElementById('saleColorOptions');
+    
+    colorSelection.style.display = 'block';
+    colorOptions.innerHTML = '';
+    
+    const variants = this.productVariants[this.selectedProduct.model_id] || [];
+    
+    // 获取当前选择的客户ID
+    const customerId = document.getElementById('customerSelect').value;
+    
+    for (const variant of variants) {
+        // 获取客户专属价格
+        let displayPrice = variant.price;
+        if (customerId && source === 'sale') {
+            const customerPrice = await this.getCustomerPrice(customerId, variant.variant_id);
+            if (customerPrice !== null) {
+                displayPrice = customerPrice;
             }
+        }
+        
+        const colorOption = document.createElement('div');
+        colorOption.className = 'color-option';
+        colorOption.dataset.variantId = variant.variant_id;
+        colorOption.innerHTML = `
+            ${variant.color} 
+            <span style="font-size: 0.8rem; color: #666;">
+                (库存: ${variant.stock}, ¥${displayPrice})
+            </span>
+        `;
+        
+        colorOption.addEventListener('click', () => {
+            this.selectVariant(variant.variant_id, source);
+        });
+        
+        colorOptions.appendChild(colorOption);
+    }
+}
 
             // 选择颜色变体
 async selectVariant(variantId, source) {
@@ -1143,7 +1157,7 @@ async selectVariant(variantId, source) {
         document.getElementById('saleProductColor').textContent = `颜色: ${this.selectedVariant.color}`;
         document.getElementById('saleProductStock').textContent = `库存: ${this.selectedVariant.stock}`;
         
-        // 重要修复：获取客户专属价格
+        // 重要：自动填充单价（优先客户专属价格）
         await this.updateProductPrice();
     }
 }
@@ -1165,9 +1179,9 @@ async updateProductPrice() {
         }
     }
 
-    // 更新显示
+    // 更新显示和单价输入框
     document.getElementById('saleProductPrice').textContent = `价格: ¥${finalPrice}`;
-    document.getElementById('unitPrice').value = finalPrice;
+    document.getElementById('unitPrice').value = finalPrice;  // 这行确保单价输入框有值
     document.getElementById('priceNote').innerHTML = priceNote;
 }
 
