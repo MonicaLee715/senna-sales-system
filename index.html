@@ -360,7 +360,57 @@
             border-color: var(--primary-color);
             background: rgba(102, 126, 234, 0.1);
         }
+/* === 已选产品预览样式 === */
+.selected-product-preview {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+}
 
+.preview-header h4 {
+    margin-bottom: 10px;
+    color: var(--text-color);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.preview-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.preview-image {
+    width: 45px;
+    height: 45px;
+    background: #e9ecef;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    flex-shrink: 0;
+}
+
+.preview-info {
+    flex: 1;
+}
+
+.preview-info h5 {
+    margin-bottom: 4px;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.preview-info p {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin: 0;
+}
         /* 销售表单样式 */
         .sale-form {
             margin-top: 10px;
@@ -875,7 +925,21 @@
                         </div>
                     </div>
                 </div>
-
+<!-- 已选产品显示 -->
+<div class="selected-product-preview" id="selectedProductPreview" style="display: none;">
+    <div class="preview-header">
+        <h4>已选产品</h4>
+    </div>
+    <div class="preview-content">
+        <div class="preview-image">
+            <i class="fas fa-glasses"></i>
+        </div>
+        <div class="preview-info">
+            <h5 id="previewProductName">产品名称</h5>
+            <p id="previewProductModel">型号: </p>
+        </div>
+    </div>
+</div>
                 <!-- 颜色选择 -->
                 <div class="color-selection" id="saleColorSelection" style="display: none;">
                     <label class="form-label">选择颜色</label>
@@ -1158,7 +1222,20 @@ document.addEventListener('click', (e) => {
                 // 显示颜色选择
                 this.showColorSelection(this.productModalSource);
             }
-
+// 显示已选产品预览
+showSelectedProductPreview() {
+    const previewElement = document.getElementById('selectedProductPreview');
+    const productNameElement = document.getElementById('previewProductName');
+    const productModelElement = document.getElementById('previewProductModel');
+    
+    if (this.selectedProduct) {
+        productNameElement.textContent = this.selectedProduct.model_name;
+        productModelElement.textContent = `型号: ${this.selectedProduct.model_id}`;
+        previewElement.style.display = 'block';
+    } else {
+        previewElement.style.display = 'none';
+    }
+}
             // 更新扫码页面的产品显示
             updateScanProductDisplay() {
                 const container = document.getElementById('scanSelectedProduct');
@@ -1575,7 +1652,9 @@ async getCustomerPrice(customerId, variantId) {
                 document.getElementById('saleQuantity').value = 1;
                 document.getElementById('unitPrice').value = '';
                 document.getElementById('priceNote').innerHTML = '';
-                
+
+                 // === 新增：隐藏已选产品预览 ===
+    document.getElementById('selectedProductPreview').style.display = 'none';
                 this.showMessage('saleMessage', '已清空销售清单', 'success');
             }
 
