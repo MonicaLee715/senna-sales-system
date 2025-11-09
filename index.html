@@ -1122,54 +1122,54 @@ const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzk28_Sa2LdS0ztE-W
             }
 
             // 选择颜色变体
-            async selectVariant(variantId, source) {
-                // 更新选中状态
-                const colorOptions = source === 'scan' ? 
-                    document.getElementById('scanColorOptions') : 
-                    document.getElementById('saleColorOptions');
-                
-                document.querySelectorAll('.color-option').forEach(option => {
-                    option.classList.remove('selected');
-                });
-                document.querySelector(`.color-option[data-variant-id="${variantId}"]`).classList.add('selected');
-                
-                this.selectedVariant = this.findVariantById(variantId);
-                
-                // 更新显示
-                if (source === 'scan') {
-                    document.getElementById('scanProductColor').textContent = `颜色: ${this.selectedVariant.color}`;
-                    document.getElementById('scanProductPrice').textContent = `价格: ¥${this.selectedVariant.price}`;
-                } else if (source === 'sale') {
-                    document.getElementById('saleProductColor').textContent = `颜色: ${this.selectedVariant.color}`;
-                    document.getElementById('saleProductStock').textContent = `库存: ${this.selectedVariant.stock}`;
-                    
-                    // 获取并显示价格（优先客户专属价格）
-                    await this.updateProductPrice();
-                }
-            }
+async selectVariant(variantId, source) {
+    // 更新选中状态
+    const colorOptions = source === 'scan' ? 
+        document.getElementById('scanColorOptions') : 
+        document.getElementById('saleColorOptions');
+    
+    document.querySelectorAll('.color-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    document.querySelector(`.color-option[data-variant-id="${variantId}"]`).classList.add('selected');
+    
+    this.selectedVariant = this.findVariantById(variantId);
+    
+    // 更新显示
+    if (source === 'scan') {
+        document.getElementById('scanProductColor').textContent = `颜色: ${this.selectedVariant.color}`;
+        document.getElementById('scanProductPrice').textContent = `价格: ¥${this.selectedVariant.price}`;
+    } else if (source === 'sale') {
+        document.getElementById('saleProductColor').textContent = `颜色: ${this.selectedVariant.color}`;
+        document.getElementById('saleProductStock').textContent = `库存: ${this.selectedVariant.stock}`;
+        
+        // 重要修复：获取客户专属价格
+        await this.updateProductPrice();
+    }
+}
 
-            // 更新产品价格（优先客户专属价格）
-            async updateProductPrice() {
-                if (!this.selectedVariant) return;
+           // 更新产品价格（优先客户专属价格）
+async updateProductPrice() {
+    if (!this.selectedVariant) return;
 
-                const customerId = document.getElementById('customerSelect').value;
-                let finalPrice = this.selectedVariant.price;
-                let priceNote = '标准价格';
+    const customerId = document.getElementById('customerSelect').value;
+    let finalPrice = this.selectedVariant.price;
+    let priceNote = '标准价格';
 
-                // 如果有选择客户，尝试获取专属价格
-                if (customerId) {
-                    const customerPrice = await this.getCustomerPrice(customerId, this.selectedVariant.variant_id);
-                    if (customerPrice !== null) {
-                        finalPrice = customerPrice;
-                        priceNote = `<span class="special-price">客户专属价格</span>`;
-                    }
-                }
+    // 如果有选择客户，尝试获取专属价格
+    if (customerId) {
+        const customerPrice = await this.getCustomerPrice(customerId, this.selectedVariant.variant_id);
+        if (customerPrice !== null) {
+            finalPrice = customerPrice;
+            priceNote = `<span class="special-price">客户专属价格</span>`;
+        }
+    }
 
-                // 更新显示
-                document.getElementById('saleProductPrice').textContent = `价格: ¥${finalPrice}`;
-                document.getElementById('unitPrice').value = finalPrice;
-                document.getElementById('priceNote').innerHTML = priceNote;
-            }
+    // 更新显示
+    document.getElementById('saleProductPrice').textContent = `价格: ¥${finalPrice}`;
+    document.getElementById('unitPrice').value = finalPrice;
+    document.getElementById('priceNote').innerHTML = priceNote;
+}
 
             // 获取客户专属价格
             async getCustomerPrice(customerId, variantId) {
