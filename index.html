@@ -1103,7 +1103,7 @@ document.addEventListener('click', (e) => {
             }
 
 
-            // 显示颜色选择
+// 显示颜色选择
 async showColorSelection(source) {
     const colorSelection = source === 'scan' ? 
         document.getElementById('scanColorSelection') : 
@@ -1118,21 +1118,17 @@ async showColorSelection(source) {
     
     const variants = this.productVariants[this.selectedProduct.model_id] || [];
     
- 
-        
+    // 遍历所有变体创建颜色选项
+    for (const variant of variants) {
         const colorOption = document.createElement('div');
         colorOption.className = 'color-option';
         colorOption.dataset.variantId = variant.variant_id;
         colorOption.innerHTML = `
-    ${variant.color} 
-    <span style="font-size: 0.8rem; color: #666;">
-        (库存: ${variant.stock}, 点击查看价格)
-    </span>
-`;
-        
-        colorOption.addEventListener('click', () => {
-    this.selectVariant(variant.variant_id, source);
-});
+            ${variant.color} 
+            <span style="font-size: 0.8rem; color: #666;">
+                (库存: ${variant.stock}, 点击查看价格)
+            </span>
+        `;
         
         colorOptions.appendChild(colorOption);
     }
