@@ -1138,7 +1138,7 @@ async showColorSelection(source) {
     }
 }
 
-            // 选择颜色变体
+// 选择颜色变体
 async selectVariant(variantId, source) {
     // 更新选中状态
     const colorOptions = source === 'scan' ? 
@@ -1148,7 +1148,6 @@ async selectVariant(variantId, source) {
     document.querySelectorAll('.color-option').forEach(option => {
         option.classList.remove('selected');
     });
-    document.querySelector(`.color-option[data-variant-id="${variantId}"]`).classList.add('selected');
     
     this.selectedVariant = this.findVariantById(variantId);
     
@@ -1162,6 +1161,28 @@ async selectVariant(variantId, source) {
         
         // 重要：自动填充单价（优先客户专属价格）
         await this.updateProductPrice();
+        
+        // 更新颜色选项显示价格
+        const customerId = document.getElementById('customerSelect').value;
+        let displayPrice = this.selectedVariant.price;
+        if (customerId) {
+            const customerPrice = await this.getCustomerPrice(customerId, this.selectedVariant.variant_id);
+            if (customerPrice !== null) {
+                displayPrice = customerPrice;
+            }
+        }
+        
+        // 更新选中的颜色选项显示
+        const selectedOption = document.querySelector(`.color-option[data-variant-id="${variantId}"]`);
+        if (selectedOption) {
+            selectedOption.innerHTML = `
+                ${this.selectedVariant.color} 
+                <span style="font-size: 0.8rem; color: #666;">
+                    (库存: ${this.selectedVariant.stock}, ¥${displayPrice})
+                </span>
+            `;
+            selectedOption.classList.add('selected');
+        }
     }
 }
 
@@ -1440,24 +1461,48 @@ async getCustomerPrice(customerId, variantId) {
                 this.showMessage('saleMessage', '已清空销售清单', 'success');
             }
 
-            updateCustomerBalance(customerId) {
-                const balanceElement = document.getElementById('customerBalance');
-                const balanceAmount = document.getElementById('balanceAmount');
-                
-                if (!customerId) {
-                    balanceElement.classList.add('hidden');
-                    return;
-                }
-                
-                const pendingAmount = this.calculatePendingAmount(customerId);
-                
-                if (pendingAmount > 0) {
-                    balanceAmount.textContent = pendingAmount.toFixed(2);
-                    balanceElement.classList.remove('hidden');
-                } else {
-                    balanceElement.classList.add('hidden');
+async updateCustomerBalance(customerId) {
+    const balanceElement = document.getElementById('customerBalance');
+    const balanceAmount = document.getElementById('balanceAmount');
+    
+    if (!customerId) {
+        balanceElement.classList.add('hidden');
+        return;
+    }
+    
+    const pendingAmount = this.calculatePendingAmount(customerId);
+    
+    if (pendingAmount > 0) {
+        balanceAmount.textContent = pendingAmount.toFixed(2);
+        balanceElement.classList.remove('hidden');
+    } else {
+        balanceElement.classList.add('hidden');
+    }
+    
+    // 如果已经选择了颜色变体，更新价格显示
+    if (this.selectedVariant) {
+        await this.updateProductPrice();
+        
+        // 同时更新颜色选项的显示价格
+        const selectedOption = document.querySelector(`.color-option[data-variant-id="${this.selectedVariant.variant_id}"]`);
+        if (selectedOption) {
+            let displayPrice = this.selectedVariant.price;
+            if (customerId) {
+                const customerPrice = await this.getCustomerPrice(customerId, this.selectedVariant.variant_id);
+                if (customerPrice !== null) {
+                    displayPrice = customerPrice;
                 }
             }
+            
+            selectedOption.innerHTML = `
+                ${this.selectedVariant.color} 
+                <span style="font-size: 0.8rem; color: #666;">
+                    (库存: ${this.selectedVariant.stock}, ¥${displayPrice})
+                </span>
+            `;
+        }
+    }
+}
 
             calculatePendingAmount(customerId) {
                 return this.salesRecords
