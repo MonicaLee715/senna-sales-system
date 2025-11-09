@@ -960,6 +960,10 @@ const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzk28_Sa2LdS0ztE-W
     if (this.selectedProduct) {
         this.showColorSelection('sale');
     }
+    // 如果已选择变体，立即更新价格显示
+    if (this.selectedVariant) {
+        this.updateProductPrice();
+    }
 });
                 
                 document.getElementById('saleProductSelectBtn').addEventListener('click', () => {
