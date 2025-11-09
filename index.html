@@ -1217,6 +1217,8 @@ document.addEventListener('click', (e) => {
                     this.updateScanProductDisplay();
                 } else if (this.productModalSource === 'sale') {
                     this.updateSaleProductDisplay();
+                            // === 新增：显示已选产品预览 ===
+        this.showSelectedProductPreview();
                 }
                 
                 // 显示颜色选择
