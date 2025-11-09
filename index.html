@@ -1118,18 +1118,7 @@ async showColorSelection(source) {
     
     const variants = this.productVariants[this.selectedProduct.model_id] || [];
     
-    // 获取当前选择的客户ID
-    const customerId = document.getElementById('customerSelect').value;
-    
-    for (const variant of variants) {
-        // 获取客户专属价格
-        let displayPrice = variant.price;
-        if (customerId && source === 'sale') {
-            const customerPrice = await this.getCustomerPrice(customerId, variant.variant_id);
-            if (customerPrice !== null) {
-                displayPrice = customerPrice;
-            }
-        }
+ 
         
         const colorOption = document.createElement('div');
         colorOption.className = 'color-option';
