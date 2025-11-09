@@ -163,33 +163,6 @@
             display: block;
         }
 
-        /* 扫码页面样式 */
-        .scan-section {
-            text-align: center;
-            padding: 20px 0;
-        }
-
-        .scan-btn {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-            border: none;
-            padding: 20px 30px;
-            border-radius: 50%;
-            font-size: 2rem;
-            cursor: pointer;
-            margin: 20px 0;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            transition: all 0.3s ease;
-        }
-
-        .scan-btn:active {
-            transform: scale(0.95);
-        }
-
-        .manual-input {
-            margin-top: 20px;
-        }
-
         /* 表单样式 */
         .form-group {
             margin-bottom: 15px;
@@ -231,6 +204,9 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+        }
+
+        .btn-block {
             width: 100%;
         }
 
@@ -252,61 +228,52 @@
             background: var(--danger-color);
         }
 
-        /* 产品选择样式 */
-        .product-selection {
-            margin-top: 15px;
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
         }
 
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .product-card {
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
+        /* 产品选择按钮 */
+        .product-select-btn {
+            background: var(--light-bg);
+            border: 2px dashed var(--border-color);
             border-radius: 8px;
-            padding: 10px;
+            padding: 20px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
+            margin-bottom: 15px;
         }
 
-        .product-card.selected {
+        .product-select-btn:hover {
             border-color: var(--primary-color);
             background: rgba(102, 126, 234, 0.1);
         }
 
-        .product-image {
-            width: 60px;
-            height: 60px;
-            background: #f0f0f0;
-            border-radius: 6px;
-            margin: 0 auto 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
+        .product-select-btn i {
+            font-size: 2rem;
             color: var(--text-muted);
+            margin-bottom: 8px;
         }
 
-        .product-name {
+        .selected-product {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .selected-product h4 {
+            margin-bottom: 5px;
+            color: var(--text-color);
+        }
+
+        .selected-product p {
+            color: var(--text-muted);
+            margin-bottom: 3px;
             font-size: 0.9rem;
-            font-weight: 500;
-            margin-bottom: 4px;
-        }
-
-        .product-price {
-            font-size: 0.8rem;
-            color: var(--success-color);
-            font-weight: 600;
-        }
-
-        .product-stock {
-            font-size: 0.7rem;
-            color: var(--text-muted);
         }
 
         /* 颜色选择 */
@@ -413,6 +380,119 @@
         .balance-warning {
             color: #856404;
             font-weight: 500;
+        }
+
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        /* 产品选择网格 */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .product-card.selected {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .product-image {
+            width: 60px;
+            height: 60px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+        }
+
+        .product-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .product-price {
+            font-size: 0.8rem;
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        .product-stock {
+            font-size: 0.7rem;
+            color: var(--text-muted);
         }
 
         /* 小票样式 */
@@ -605,21 +685,25 @@
                         <h2>扫码快速出入库</h2>
                         <p style="color: var(--text-muted); margin: 10px 0;">扫描产品二维码快速处理网店订单</p>
                         
-                        <button class="scan-btn" id="startScan">
-                            <i class="fas fa-camera"></i>
+                        <button class="btn btn-block" id="startScan">
+                            <i class="fas fa-camera"></i>开始扫码
                         </button>
-                        <p>点击开始扫码</p>
                     </div>
 
                     <div class="manual-input">
                         <h3 style="margin-bottom: 15px;">手动输入</h3>
                         
                         <!-- 产品选择 -->
-                        <div class="product-selection">
-                            <label class="form-label">选择产品系列</label>
-                            <div class="product-grid" id="scanProductGrid">
-                                <!-- 产品卡片将通过JS动态生成 -->
-                            </div>
+                        <div class="product-select-btn" id="scanProductSelectBtn">
+                            <i class="fas fa-plus-circle"></i>
+                            <div>选择产品系列</div>
+                        </div>
+
+                        <!-- 选中的产品显示 -->
+                        <div id="scanSelectedProduct" class="selected-product hidden">
+                            <h4 id="scanProductName"></h4>
+                            <p id="scanProductColor"></p>
+                            <p id="scanProductPrice"></p>
                         </div>
 
                         <!-- 颜色选择 -->
@@ -643,14 +727,13 @@
                             </select>
                         </div>
                         
-                        <button class="btn" id="confirmScan">
+                        <button class="btn btn-block" id="confirmScan">
                             <i class="fas fa-check"></i>确认操作
                         </button>
                     </div>
                 </div>
 
                 <div id="scanMessage"></div>
-                <div id="scanDebug" class="debug-info" style="display: none;"></div>
             </div>
 
             <!-- 线下销售页面 -->
@@ -658,7 +741,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">线下销售出库</h3>
-                        <button class="btn btn-warning" onclick="app.useTestData()" style="width: auto; padding: 8px 12px;">
+                        <button class="btn btn-warning" onclick="app.useTestData()" style="padding: 8px 12px;">
                             <i class="fas fa-vial"></i>测试数据
                         </button>
                     </div>
@@ -677,11 +760,17 @@
                         </div>
 
                         <!-- 产品选择 -->
-                        <div class="product-selection">
-                            <label class="form-label">选择产品系列</label>
-                            <div class="product-grid" id="saleProductGrid">
-                                <!-- 产品卡片将通过JS动态生成 -->
-                            </div>
+                        <div class="product-select-btn" id="saleProductSelectBtn">
+                            <i class="fas fa-plus-circle"></i>
+                            <div>点击选择产品</div>
+                        </div>
+
+                        <!-- 选中的产品显示 -->
+                        <div id="saleSelectedProduct" class="selected-product hidden">
+                            <h4 id="saleProductName"></h4>
+                            <p id="saleProductColor"></p>
+                            <p id="saleProductPrice"></p>
+                            <p id="saleProductStock"></p>
                         </div>
 
                         <!-- 颜色选择 -->
@@ -703,7 +792,7 @@
                             </div>
                         </div>
 
-                        <button class="btn" id="addItemBtn">
+                        <button class="btn btn-block" id="addItemBtn">
                             <i class="fas fa-plus"></i>添加到销售单
                         </button>
                     </div>
@@ -717,7 +806,7 @@
                             总计: ¥<span id="totalAmount">0</span>
                         </div>
                         
-                        <button class="btn btn-success" id="confirmSale">
+                        <button class="btn btn-success btn-block" id="confirmSale">
                             <i class="fas fa-check-circle"></i>确认销售出库
                         </button>
                     </div>
@@ -767,6 +856,21 @@
         </div>
     </main>
 
+    <!-- 产品选择弹窗 -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>选择产品系列</h3>
+                <button class="close-btn" id="closeProductModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="product-grid" id="modalProductGrid">
+                    <!-- 产品卡片将通过JS动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 底部导航 -->
     <nav class="bottom-nav">
         <a href="#scan" class="nav-item active" data-page="scan">
@@ -802,6 +906,7 @@
                 this.selectedProduct = null;
                 this.selectedVariant = null;
                 this.useTestMode = false;
+                this.productModalSource = null; // 记录弹窗来源
                 this.init();
             }
             
@@ -829,10 +934,19 @@
                 document.getElementById('confirmScan').addEventListener('click', () => {
                     this.confirmScanOperation();
                 });
+
+                document.getElementById('scanProductSelectBtn').addEventListener('click', () => {
+                    this.openProductModal('scan');
+                });
                 
                 // 销售页面事件
                 document.getElementById('customerSelect').addEventListener('change', (e) => {
+                    this.clearSaleForm();
                     this.updateCustomerBalance(e.target.value);
+                });
+                
+                document.getElementById('saleProductSelectBtn').addEventListener('click', () => {
+                    this.openProductModal('sale');
                 });
                 
                 document.getElementById('saleQuantity').addEventListener('change', () => {
@@ -853,6 +967,135 @@
 
                 document.getElementById('refreshBtn').addEventListener('click', () => {
                     this.refreshData();
+                });
+
+                // 弹窗事件
+                document.getElementById('closeProductModal').addEventListener('click', () => {
+                    this.closeProductModal();
+                });
+
+                // 点击弹窗外部关闭
+                document.getElementById('productModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'productModal') {
+                        this.closeProductModal();
+                    }
+                });
+            }
+
+            // 打开产品选择弹窗
+            openProductModal(source) {
+                this.productModalSource = source;
+                this.renderProductModal();
+                document.getElementById('productModal').classList.add('show');
+            }
+
+            // 关闭产品选择弹窗
+            closeProductModal() {
+                document.getElementById('productModal').classList.remove('show');
+                this.productModalSource = null;
+            }
+
+            // 渲染产品选择弹窗
+            renderProductModal() {
+                const container = document.getElementById('modalProductGrid');
+                container.innerHTML = '';
+                
+                this.products.forEach(product => {
+                    const productCard = document.createElement('div');
+                    productCard.className = 'product-card';
+                    productCard.dataset.modelId = product.model_id;
+                    productCard.innerHTML = `
+                        <div class="product-image">
+                            <i class="fas fa-glasses"></i>
+                        </div>
+                        <div class="product-name">${product.model_name}</div>
+                        <div class="product-stock">点击选择</div>
+                    `;
+                    
+                    productCard.addEventListener('click', () => {
+                        this.selectProductInModal(product.model_id);
+                    });
+                    
+                    container.appendChild(productCard);
+                });
+            }
+
+            // 在弹窗中选择产品
+            selectProductInModal(modelId) {
+                this.selectedProduct = this.products.find(p => p.model_id === modelId);
+                this.closeProductModal();
+                
+                // 根据来源更新对应的界面
+                if (this.productModalSource === 'scan') {
+                    this.updateScanProductDisplay();
+                } else if (this.productModalSource === 'sale') {
+                    this.updateSaleProductDisplay();
+                }
+                
+                // 显示颜色选择
+                this.showColorSelection(this.productModalSource);
+            }
+
+            // 更新扫码页面的产品显示
+            updateScanProductDisplay() {
+                const container = document.getElementById('scanSelectedProduct');
+                const productName = document.getElementById('scanProductName');
+                
+                container.classList.remove('hidden');
+                productName.textContent = this.selectedProduct.model_name;
+                
+                // 重置颜色选择
+                document.getElementById('scanProductColor').textContent = '';
+                document.getElementById('scanProductPrice').textContent = '';
+                this.selectedVariant = null;
+            }
+
+            // 更新销售页面的产品显示
+            updateSaleProductDisplay() {
+                const container = document.getElementById('saleSelectedProduct');
+                const productName = document.getElementById('saleProductName');
+                
+                container.classList.remove('hidden');
+                productName.textContent = this.selectedProduct.model_name;
+                
+                // 重置颜色选择
+                document.getElementById('saleProductColor').textContent = '';
+                document.getElementById('saleProductPrice').textContent = '';
+                document.getElementById('saleProductStock').textContent = '';
+                document.getElementById('unitPrice').value = '';
+                this.selectedVariant = null;
+            }
+
+            // 显示颜色选择
+            showColorSelection(source) {
+                const colorSelection = source === 'scan' ? 
+                    document.getElementById('scanColorSelection') : 
+                    document.getElementById('saleColorSelection');
+                
+                const colorOptions = source === 'scan' ? 
+                    document.getElementById('scanColorOptions') : 
+                    document.getElementById('saleColorOptions');
+                
+                colorSelection.style.display = 'block';
+                colorOptions.innerHTML = '';
+                
+                const variants = this.productVariants[this.selectedProduct.model_id] || [];
+                variants.forEach(variant => {
+                    const colorOption = document.createElement('div');
+                    colorOption.className = 'color-option';
+                    colorOption.dataset.variantId = variant.variant_id;
+                    colorOption.innerHTML = `
+                        ${variant.color} 
+                        <span style="font-size: 0.8rem; color: #666;">
+                            (库存: ${variant.stock}, ¥${variant.price})
+                        </span>
+                    `;
+                    
+                    colorOption.addEventListener('click', () => {
+                        this.selectVariant(variant.variant_id, source);
+                    });
+                    
+                    colorOptions.appendChild(colorOption);
                 });
             }
 
@@ -918,10 +1161,9 @@
                     debugInfo.innerHTML = '数据加载完成！';
                 } catch (error) {
                     debugInfo.innerHTML = `数据加载失败: ${error.message}`;
-                this.useTestData();
-                this.showMessage('scanMessage', '使用测试数据模式', 'warning');
-                this.showMessage('saleMessage', '使用测试数据模式', 'warning');
-                return;
+                    this.useTestData();
+                    this.showMessage('scanMessage', '使用测试数据模式', 'warning');
+                    this.showMessage('saleMessage', '使用测试数据模式', 'warning');
                 }
             }
             
@@ -975,8 +1217,6 @@
                     
                     if (data.success) {
                         this.products = data.data;
-                        this.renderProductGrid('scanProductGrid');
-                        this.renderProductGrid('saleProductGrid');
                         
                         // 加载所有变体
                         for (const product of this.products) {
@@ -998,9 +1238,6 @@
                     { model_id: 'M003', model_name: '运动休闲系列' }
                 ];
                 
-                this.renderProductGrid('scanProductGrid');
-                this.renderProductGrid('saleProductGrid');
-                
                 // 添加测试变体数据
                 this.productVariants = {
                     'M001': [
@@ -1014,30 +1251,6 @@
                         { variant_id: 'V004', model_id: 'M003', color: '蓝色', price: 399, stock: 40, product_image: '' }
                     ]
                 };
-            }
-
-            renderProductGrid(containerId) {
-                const container = document.getElementById(containerId);
-                container.innerHTML = '';
-                
-                this.products.forEach(product => {
-                    const productCard = document.createElement('div');
-                    productCard.className = 'product-card';
-                    productCard.dataset.modelId = product.model_id;
-                    productCard.innerHTML = `
-                        <div class="product-image">
-                            <i class="fas fa-glasses"></i>
-                        </div>
-                        <div class="product-name">${product.model_name}</div>
-                        <div class="product-stock">点击选择</div>
-                    `;
-                    
-                    productCard.addEventListener('click', () => {
-                        this.selectProduct(product.model_id, containerId);
-                    });
-                    
-                    container.appendChild(productCard);
-                });
             }
 
             async loadProductVariants(modelId) {
@@ -1056,56 +1269,9 @@
                 }
             }
 
-            selectProduct(modelId, source) {
-                // 更新选中状态
-                document.querySelectorAll('.product-card').forEach(card => {
-                    card.classList.remove('selected');
-                });
-                document.querySelector(`.product-card[data-model-id="${modelId}"]`).classList.add('selected');
-                
-                this.selectedProduct = this.products.find(p => p.model_id === modelId);
-                
-                // 显示颜色选择
-                const colorSelection = source.includes('scan') ? 
-                    document.getElementById('scanColorSelection') : 
-                    document.getElementById('saleColorSelection');
-                
-                const colorOptions = source.includes('scan') ? 
-                    document.getElementById('scanColorOptions') : 
-                    document.getElementById('saleColorOptions');
-                
-                colorSelection.style.display = 'block';
-                colorOptions.innerHTML = '';
-                
-                const variants = this.productVariants[modelId] || [];
-                variants.forEach(variant => {
-                    const colorOption = document.createElement('div');
-                    colorOption.className = 'color-option';
-                    colorOption.dataset.variantId = variant.variant_id;
-                    colorOption.innerHTML = `
-                        ${variant.color} 
-                        <span style="font-size: 0.8rem; color: #666;">
-                            (库存: ${variant.stock}, ¥${variant.price})
-                        </span>
-                    `;
-                    
-                    colorOption.addEventListener('click', () => {
-                        this.selectVariant(variant.variant_id, source);
-                    });
-                    
-                    colorOptions.appendChild(colorOption);
-                });
-                
-                // 重置变体选择
-                this.selectedVariant = null;
-                if (source.includes('sale')) {
-                    document.getElementById('unitPrice').value = '';
-                }
-            }
-
             selectVariant(variantId, source) {
                 // 更新选中状态
-                const colorOptions = source.includes('scan') ? 
+                const colorOptions = source === 'scan' ? 
                     document.getElementById('scanColorOptions') : 
                     document.getElementById('saleColorOptions');
                 
@@ -1116,7 +1282,14 @@
                 
                 this.selectedVariant = this.findVariantById(variantId);
                 
-                if (source.includes('sale') && this.selectedVariant) {
+                // 更新显示
+                if (source === 'scan') {
+                    document.getElementById('scanProductColor').textContent = `颜色: ${this.selectedVariant.color}`;
+                    document.getElementById('scanProductPrice').textContent = `价格: ¥${this.selectedVariant.price}`;
+                } else if (source === 'sale') {
+                    document.getElementById('saleProductColor').textContent = `颜色: ${this.selectedVariant.color}`;
+                    document.getElementById('saleProductPrice').textContent = `价格: ¥${this.selectedVariant.price}`;
+                    document.getElementById('saleProductStock').textContent = `库存: ${this.selectedVariant.stock}`;
                     document.getElementById('unitPrice').value = this.selectedVariant.price;
                 }
             }
@@ -1149,6 +1322,22 @@
                     { sale_id: 'S002', customer_id: 'C001', total_amount: 897, status: '待收款' },
                     { sale_id: 'S003', customer_id: 'C002', total_amount: 199, status: '待收款' }
                 ];
+            }
+
+            // 清空销售表单
+            clearSaleForm() {
+                this.saleItems = [];
+                this.updateSaleItemsDisplay();
+                this.selectedProduct = null;
+                this.selectedVariant = null;
+                
+                // 重置产品选择
+                document.getElementById('saleSelectedProduct').classList.add('hidden');
+                document.getElementById('saleColorSelection').style.display = 'none';
+                document.getElementById('saleQuantity').value = 1;
+                document.getElementById('unitPrice').value = '';
+                
+                this.showMessage('saleMessage', '已清空销售清单', 'success');
             }
 
             updateCustomerBalance(customerId) {
@@ -1217,7 +1406,7 @@
                 this.updateSaleItemsDisplay();
                 this.showMessage('saleMessage', '商品已添加到销售单', 'success');
                 
-                // 重置表单
+                // 重置数量
                 document.getElementById('saleQuantity').value = 1;
             }
             
@@ -1276,8 +1465,8 @@
                 }
 
                 try {
-                    // 创建销售记录
-                    for (const item of this.saleItems) {
+                    // 为每个商品创建销售记录
+                    const salePromises = this.saleItems.map(async (item) => {
                         const saleData = {
                             customer_id: item.customerId,
                             variant_id: item.variantId,
@@ -1285,16 +1474,27 @@
                             operator: '销售员'
                         };
 
-                        const params = new URLSearchParams(saleData);
+                        // 构建URL参数
+                        const params = new URLSearchParams();
                         params.append('action', 'createSale');
+                        Object.keys(saleData).forEach(key => {
+                            params.append(key, saleData[key]);
+                        });
+
+                        console.log('销售参数:', params.toString());
 
                         const response = await fetch(`${API_BASE_URL}?${params}`);
                         const result = await response.json();
                         
                         if (!result.success) {
-                            throw new Error(result.message || '销售失败');
+                            throw new Error(result.message || `销售失败: ${item.variantName}`);
                         }
-                    }
+                        
+                        return result;
+                    });
+
+                    // 等待所有销售完成
+                    await Promise.all(salePromises);
 
                     this.showMessage('saleMessage', '销售出库成功！', 'success');
                     this.generateReceipt(customer.name);
@@ -1307,21 +1507,6 @@
                     console.error('销售失败:', error);
                     this.showMessage('saleMessage', '销售失败: ' + error.message, 'error');
                 }
-            }
-
-            clearSaleForm() {
-                this.saleItems = [];
-                this.selectedProduct = null;
-                this.selectedVariant = null;
-                this.updateSaleItemsDisplay();
-                document.getElementById('customerSelect').value = '';
-                document.getElementById('saleQuantity').value = 1;
-                document.getElementById('unitPrice').value = '';
-                document.getElementById('saleColorSelection').style.display = 'none';
-                document.querySelectorAll('.product-card').forEach(card => {
-                    card.classList.remove('selected');
-                });
-                document.getElementById('customerBalance').classList.add('hidden');
             }
 
             generateReceipt(customerName) {
@@ -1347,7 +1532,8 @@
                     `;
                 });
 
-                const pendingAmount = this.calculatePendingAmount(document.getElementById('customerSelect').value);
+                const customerId = document.getElementById('customerSelect').value;
+                const pendingAmount = this.calculatePendingAmount(customerId);
 
                 invoiceContent.innerHTML = `
                     <div class="receipt" id="receiptToDownload">
@@ -1441,10 +1627,6 @@
                     return;
                 }
 
-                const debugInfo = document.getElementById('scanDebug');
-                debugInfo.style.display = 'block';
-                debugInfo.innerHTML = '开始扫码操作...';
-
                 try {
                     if (this.useTestMode) {
                         // 测试模式
@@ -1467,13 +1649,9 @@
                         params.append('action', 'createScanSale');
                         params.append('items', JSON.stringify(scanData.items));
                         params.append('operator', scanData.operator);
-
-                        debugInfo.innerHTML += `<br>请求参数: ${params.toString()}`;
                         
                         const response = await fetch(`${API_BASE_URL}?${params.toString()}`);
                         const data = await response.json();
-                        
-                        debugInfo.innerHTML += `<br>API响应: ${JSON.stringify(data)}`;
 
                         if (data.success) {
                             this.showMessage('scanMessage', `出库成功！销售单号: ${data.results[0].sale_id}`, 'success');
@@ -1488,16 +1666,13 @@
                 } catch (error) {
                     console.error('操作失败:', error);
                     this.showMessage('scanMessage', '操作失败: ' + error.message, 'error');
-                    debugInfo.innerHTML += `<br>错误: ${error.message}`;
                 }
             }
 
             clearScanForm() {
                 document.getElementById('scanQuantity').value = 1;
+                document.getElementById('scanSelectedProduct').classList.add('hidden');
                 document.getElementById('scanColorSelection').style.display = 'none';
-                document.querySelectorAll('.product-card').forEach(card => {
-                    card.classList.remove('selected');
-                });
                 this.selectedProduct = null;
                 this.selectedVariant = null;
             }
