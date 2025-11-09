@@ -1135,11 +1135,11 @@ async showColorSelection(source) {
         colorOption.className = 'color-option';
         colorOption.dataset.variantId = variant.variant_id;
         colorOption.innerHTML = `
-            ${variant.color} 
-            <span style="font-size: 0.8rem; color: #666;">
-                (库存: ${variant.stock}, ¥${displayPrice})
-            </span>
-        `;
+    ${variant.color} 
+    <span style="font-size: 0.8rem; color: #666;">
+        (库存: ${variant.stock}, 点击查看价格)
+    </span>
+`;
         
         colorOption.addEventListener('click', () => {
     this.selectVariant(variant.variant_id, source);
