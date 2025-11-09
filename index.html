@@ -1206,8 +1206,8 @@ selectProductInModal(modelId) {
     // 显示颜色选择区域
     document.getElementById('saleColorSelection').style.display = 'block';
     
-    // 生成颜色选项
-    this.showColorSelection(this.productModalSource);
+    // 强制指定 source 为 'sale'
+    this.showColorSelection('sale');
 }
             
 // 显示已选产品预览
