@@ -867,7 +867,7 @@
                 <div id="scanMessage"></div>
             </div>
 
-            <!-- 线下销售页面 -->
+          <!-- 线下销售页面 -->
 <div id="sale-page" class="page">
     <div class="card">
         <div class="card-header">
@@ -890,7 +890,7 @@
                 </div>
             </div>
 
-            <!-- 2. 当前销售商品清单（放在上面） -->
+            <!-- 2. 当前销售商品清单 -->
             <div class="item-list" id="saleItems" style="display: none;">
                 <h4>当前销售商品</h4>
                 <div id="itemsList"></div>
@@ -904,42 +904,29 @@
             <div class="add-item-section">
                 <h4>添加新商品</h4>
                 
-                <!-- 产品选择 -->
+                <!-- 产品选择按钮 -->
                 <div class="product-select-btn" id="saleProductSelectBtn">
                     <i class="fas fa-plus-circle"></i>
                     <div>点击选择产品</div>
                 </div>
 
-                <!-- 选中的产品显示 -->
-                <div id="saleSelectedProduct" class="selected-product hidden">
-                    <div class="selected-product-header">
-                        <div class="product-image-small">
+                <!-- 已选产品预览 -->
+                <div class="selected-product-preview" id="selectedProductPreview" style="display: none;">
+                    <div class="preview-header">
+                        <h4>已选产品</h4>
+                    </div>
+                    <div class="preview-content">
+                        <div class="preview-image">
                             <i class="fas fa-glasses"></i>
                         </div>
-                        <div class="product-info">
-                            <h4 id="saleProductName"></h4>
-                            <p id="saleProductColor"></p>
-                            <p id="saleProductPrice"></p>
-                            <p id="saleProductStock"></p>
-                            <div id="priceNote" class="price-note"></div>
+                        <div class="preview-info">
+                            <h5 id="previewProductName">产品名称</h5>
+                            <p id="previewProductModel">型号: </p>
+                            <p id="previewProductDetails">颜色: 未选择 | 价格: ¥0 | 库存: 0</p>
                         </div>
                     </div>
                 </div>
-<!-- 已选产品显示 -->
-<div class="selected-product-preview" id="selectedProductPreview" style="display: none;">
-    <div class="preview-header">
-        <h4>已选产品</h4>
-    </div>
-    <div class="preview-content">
-        <div class="preview-image">
-            <i class="fas fa-glasses"></i>
-        </div>
-        <div class="preview-info">
-            <h5 id="previewProductName">产品名称</h5>
-            <p id="previewProductModel">型号: </p>
-        </div>
-    </div>
-</div>
+
                 <!-- 颜色选择 -->
                 <div class="color-selection" id="saleColorSelection" style="display: none;">
                     <label class="form-label">选择颜色</label>
@@ -1256,21 +1243,31 @@ showSelectedProductPreview() {
 
 // 更新销售页面的产品显示
 updateSaleProductDisplay() {
-    const container = document.getElementById('saleSelectedProduct');
-    const productName = document.getElementById('saleProductName');
+    const previewElement = document.getElementById('selectedProductPreview');
+    const productNameElement = document.getElementById('previewProductName');
+    const productModelElement = document.getElementById('previewProductModel');
+    const productDetailsElement = document.getElementById('previewProductDetails');
     
-    // 显示选中产品区域，隐藏选择按钮
-    container.classList.remove('hidden');
-    document.getElementById('saleProductSelectBtn').style.display = 'none';
-    productName.textContent = this.selectedProduct.model_name;
-    
-    // 重置颜色选择 - 现在显示默认文本而不是空字符串
-    document.getElementById('saleProductColor').textContent = '颜色: 未选择';
-    document.getElementById('saleProductPrice').textContent = '价格: ¥0';
-    document.getElementById('saleProductStock').textContent = '库存: 0';
-    document.getElementById('unitPrice').value = '';
-    document.getElementById('priceNote').innerHTML = '';
-    this.selectedVariant = null;
+    if (this.selectedProduct) {
+        // 显示选中产品区域，隐藏选择按钮
+        previewElement.style.display = 'block';
+        document.getElementById('saleProductSelectBtn').style.display = 'none';
+        
+        // 更新产品信息
+        productNameElement.textContent = this.selectedProduct.model_name;
+        productModelElement.textContent = `型号: ${this.selectedProduct.model_id}`;
+        productDetailsElement.textContent = '颜色: 未选择 | 价格: ¥0 | 库存: 0';
+        
+        // 重置颜色选择
+        document.getElementById('saleColorSelection').style.display = 'none';
+        document.getElementById('saleColorOptions').innerHTML = '';
+        document.getElementById('unitPrice').value = '';
+        document.getElementById('priceNote').innerHTML = '';
+        this.selectedVariant = null;
+    } else {
+        previewElement.style.display = 'none';
+        document.getElementById('saleProductSelectBtn').style.display = 'block';
+    }
 }
 
 // 显示颜色选择
@@ -1322,14 +1319,10 @@ async selectVariant(variantId, source) {
         document.getElementById('scanProductColor').textContent = `颜色: ${this.selectedVariant.color}`;
         document.getElementById('scanProductPrice').textContent = `价格: ¥${this.selectedVariant.price}`;
     } else if (source === 'sale') {
-        document.getElementById('saleProductColor').textContent = `颜色: ${this.selectedVariant.color}`;
-        document.getElementById('saleProductStock').textContent = `库存: ${this.selectedVariant.stock}`;
-        
-        // 重要：自动填充单价（优先客户专属价格）
-        await this.updateProductPrice();
-        
-        // 更新颜色选项显示价格
+        // 更新产品详情显示
+        const productDetailsElement = document.getElementById('previewProductDetails');
         const customerId = document.getElementById('customerSelect').value;
+        
         let displayPrice = this.selectedVariant.price;
         if (customerId) {
             const customerPrice = await this.getCustomerPrice(customerId, this.selectedVariant.variant_id);
@@ -1338,7 +1331,13 @@ async selectVariant(variantId, source) {
             }
         }
         
-        // 更新选中的颜色选项显示
+        productDetailsElement.textContent = 
+            `颜色: ${this.selectedVariant.color} | 价格: ¥${displayPrice} | 库存: ${this.selectedVariant.stock}`;
+        
+        // 自动填充单价
+        await this.updateProductPrice();
+        
+        // 更新颜色选项显示
         const selectedOption = document.querySelector(`.color-option[data-variant-id="${variantId}"]`);
         if (selectedOption) {
             selectedOption.innerHTML = `
@@ -1640,25 +1639,24 @@ async getCustomerPrice(customerId, variantId) {
                 ];
             }
 
-            // 清空销售表单
-            clearSaleForm() {
-                this.saleItems = [];
-                this.updateSaleItemsDisplay();
-                this.selectedProduct = null;
-                this.selectedVariant = null;
-                
-                // 重置产品选择
-                document.getElementById('saleSelectedProduct').classList.add('hidden');
-                document.getElementById('saleProductSelectBtn').style.display = 'block';
-                document.getElementById('saleColorSelection').style.display = 'none';
-                document.getElementById('saleQuantity').value = 1;
-                document.getElementById('unitPrice').value = '';
-                document.getElementById('priceNote').innerHTML = '';
-
-                 // === 新增：隐藏已选产品预览 ===
+// 清空销售表单
+clearSaleForm() {
+    this.saleItems = [];
+    this.updateSaleItemsDisplay();
+    this.selectedProduct = null;
+    this.selectedVariant = null;
+    
+    // 重置产品选择
     document.getElementById('selectedProductPreview').style.display = 'none';
-                this.showMessage('saleMessage', '已清空销售清单', 'success');
-            }
+    document.getElementById('saleProductSelectBtn').style.display = 'block';
+    document.getElementById('saleColorSelection').style.display = 'none';
+    document.getElementById('saleColorOptions').innerHTML = '';
+    document.getElementById('saleQuantity').value = 1;
+    document.getElementById('unitPrice').value = '';
+    document.getElementById('priceNote').innerHTML = '';
+    
+    this.showMessage('saleMessage', '已清空销售清单', 'success');
+}
 
 async updateCustomerBalance(customerId) {
     const balanceElement = document.getElementById('customerBalance');
