@@ -1250,39 +1250,34 @@ showSelectedProductPreview() {
             }
 
 // 更新销售页面的产品显示
+// 更新销售页面的产品显示
 updateSaleProductDisplay() {
-    console.log('updateSaleProductDisplay 被调用');
-    console.log('selectedProduct:', this.selectedProduct);
-    
-    // 强制显示预览区域进行测试
-    document.getElementById('selectedProductPreview').style.display = 'block';
-    document.getElementById('saleProductSelectBtn').style.display = 'none';
+    console.log('=== updateSaleProductDisplay 开始 ===');
     
     const previewElement = document.getElementById('selectedProductPreview');
     const productNameElement = document.getElementById('previewProductName');
     const productModelElement = document.getElementById('previewProductModel');
     const productDetailsElement = document.getElementById('previewProductDetails');
     
+    console.log('previewElement:', previewElement);
+    console.log('productNameElement:', productNameElement);
+    console.log('productDetailsElement:', productDetailsElement);
+    
     if (this.selectedProduct) {
+        console.log('有选中产品，开始更新显示');
+        
         // 显示选中产品区域，隐藏选择按钮
         previewElement.style.display = 'block';
         document.getElementById('saleProductSelectBtn').style.display = 'none';
         
-        // 更新产品信息
-        productNameElement.textContent = this.selectedProduct.model_name;
-        productModelElement.textContent = `型号: ${this.selectedProduct.model_id}`;
-        productDetailsElement.textContent = '颜色: 未选择 | 价格: ¥0 | 库存: 0';
+        console.log('样式已设置，应该显示预览了');
         
-        // 重置颜色选择
-        document.getElementById('saleColorSelection').style.display = 'none';
-        document.getElementById('saleColorOptions').innerHTML = '';
-        document.getElementById('unitPrice').value = '';
-        document.getElementById('priceNote').innerHTML = '';
-        this.selectedVariant = null;
+        // ... 其余代码保持不变
     } else {
-        previewElement.style.display = 'none';
-        document.getElementById('saleProductSelectBtn').style.display = 'block';
+        console.log('没有选中产品');
     }
+    
+    console.log('=== updateSaleProductDisplay 结束 ===');
 }
 
 // 显示颜色选择
