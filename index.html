@@ -1205,7 +1205,7 @@ selectProductInModal(modelId) {
     if (this.productModalSource === 'scan') {
         this.updateScanProductDisplay();
     } else if (this.productModalSource === 'sale') {
-        this.updateSaleProductDisplay(); // 直接调用这个方法
+        this.updateSaleProductDisplay(); // 只调用这一个方法
     }
     
     // 显示颜色选择
@@ -1264,7 +1264,24 @@ updateSaleProductDisplay() {
         // 更新产品信息
         productNameElement.textContent = this.selectedProduct.model_name;
         productModelElement.textContent = `型号: ${this.selectedProduct.model_id}`;
-        productDetailsElement.textContent = '颜色: 未选择 | 价格: ¥0 | 库存: 0';
+        
+        // 如果有选中的变体，显示变体信息，否则显示默认信息
+        if (this.selectedVariant) {
+            const customerId = document.getElementById('customerSelect').value;
+            let displayPrice = this.selectedVariant.price;
+            
+            // 如果有客户，获取专属价格（这里简化处理，实际应该异步获取）
+            if (customerId) {
+                // 在实际应用中这里应该调用 getCustomerPrice 方法
+                // 这里先使用标准价格
+                displayPrice = this.selectedVariant.price;
+            }
+            
+            productDetailsElement.textContent = 
+                `颜色: ${this.selectedVariant.color} | 价格: ¥${displayPrice} | 库存: ${this.selectedVariant.stock}`;
+        } else {
+            productDetailsElement.textContent = '颜色: 未选择 | 价格: ¥0 | 库存: 0';
+        }
         
         console.log('产品信息已更新，预览区域应该显示');
     } else {
@@ -1326,27 +1343,24 @@ async selectVariant(variantId, source) {
         document.getElementById('scanProductPrice').textContent = `价格: ¥${this.selectedVariant.price}`;
     } else if (source === 'sale') {
         // 更新产品详情显示
-        const productDetailsElement = document.getElementById('previewProductDetails');
-        const customerId = document.getElementById('customerSelect').value;
+        await this.updateProductPrice(); // 先更新价格
         
-        let displayPrice = this.selectedVariant.price;
-        if (customerId) {
-            const customerPrice = await this.getCustomerPrice(customerId, this.selectedVariant.variant_id);
-            if (customerPrice !== null) {
-                displayPrice = customerPrice;
-            }
-        }
-        
-        // 更新预览区域的产品详情
-        productDetailsElement.textContent = 
-            `颜色: ${this.selectedVariant.color} | 价格: ¥${displayPrice} | 库存: ${this.selectedVariant.stock}`;
-        
-        // 自动填充单价
-        await this.updateProductPrice();
+        // 然后更新整个产品显示
+        this.updateSaleProductDisplay();
         
         // 更新颜色选项显示
         const selectedOption = document.querySelector(`.color-option[data-variant-id="${variantId}"]`);
         if (selectedOption) {
+            const customerId = document.getElementById('customerSelect').value;
+            let displayPrice = this.selectedVariant.price;
+            
+            if (customerId) {
+                const customerPrice = await this.getCustomerPrice(customerId, this.selectedVariant.variant_id);
+                if (customerPrice !== null) {
+                    displayPrice = customerPrice;
+                }
+            }
+            
             selectedOption.innerHTML = `
                 ${this.selectedVariant.color} 
                 <span style="font-size: 0.8rem; color: #666;">
@@ -1358,11 +1372,10 @@ async selectVariant(variantId, source) {
     }
 }
 
-           // 更新产品价格（优先客户专属价格）
+          // 更新产品价格（优先客户专属价格）
 async updateProductPrice() {
     console.log('=== updateProductPrice 被调用 ===');
     console.log('selectedVariant:', this.selectedVariant);
-    console.log('当前客户:', document.getElementById('customerSelect').value);
     
     if (!this.selectedVariant) {
         console.log('错误: selectedVariant 为空');
@@ -1395,11 +1408,13 @@ async updateProductPrice() {
     console.log('最终价格:', finalPrice);
     
     // 更新显示和单价输入框
-    document.getElementById('saleProductPrice').textContent = `价格: ¥${finalPrice}`;
     document.getElementById('unitPrice').value = finalPrice;
     document.getElementById('priceNote').innerHTML = priceNote;
     
     console.log('单价输入框值已设置为:', document.getElementById('unitPrice').value);
+    
+    // 同时更新预览区域的价格显示
+    this.updateSaleProductDisplay();
 }
 // 获取客户专属价格（带缓存版本）
 async getCustomerPrice(customerId, variantId) {
