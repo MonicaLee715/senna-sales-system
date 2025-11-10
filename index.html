@@ -1559,7 +1559,10 @@ clearSaleForm() {
     document.getElementById('saleColorOptions').innerHTML = '';
     document.getElementById('saleQuantity').value = 1;
     document.getElementById('unitPrice').value = '';
-    document.getElementById('priceNote').innerHTML = '';
+    const priceNoteElement = document.getElementById('priceNote');
+if (priceNoteElement) {
+    priceNoteElement.innerHTML = '';
+}
     
     this.showMessage('saleMessage', '已清空销售清单', 'success');
 }
