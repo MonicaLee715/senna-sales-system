@@ -357,9 +357,12 @@
         }
 
         .color-option.selected {
-            border-color: var(--primary-color);
-            background: rgba(102, 126, 234, 0.1);
-        }
+    border-color: var(--primary-color);
+    background: rgba(102, 126, 234, 0.15);
+    font-weight: 600;
+    color: var(--primary-color);
+    box-shadow: 0 2px 5px rgba(102, 126, 234, 0.3);
+}
 /* === 已选产品预览样式 === */
 .selected-product-preview {
     background: #f8f9fa;
@@ -1207,7 +1210,7 @@ async showColorSelection(source) {
         colorOption.innerHTML = `
             ${variant.color} 
             <span style="font-size: 0.8rem; color: #666;">
-                (库存: ${variant.stock}, 点击查看价格)
+                (库存: ${variant.stock})
             </span>
         `;
         
@@ -1249,7 +1252,7 @@ async selectVariant(variantId, source) {
         selectedOption.innerHTML = `
             ${this.selectedVariant.color} 
             <span style="font-size: 0.8rem; color: #666;">
-                (库存: ${this.selectedVariant.stock}, ¥${displayPrice})
+                (库存: ${this.selectedVariant.stock})
             </span>
         `;
         selectedOption.classList.add('selected');
@@ -1616,7 +1619,7 @@ balanceElement.classList.remove('hidden');
             selectedOption.innerHTML = `
                 ${this.selectedVariant.color} 
                 <span style="font-size: 0.8rem; color: #666;">
-                    (库存: ${this.selectedVariant.stock}, ¥${displayPrice})
+                    (库存: ${this.selectedVariant.stock})
                 </span>
             `;
         }
