@@ -1275,13 +1275,7 @@ async updateProductPrice() {
     
     let finalPrice = this.selectedVariant.price;
     let priceNote = '标准价格';
-    // 立即更新显示标准价格（不等待API）
-const unitPriceElement = document.getElementById('unitPrice');
-const priceNoteElement = document.getElementById('priceNote');
-
-if (unitPriceElement) unitPriceElement.value = finalPrice;
-if (priceNoteElement) priceNoteElement.innerHTML = priceNote;
-
+  
     // 如果有选择客户，尝试获取专属价格
     if (customerId) {
         console.log('开始获取客户专属价格...');
