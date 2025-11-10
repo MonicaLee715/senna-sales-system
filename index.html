@@ -1297,8 +1297,10 @@ async updateProductPrice() {
     
     // 更新显示和单价输入框
     document.getElementById('unitPrice').value = finalPrice;
-    document.getElementById('priceNote').innerHTML = priceNote;
-    
+    const priceNoteElement = document.getElementById('priceNote');
+if (priceNoteElement) {
+    priceNoteElement.innerHTML = priceNote;
+}
     console.log('单价输入框值已设置为:', document.getElementById('unitPrice').value);
     
 
