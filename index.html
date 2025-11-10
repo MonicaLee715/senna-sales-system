@@ -1277,21 +1277,6 @@ async updateProductPrice() {
     let priceNote = '标准价格';
   
     // 如果有选择客户，尝试获取专属价格
-    // 立即显示标准价格（不等待API）
-try {
-    const unitPriceElement = document.getElementById('unitPrice');
-    const priceNoteElement = document.getElementById('priceNote');
-    
-    if (unitPriceElement) {
-        unitPriceElement.value = this.selectedVariant.price; // 立即显示标准价格
-    }
-    if (priceNoteElement) {
-        priceNoteElement.innerHTML = '标准价格';
-    }
-    console.log('立即显示标准价格完成');
-} catch (error) {
-    console.log('立即显示时出错:', error);
-}
     if (customerId) {
         console.log('开始获取客户专属价格...');
         const customerPrice = await this.getCustomerPrice(customerId, this.selectedVariant.variant_id);
