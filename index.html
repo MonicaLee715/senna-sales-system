@@ -776,7 +776,7 @@
     <!-- 顶部导航栏 -->
     <header class="app-header">
         <div class="header-content">
-            <h1 class="app-title" id="pageTitle">扫码出入库</h1>
+            <h1 class="app-title" id="pageTitle">扫码</h1>
             <div class="header-actions">
                 <button class="icon-btn" id="refreshBtn">
                     <i class="fas fa-sync-alt"></i>
@@ -796,70 +796,18 @@
         
         <!-- 动态内容区 -->
         <div id="content" style="display: none;">
-            <!-- 扫码出入库页面 -->
+            <!-- 扫码页面 - 简化版，只保留扫码按钮 -->
             <div id="scan-page" class="page active">
                 <div class="card">
-                    <div class="scan-section">
+                    <div class="scan-section" style="text-align: center; padding: 40px 20px;">
                         <div class="feature-icon">
-                            <i class="fas fa-qrcode" style="font-size: 3rem; color: var(--primary-color);"></i>
+                            <i class="fas fa-qrcode" style="font-size: 4rem; color: var(--primary-color); margin-bottom: 20px;"></i>
                         </div>
-                        <h2>扫码快速出入库</h2>
-                        <p style="color: var(--text-muted); margin: 10px 0;">扫描产品二维码快速处理网店订单</p>
+                        <h2 style="margin-bottom: 10px;">扫码快速操作</h2>
+                        <p style="color: var(--text-muted); margin: 20px 0 30px;">扫描产品二维码进行出入库操作</p>
                         
-                        <button class="btn btn-block" id="startScan">
+                        <button class="btn btn-block" id="startScan" style="max-width: 200px; margin: 0 auto;">
                             <i class="fas fa-camera"></i>开始扫码
-                        </button>
-                    </div>
-
-                    <div class="manual-input">
-                        <h3 style="margin-bottom: 15px;">手动输入</h3>
-                        
-                        <!-- 产品选择 -->
-                        <div class="product-select-btn" id="scanProductSelectBtn">
-                            <i class="fas fa-plus-circle"></i>
-                            <div>选择产品系列</div>
-                        </div>
-
-                        <!-- 选中的产品显示 -->
-<div id="saleSelectedProduct" class="selected-product hidden">
-    <div class="selected-product-header">
-        <div class="product-image-small">
-            <i class="fas fa-glasses"></i>
-        </div>
-        <div class="product-info">
-            <h4 id="saleProductName">产品名称</h4>
-            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <p id="saleProductColor">颜色: 未选择</p>
-                <p id="saleProductPrice">价格: ¥0</p>
-                <p id="saleProductStock">库存: 0</p>
-            </div>
-            <div id="priceNote" class="price-note"></div>
-        </div>
-    </div>
-</div>
-                        <!-- 颜色选择 -->
-                        <div class="color-selection" id="scanColorSelection" style="display: none;">
-                            <label class="form-label">选择颜色</label>
-                            <div class="color-options" id="scanColorOptions">
-                                <!-- 颜色选项将通过JS动态生成 -->
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">数量</label>
-                            <input type="number" class="form-input" id="scanQuantity" value="1" min="1">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">操作类型</label>
-                            <select class="form-select" id="scanType">
-                                <option value="out">销售出库</option>
-                                <option value="in">采购入库</option>
-                            </select>
-                        </div>
-                        
-                        <button class="btn btn-block" id="confirmScan">
-                            <i class="fas fa-check"></i>确认操作
                         </button>
                     </div>
                 </div>
@@ -1020,7 +968,7 @@
     <nav class="bottom-nav">
         <a href="#scan" class="nav-item active" data-page="scan">
             <i class="fas fa-qrcode"></i>
-            <span>扫码出入库</span>
+            <span>扫码</span>
         </a>
         <a href="#sale" class="nav-item" data-page="sale">
             <i class="fas fa-receipt"></i>
@@ -1080,15 +1028,7 @@ const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzk28_Sa2LdS0ztE-W
                     this.startScan();
                 });
                 
-                document.getElementById('confirmScan').addEventListener('click', () => {
-                    this.confirmScanOperation();
-                });
-
-                document.getElementById('scanProductSelectBtn').addEventListener('click', () => {
-                    this.openProductModal('scan');
-                });
-                
-// 销售页面事件
+                // 销售页面事件
 document.getElementById('customerSelect').addEventListener('change', (e) => {
     // === 添加防抖处理 ===
     clearTimeout(this.customerChangeTimeout);
@@ -1219,21 +1159,6 @@ showSelectedProductPreview() {
         previewElement.style.display = 'none';
     }
 }
-            // 更新扫码页面的产品显示
-            updateScanProductDisplay() {
-                const container = document.getElementById('scanSelectedProduct');
-                const productName = document.getElementById('scanProductName');
-                
-                // 显示选中产品区域，隐藏选择按钮
-                container.classList.remove('hidden');
-                document.getElementById('scanProductSelectBtn').style.display = 'none';
-                productName.textContent = this.selectedProduct.model_name;
-                
-                // 重置颜色选择
-                document.getElementById('scanProductColor').textContent = '';
-                document.getElementById('scanProductPrice').textContent = '';
-                this.selectedVariant = null;
-            }
 
 // 更新销售页面的产品显示
 updateSaleProductDisplay() {
@@ -1304,14 +1229,9 @@ async selectVariant(variantId, source) {
     this.selectedVariant = this.findVariantById(variantId);
     
     // 更新显示
-    if (source === 'scan') {
-        document.getElementById('scanProductColor').textContent = `颜色: ${this.selectedVariant.color}`;
-        document.getElementById('scanProductPrice').textContent = `价格: ¥${this.selectedVariant.price}`;
-    } else if (source === 'sale') {
+    if (source === 'sale') {
     // 更新产品详情显示
     await this.updateProductPrice(); // 先更新价格
-    
-    // 删除这一行：this.updateSaleProductDisplay();
     
     // 更新颜色选项显示
     const selectedOption = document.querySelector(`.color-option[data-variant-id="${variantId}"]`);
@@ -1463,7 +1383,7 @@ async getCustomerPrice(customerId, variantId) {
             
             updatePageTitle(page) {
                 const titles = {
-                    'scan': '扫码出入库',
+                    'scan': '扫码',
                     'sale': '线下销售', 
                     'data': '数据查看',
                     'base': '基础数据'
@@ -1939,77 +1859,7 @@ updateSaleItemsDisplay() {
             }
             
             startScan() {
-                alert('扫码功能开发中...\n\n请使用手动输入功能');
-            }
-            
-            async confirmScanOperation() {
-                if (!this.selectedVariant) {
-                    this.showMessage('scanMessage', '请选择产品颜色', 'error');
-                    return;
-                }
-
-                const quantity = parseInt(document.getElementById('scanQuantity').value);
-                const scanType = document.getElementById('scanType').value;
-                
-                if (!quantity || quantity < 1) {
-                    this.showMessage('scanMessage', '请输入正确的数量', 'error');
-                    return;
-                }
-
-                if (this.selectedVariant.stock < quantity) {
-                    this.showMessage('scanMessage', `库存不足，当前库存: ${this.selectedVariant.stock}`, 'error');
-                    return;
-                }
-
-                try {
-                    if (this.useTestMode) {
-                        // 测试模式
-                        this.showMessage('scanMessage', `测试模式: ${this.selectedVariant.variant_id} 出库成功！`, 'success');
-                        this.clearScanForm();
-                        return;
-                    }
-
-                    if (scanType === 'out') {
-                        const scanData = {
-                            items: [{
-                                variant_id: this.selectedVariant.variant_id,
-                                quantity: quantity,
-                                unit_price: 0
-                            }],
-                            operator: "网店客服"
-                        };
-
-                        const params = new URLSearchParams();
-                        params.append('action', 'createScanSale');
-                        params.append('items', JSON.stringify(scanData.items));
-                        params.append('operator', scanData.operator);
-                        
-                        const response = await fetch(`${API_BASE_URL}?${params.toString()}`);
-                        const data = await response.json();
-
-                        if (data.success) {
-                            this.showMessage('scanMessage', `出库成功！销售单号: ${data.results[0].sale_id}`, 'success');
-                            this.clearScanForm();
-                        } else {
-                            throw new Error(data.message);
-                        }
-                    } else {
-                        this.showMessage('scanMessage', '采购入库功能开发中', 'error');
-                    }
-                    
-                } catch (error) {
-                    console.error('操作失败:', error);
-                    this.showMessage('scanMessage', '操作失败: ' + error.message, 'error');
-                }
-            }
-
-            clearScanForm() {
-                document.getElementById('scanQuantity').value = 1;
-                document.getElementById('scanSelectedProduct').classList.add('hidden');
-                document.getElementById('scanProductSelectBtn').style.display = 'block';
-                document.getElementById('scanColorSelection').style.display = 'none';
-                this.selectedProduct = null;
-                this.selectedVariant = null;
+                alert('扫码功能开发中...\n\n请使用其他页面功能');
             }
 
             showMessage(containerId, message, type) {
