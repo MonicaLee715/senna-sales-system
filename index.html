@@ -1761,6 +1761,7 @@ updateSaleItemsDisplay() {
                         params.append('variant_id', saleData.variant_id);
                         params.append('quantity', saleData.quantity.toString());
                         params.append('operator', saleData.operator);
+                        params.append('unit_price', saleData.unit_price.toString());  // ← 添加这行
 
                         console.log('销售参数:', params.toString());
 
