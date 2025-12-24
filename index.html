@@ -873,18 +873,26 @@
                         <!-- 颜色选项将通过JS动态生成 -->
                     </div>
                 </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">数量</label>
-                        <input type="number" class="form-input" id="saleQuantity" value="1" min="1">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">单价</label>
-                        <input type="number" class="form-input" id="unitPrice" placeholder="输入单价">
-                        <div class="price-note">可手动修改为客户专属价格</div>
-                    </div>
-                </div>
+<div class="form-row">
+    <div class="form-group">
+        <label class="form-label">数量</label>
+        <input type="number" class="form-input" id="saleQuantity" value="1" min="1">
+    </div>
+    <div class="form-group">
+        <label class="form-label">单价</label>
+        <div class="price-display" style="
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            font-weight: 600;
+        ">
+            ¥<span id="priceDisplay">0</span>
+            <div id="priceNote" class="price-note" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;"></div>
+        </div>
+    </div>
+</div>
 
                 <button class="btn btn-block" id="addItemBtn">
                     <i class="fas fa-plus"></i>添加到销售单
@@ -988,7 +996,7 @@
 
     <script>
         // API配置
-const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzE9AdH1Aycza5y1FEhKFnhTbCPhgXiTSbONUQYDdAfjt-HqM0S7UKcNMLZyZj1Vx2VkA/exec';        
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbz_7KJ3iEV8I7ImNIcKikYO0oJLMrKiTOatuqhTT9W0imWdhGWdMMYUkVxT2FFzeeYy2w/exec';        
         class App {
             constructor() {
                 this.currentPage = 'scan';
@@ -1001,8 +1009,11 @@ const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzE9AdH1Aycza5y1FE
                 this.selectedVariant = null;
                 this.useTestMode = false;
                 this.productModalSource = null;
-                    // === 添加价格缓存 ===
-    this.priceCache = {}; // 价格缓存对象
+    // === 新增：批量价格缓存 ===
+    this.standardPrices = {};      // {variantId: 标准价}
+    this.customerPrices = {};      // {customerId: {variantId: 专属价}}
+    this.allVariants = [];         // 所有变体数据（包含价格）
+    // ========================
     this.currentCustomerId = null;
     this.customerChangeTimeout = null; // 防抖用的定时器
     // ==================
@@ -1259,95 +1270,107 @@ async selectVariant(variantId, source) {
 }
 }
 
-          // 更新产品价格（优先客户专属价格）
-async updateProductPrice() {
-    console.log('=== updateProductPrice 被调用 ===');
-    console.log('selectedVariant:', this.selectedVariant);
+        // === 新方法：从缓存获取价格（同步，无网络请求）===
+getPrice(variantId, customerId) {
+    if (!variantId) {
+        console.log('getPrice: variantId为空');
+        return 0;
+    }
+    
+    console.log(`getPrice调用: variantId=${variantId}, customerId=${customerId}`);
+    
+    // 1. 优先客户专属价
+    if (customerId && 
+        this.customerPrices[customerId] && 
+        this.customerPrices[customerId][variantId] !== undefined) {
+        
+        const price = this.customerPrices[customerId][variantId];
+        console.log(`使用客户专属价: ¥${price} (客户: ${customerId})`);
+        return price;
+    }
+    
+    // 2. 其次标准价
+    if (this.standardPrices[variantId] !== undefined) {
+        const price = this.standardPrices[variantId];
+        console.log(`使用标准价: ¥${price}`);
+        return price;
+    }
+    
+    // 3. 都没找到，尝试从变体数据中找
+    const variant = this.allVariants.find(v => v.variant_id === variantId);
+    if (variant) {
+        console.log(`从变体数据获取价格: ¥${variant.price}`);
+        // 顺便更新缓存
+        this.standardPrices[variantId] = variant.price;
+        return variant.price;
+    }
+    
+    console.log('未找到价格，返回0');
+    return 0;
+}
+
+// === 修改颜色选择方法 ===
+async selectVariant(variantId, source) {
+    console.log(`selectVariant: ${variantId}, source: ${source}`);
+    
+    // 更新选中状态
+    const colorOptions = source === 'scan' ? 
+        document.getElementById('scanColorOptions') : 
+        document.getElementById('saleColorOptions');
+    
+    // 移除所有选中状态
+    document.querySelectorAll('.color-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // 查找选中的变体
+    this.selectedVariant = this.findVariantById(variantId);
     
     if (!this.selectedVariant) {
-        console.log('错误: selectedVariant 为空');
+        console.log('未找到变体:', variantId);
         return;
     }
-
-    const customerId = document.getElementById('customerSelect').value;
-    console.log('客户ID:', customerId);
     
-    let finalPrice = this.selectedVariant.price;
-    let priceNote = '标准价格';
-  
-    // 如果有选择客户，尝试获取专属价格
-    if (customerId) {
-        console.log('开始获取客户专属价格...');
-        const customerPrice = await this.getCustomerPrice(customerId, this.selectedVariant.variant_id);
-        console.log('客户专属价格结果:', customerPrice);
+    // 更新显示
+    if (source === 'sale') {
+        // === 关键修改：直接从缓存获取价格 ===
+        const customerId = document.getElementById('customerSelect').value;
+        const price = this.getPrice(variantId, customerId);
         
-        if (customerPrice !== null) {
-            finalPrice = customerPrice;
-            priceNote = `<span class="special-price">客户专属价格</span>`;
-            console.log('使用专属价格:', finalPrice);
-        } else {
-            console.log('没有专属价格，使用标准价格:', finalPrice);
-        }
-    } else {
-        console.log('没有选择客户，使用标准价格:', finalPrice);
-    }
-
-    console.log('最终价格:', finalPrice);
-    
-    // 更新显示和单价输入框
-    document.getElementById('unitPrice').value = finalPrice;
-    const priceNoteElement = document.getElementById('priceNote');
-if (priceNoteElement) {
-    priceNoteElement.innerHTML = priceNote;
-}
-    console.log('单价输入框值已设置为:', document.getElementById('unitPrice').value);
-    
-
-}
-// 获取客户专属价格（带缓存版本）
-async getCustomerPrice(customerId, variantId) {
-    console.log('getCustomerPrice被调用:', customerId, variantId);
-    
-    if (!customerId) return null;
-    
-    // === 缓存逻辑开始 ===
-    // 客户切换时清理缓存
-    if (customerId !== this.currentCustomerId) {
-        this.priceCache = {};
-        this.currentCustomerId = customerId;
-        console.log('切换到新客户，清理缓存');
-    }
-    
-    const cacheKey = variantId;
-    
-    // 检查缓存（5分钟内有效）
-    if (this.priceCache[cacheKey] && 
-        Date.now() - this.priceCache[cacheKey].timestamp < 300000) {
-        console.log('使用缓存价格:', this.priceCache[cacheKey].price);
-        return this.priceCache[cacheKey].price;
-    }
-    // === 缓存逻辑结束 ===
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}?action=getCustomerPrice&customer_id=${customerId}&variant_id=${variantId}`);
-        const data = await response.json();
-        console.log('客户价格API返回:', data);
+        console.log(`获取到价格: ¥${price}, 客户: ${customerId || '未选择'}`);
         
-        if (data.success && data.data !== null) {
-            // === 缓存结果 ===
-            this.priceCache[cacheKey] = {
-                price: data.data,
-                timestamp: Date.now()
-            };
-            // ==============
-            return data.data;
+        // 更新价格显示
+        const priceDisplay = document.getElementById('priceDisplay');
+        if (priceDisplay) {
+            priceDisplay.textContent = price;
         }
-    } catch (error) {
-        console.error('获取客户价格失败:', error);
+        
+        // 更新价格提示
+        const priceNote = document.getElementById('priceNote');
+        if (priceNote) {
+            if (customerId && this.customerPrices[customerId]?.[variantId] !== undefined) {
+                priceNote.textContent = '客户专属价格';
+                priceNote.className = 'price-note special-price';
+            } else {
+                priceNote.textContent = '标准价格';
+                priceNote.className = 'price-note';
+            }
+        }
+        
+        // 更新颜色选项显示
+        const selectedOption = document.querySelector(`.color-option[data-variant-id="${variantId}"]`);
+        if (selectedOption) {
+            selectedOption.classList.add('selected');
+        }
+        
+        // 更新销售表单中的单价（如果需要）
+        const unitPriceInput = document.getElementById('unitPrice');
+        if (unitPriceInput) {
+            unitPriceInput.value = price;
+        }
     }
-    
-    return null;
 }
+
 
             // 使用测试数据
             useTestData() {
@@ -1460,26 +1483,67 @@ async getCustomerPrice(customerId, variantId) {
                 });
             }
             
-            async loadProducts() {
-                try {
-                    const response = await fetch(`${API_BASE_URL}?action=getProducts&t=${Date.now()}`);
-                    const data = await response.json();
+           async loadProducts() {
+    try {
+        const response = await fetch(`${API_BASE_URL}?action=getProducts&t=${Date.now()}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            this.products = data.data;
+            
+            // === 新增：批量加载所有变体 ===
+            await this.loadAllVariants();
+            // ============================
+        } else {
+            throw new Error(data.message);
+        }
+    } catch (error) {
+        console.error('加载产品失败:', error);
+        throw error;
+    }
+}
+
+// === 新增方法：批量加载所有变体 ===
+async loadAllVariants() {
+    try {
+        console.log('开始批量加载所有变体...');
+        const allVariants = [];
+        const standardPrices = {};
+        
+        // 为每个产品系列加载变体
+        for (const product of this.products) {
+            const response = await fetch(`${API_BASE_URL}?action=getProductVariants&model_id=${product.model_id}&t=${Date.now()}`);
+            const data = await response.json();
+            
+            if (data.success && data.data) {
+                // 添加到总列表
+                allVariants.push(...data.data);
+                
+                // 构建标准价缓存
+                data.data.forEach(variant => {
+                    standardPrices[variant.variant_id] = variant.price;
                     
-                    if (data.success) {
-                        this.products = data.data;
-                        
-                        // 加载所有变体
-                        for (const product of this.products) {
-                            await this.loadProductVariants(product.model_id);
-                        }
-                    } else {
-                        throw new Error(data.message);
+                    // 确保productVariants结构正确
+                    if (!this.productVariants[product.model_id]) {
+                        this.productVariants[product.model_id] = [];
                     }
-                } catch (error) {
-                    console.error('加载产品失败:', error);
-                    throw error;
-                }
+                    this.productVariants[product.model_id].push(variant);
+                });
             }
+        }
+        
+        this.allVariants = allVariants;
+        this.standardPrices = standardPrices;
+        console.log(`批量加载完成，共 ${allVariants.length} 个变体`);
+        
+    } catch (error) {
+        console.error('批量加载变体失败:', error);
+        // 回退到原来的逐个加载方式
+        for (const product of this.products) {
+            await this.loadProductVariants(product.model_id);
+        }
+    }
+}
 
             addTestProducts() {
                 this.products = [
@@ -1582,6 +1646,10 @@ async updateCustomerBalance(customerId) {
         return;
     }
     
+    // === 新增第一步：批量加载该客户专属价格 ===
+    await this.loadCustomerPrices(customerId);
+    // =====================================
+    
     // 确保销售记录数据已加载，如果未加载显示"计算中..."
     if (!this.salesRecords || this.salesRecords.length === 0) {
         balanceAmount.textContent = '计算中...';
@@ -1598,25 +1666,36 @@ async updateCustomerBalance(customerId) {
     
     const pendingAmount = this.calculatePendingAmount(customerId);
     
-   // 无论金额是多少都显示，包括0
-balanceAmount.textContent = pendingAmount.toFixed(2);
-balanceElement.classList.remove('hidden');
+    // 无论金额是多少都显示，包括0
+    balanceAmount.textContent = pendingAmount.toFixed(2);
+    balanceElement.classList.remove('hidden');
     
-    // 如果已经选择了颜色变体，更新价格显示
+    // === 修改这里：如果已经选择了颜色变体，直接从缓存更新价格 ===
     if (this.selectedVariant) {
-        await this.updateProductPrice();
+        // 直接从缓存获取价格
+        const price = this.getPrice(this.selectedVariant.variant_id, customerId);
         
-        // 同时更新颜色选项的显示价格
+        // 更新价格显示（假设你已经修改了价格显示方式）
+        if (document.getElementById('priceDisplay')) {
+            document.getElementById('priceDisplay').textContent = price;
+        }
+        
+        // 更新价格提示
+        const priceNote = document.getElementById('priceNote');
+        if (priceNote) {
+            if (customerId && this.customerPrices[customerId]?.[this.selectedVariant.variant_id] !== undefined) {
+                priceNote.textContent = '客户专属价格';
+                priceNote.className = 'price-note special-price';
+            } else {
+                priceNote.textContent = '标准价格';
+                priceNote.className = 'price-note';
+            }
+        }
+        
+        // 更新颜色选项的显示（不需要重新查询价格）
         const selectedOption = document.querySelector(`.color-option[data-variant-id="${this.selectedVariant.variant_id}"]`);
         if (selectedOption) {
-            let displayPrice = this.selectedVariant.price;
-            if (customerId) {
-                const customerPrice = await this.getCustomerPrice(customerId, this.selectedVariant.variant_id);
-                if (customerPrice !== null) {
-                    displayPrice = customerPrice;
-                }
-            }
-            
+            // 这里不再需要异步获取价格
             selectedOption.innerHTML = `
                 ${this.selectedVariant.color} 
                 <span style="font-size: 0.8rem; color: #666;">
@@ -1638,51 +1717,56 @@ balanceElement.classList.remove('hidden');
             }
             
             addSaleItem() {
-                const customerId = document.getElementById('customerSelect').value;
-                const quantity = parseInt(document.getElementById('saleQuantity').value);
-                const unitPrice = parseFloat(document.getElementById('unitPrice').value);
-                
-                if (!customerId) {
-                    this.showMessage('saleMessage', '请选择客户', 'error');
-                    return;
-                }
+    const customerId = document.getElementById('customerSelect').value;
+    const quantity = parseInt(document.getElementById('saleQuantity').value);
+    
+    // === 修改：不再从输入框获取，而是自动计算 ===
+    // const unitPrice = parseFloat(document.getElementById('unitPrice').value);
+    const unitPrice = this.getPrice(this.selectedVariant.variant_id, customerId);
+    // ==========================================
+    
+    if (!customerId) {
+        this.showMessage('saleMessage', '请选择客户', 'error');
+        return;
+    }
 
-                if (!this.selectedVariant) {
-                    this.showMessage('saleMessage', '请选择产品颜色', 'error');
-                    return;
-                }
+    if (!this.selectedVariant) {
+        this.showMessage('saleMessage', '请选择产品颜色', 'error');
+        return;
+    }
 
-                if (!quantity || quantity < 1) {
-                    this.showMessage('saleMessage', '请输入正确的数量', 'error');
-                    return;
-                }
+    if (!quantity || quantity < 1) {
+        this.showMessage('saleMessage', '请输入正确的数量', 'error');
+        return;
+    }
 
-                if (!unitPrice || unitPrice < 0) {
-                    this.showMessage('saleMessage', '请输入正确的单价', 'error');
-                    return;
-                }
+    // === 修改：价格验证逻辑 ===
+    if (!unitPrice || unitPrice <= 0) {
+        this.showMessage('saleMessage', '价格获取失败，请重新选择产品', 'error');
+        return;
+    }
 
-                if (this.selectedVariant.stock < quantity) {
-                    this.showMessage('saleMessage', `库存不足，当前库存: ${this.selectedVariant.stock}`, 'error');
-                    return;
-                }
-                
-                const item = {
-                    customerId,
-                    variantId: this.selectedVariant.variant_id,
-                    variantName: `${this.selectedProduct.model_name} - ${this.selectedVariant.color}`,
-                    quantity,
-                    unitPrice: unitPrice,  // 使用实际输入的价格
-                    total: quantity * unitPrice
-                };
-                
-                this.saleItems.push(item);
-                this.updateSaleItemsDisplay();
-                this.showMessage('saleMessage', '商品已添加到销售单', 'success');
-                
-                // 重置数量
-                document.getElementById('saleQuantity').value = 1;
-            }
+    if (this.selectedVariant.stock < quantity) {
+        this.showMessage('saleMessage', `库存不足，当前库存: ${this.selectedVariant.stock}`, 'error');
+        return;
+    }
+    
+    const item = {
+        customerId,
+        variantId: this.selectedVariant.variant_id,
+        variantName: `${this.selectedProduct.model_name} - ${this.selectedVariant.color}`,
+        quantity,
+        unitPrice: unitPrice,  // 使用自动计算的价格
+        total: quantity * unitPrice
+    };
+    
+    this.saleItems.push(item);
+    this.updateSaleItemsDisplay();
+    this.showMessage('saleMessage', '商品已添加到销售单', 'success');
+    
+    // 重置数量
+    document.getElementById('saleQuantity').value = 1;
+}
             
 updateSaleItemsDisplay() {
     const itemsList = document.getElementById('itemsList');
