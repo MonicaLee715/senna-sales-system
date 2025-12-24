@@ -2101,41 +2101,67 @@ updateSaleItemsDisplay() {
             }
             
 async startScan() {
-    if (typeof window.QRScanner !== 'undefined') {
-        // 如果是移动端且有扫码插件
-        this.showMessage('scanMessage', '正在启动摄像头...', 'success');
+    console.log('=== 开始测试真实扫码功能 ===');
+    
+    // 1. 检查是否在手机浏览器中
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    console.log('是否为手机端:', isMobile);
+    
+    if (!isMobile) {
+        this.showMessage('scanMessage', '请在手机浏览器中测试扫码功能', 'warning');
+        this.startMockScan();
+        return;
+    }
+    
+    // 2. 检查浏览器支持
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        this.showMessage('scanMessage', '您的浏览器不支持摄像头功能', 'error');
+        this.startMockScan();
+        return;
+    }
+    
+    // 3. 尝试打开摄像头
+    try {
+        this.showMessage('scanMessage', '正在请求摄像头权限...', 'success');
         
-        window.QRScanner.scan((err, result) => {
-            if (err) {
-                console.error('扫码失败:', err);
-                this.showMessage('scanMessage', '扫码失败: ' + err, 'error');
-                return;
-            }
-            
-            if (result) {
-                // 处理扫描结果
-                const variantId = this.extractVariantIdFromQR(result);
-                if (variantId) {
-                    document.getElementById('manualVariantId').value = variantId;
-                    this.lookupInventory(variantId);
-                }
-            }
+        // 测试是否能访问摄像头
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' } 
         });
         
-    } else {
-        // 桌面端或没有扫码插件，使用模拟扫码
-        this.showMessage('scanMessage', '正在模拟扫码...', 'warning');
+        // 如果到这里，说明摄像头权限获取成功
+        console.log('摄像头权限获取成功！');
         
-        // 模拟扫描一个商品ID（实际应用中应该从摄像头获取）
+        // 关闭摄像头（暂时）
+        stream.getTracks().forEach(track => track.stop());
+        
+        this.showMessage('scanMessage', '✅ 摄像头测试通过！可以使用真实扫码', 'success');
+        
+        // 提示用户下一步
         setTimeout(() => {
-            const mockVariantIds = ['V001', 'V002', 'V003', 'V004'];
-            const randomVariantId = mockVariantIds[Math.floor(Math.random() * mockVariantIds.length)];
-            
-            document.getElementById('manualVariantId').value = randomVariantId;
-            this.lookupInventory(randomVariantId);
-            
-            this.showMessage('scanMessage', `模拟扫码: ${randomVariantId}`, 'success');
-        }, 1000);
+            this.showMessage('scanMessage', '请刷新页面，我们已确认扫码功能可用', 'success');
+        }, 3000);
+        
+    } catch (error) {
+        console.error('摄像头访问失败:', error);
+        
+        // 显示具体的错误信息
+        let errorMsg = '摄像头访问失败: ';
+        if (error.name === 'NotAllowedError') {
+            errorMsg = '请允许摄像头权限，然后重试';
+        } else if (error.name === 'NotFoundError') {
+            errorMsg = '未找到摄像头';
+        } else {
+            errorMsg = error.message;
+        }
+        
+        this.showMessage('scanMessage', errorMsg, 'error');
+        
+        // 3秒后回退到模拟扫码
+        setTimeout(() => {
+            this.showMessage('scanMessage', '使用模拟扫码代替', 'warning');
+            this.startMockScan();
+        }, 3000);
     }
 }
 // 从二维码内容提取商品ID
