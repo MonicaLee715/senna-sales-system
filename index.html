@@ -799,24 +799,120 @@
         
         <!-- 动态内容区 -->
         <div id="content" style="display: none;">
-            <!-- 扫码页面 - 简化版，只保留扫码按钮 -->
-            <div id="scan-page" class="page active">
-                <div class="card">
-                    <div class="scan-section" style="text-align: center; padding: 40px 20px;">
-                        <div class="feature-icon">
-                            <i class="fas fa-qrcode" style="font-size: 4rem; color: var(--primary-color); margin-bottom: 20px;"></i>
-                        </div>
-                        <h2 style="margin-bottom: 10px;">扫码快速操作</h2>
-                        <p style="color: var(--text-muted); margin: 20px 0 30px;">扫描产品二维码进行出入库操作</p>
-                        
-                        <button class="btn btn-block" id="startScan" style="max-width: 200px; margin: 0 auto;">
-                            <i class="fas fa-camera"></i>开始扫码
+<!-- 库存管理页面 -->
+<div id="scan-page" class="page active">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">库存管理</h3>
+            <button class="btn btn-warning" id="manualInputBtn" style="padding: 8px 12px;">
+                <i class="fas fa-keyboard"></i>手动输入
+            </button>
+        </div>
+        
+        <div class="scan-section" style="text-align: center; padding: 20px;">
+            <!-- 扫码区域 -->
+            <div class="scan-area" style="margin-bottom: 20px;">
+                <div class="feature-icon">
+                    <i class="fas fa-qrcode" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 15px;"></i>
+                </div>
+                <h3 style="margin-bottom: 10px;">扫描商品二维码</h3>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">扫描产品二维码查看库存并进行调整</p>
+                
+                <button class="btn" id="startScan" style="max-width: 200px; margin: 0 auto 15px;">
+                    <i class="fas fa-camera"></i>开始扫码
+                </button>
+                
+                <div style="margin: 15px 0; color: var(--text-muted);">或</div>
+                
+                <div class="form-group" style="text-align: left;">
+                    <label class="form-label">手动输入商品ID/二维码</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" class="form-input" id="manualVariantId" placeholder="输入V001, V002等" style="flex: 1;">
+                        <button class="btn" id="manualSearchBtn" style="white-space: nowrap;">
+                            <i class="fas fa-search"></i>查询
                         </button>
                     </div>
                 </div>
-
-                <div id="scanMessage"></div>
             </div>
+            
+            <!-- 库存信息展示区 -->
+            <div id="inventoryInfo" style="display: none;">
+                <div class="selected-product-preview" style="margin-bottom: 20px;">
+                    <div class="preview-content">
+                        <div class="preview-image">
+                            <i class="fas fa-glasses"></i>
+                        </div>
+                        <div class="preview-info">
+                            <h5 id="inventoryProductName">产品名称</h5>
+                            <p id="inventoryProductColor">颜色: 未选择</p>
+                            <p id="inventoryProductModel">型号: 未选择</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="background: #f8f9fa; margin-bottom: 20px;">
+                    <h4 style="text-align: center; margin-bottom: 15px;">当前库存信息</h4>
+                    <div style="font-size: 2rem; text-align: center; font-weight: bold; color: var(--primary-color); margin-bottom: 10px;" id="currentStock">0</div>
+                    <p style="text-align: center; color: var(--text-muted);">当前库存数量</p>
+                    
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">
+                            <i class="fas fa-info-circle"></i> 最后更新: <span id="lastUpdated">-</span>
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 库存调整表单 -->
+                <div class="inventory-adjustment">
+                    <h4 style="margin-bottom: 15px;">库存调整</h4>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">调整类型</label>
+                            <select class="form-select" id="adjustType">
+                                <option value="increase">增加库存</option>
+                                <option value="decrease">减少库存</option>
+                                <option value="set">设置库存</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">数量</label>
+                            <input type="number" class="form-input" id="adjustQuantity" value="1" min="1">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">调整原因</label>
+                        <select class="form-select" id="adjustReason">
+                            <option value="sale">销售出库</option>
+                            <option value="purchase">采购入库</option>
+                            <option value="return">客户退货</option>
+                            <option value="damage">商品报损</option>
+                            <option value="adjustment">库存盘点调整</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">备注</label>
+                        <input type="text" class="form-input" id="adjustRemark" placeholder="可输入备注信息（选填）">
+                    </div>
+                    
+                    <div class="form-row" style="margin-top: 20px;">
+                        <button class="btn btn-success" id="confirmAdjust" style="flex: 1;">
+                            <i class="fas fa-check"></i>确认调整
+                        </button>
+                        <button class="btn btn-outline" id="cancelAdjust" style="flex: 1;">
+                            <i class="fas fa-times"></i>取消
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="scanMessage"></div>
+</div>
 
           <!-- 线下销售页面 -->
 <div id="sale-page" class="page">
@@ -1021,11 +1117,12 @@ const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbz_7KJ3iEV8I7ImNIc
     this.init();
 }
             
-            init() {
-                this.bindEvents();
-                this.hideLoading();
-                this.loadInitialData();
-            }
+init() {
+    this.bindEvents();
+    this.bindInventoryEvents();  // 添加这一行
+    this.hideLoading();
+    this.loadInitialData();
+}
             
             bindEvents() {
                 // 底部导航点击事件
@@ -1127,6 +1224,50 @@ document.addEventListener('click', (e) => {
 });
             }
 
+            // 添加库存管理相关事件绑定
+bindInventoryEvents() {
+    // 手动输入按钮
+    document.getElementById('manualInputBtn').addEventListener('click', () => {
+        document.getElementById('manualVariantId').focus();
+    });
+    
+    // 手动查询按钮
+    document.getElementById('manualSearchBtn').addEventListener('click', () => {
+        const variantId = document.getElementById('manualVariantId').value.trim();
+        if (variantId) {
+            this.lookupInventory(variantId);
+        } else {
+            this.showMessage('scanMessage', '请输入商品ID', 'error');
+        }
+    });
+    
+    // 回车键触发查询
+    document.getElementById('manualVariantId').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            document.getElementById('manualSearchBtn').click();
+        }
+    });
+    
+    // 确认调整库存
+    document.getElementById('confirmAdjust').addEventListener('click', () => {
+        this.confirmInventoryAdjustment();
+    });
+    
+    // 取消调整
+    document.getElementById('cancelAdjust').addEventListener('click', () => {
+        this.hideInventoryInfo();
+    });
+    
+    // 调整类型变化时
+    document.getElementById('adjustType').addEventListener('change', (e) => {
+        if (e.target.value === 'set') {
+            document.getElementById('adjustQuantity').placeholder = '输入要设置的库存数量';
+        } else {
+            document.getElementById('adjustQuantity').placeholder = '';
+        }
+    });
+}
+            
             // 打开产品选择弹窗
             openProductModal(source) {
                 this.productModalSource = source;
@@ -1385,7 +1526,7 @@ async selectVariant(variantId, source) {
             
             updatePageTitle(page) {
                 const titles = {
-                    'scan': '扫码',
+                    'scan': '库存管理',
                     'sale': '线下销售', 
                     'data': '数据查看',
                     'base': '基础数据'
@@ -1959,10 +2100,201 @@ updateSaleItemsDisplay() {
                 }
             }
             
-            startScan() {
-                alert('扫码功能开发中...\n\n请使用其他页面功能');
+async startScan() {
+    if (typeof window.QRScanner !== 'undefined') {
+        // 如果是移动端且有扫码插件
+        this.showMessage('scanMessage', '正在启动摄像头...', 'success');
+        
+        window.QRScanner.scan((err, result) => {
+            if (err) {
+                console.error('扫码失败:', err);
+                this.showMessage('scanMessage', '扫码失败: ' + err, 'error');
+                return;
             }
+            
+            if (result) {
+                // 处理扫描结果
+                const variantId = this.extractVariantIdFromQR(result);
+                if (variantId) {
+                    document.getElementById('manualVariantId').value = variantId;
+                    this.lookupInventory(variantId);
+                }
+            }
+        });
+        
+    } else {
+        // 桌面端或没有扫码插件，使用模拟扫码
+        this.showMessage('scanMessage', '正在模拟扫码...', 'warning');
+        
+        // 模拟扫描一个商品ID（实际应用中应该从摄像头获取）
+        setTimeout(() => {
+            const mockVariantIds = ['V001', 'V002', 'V003', 'V004'];
+            const randomVariantId = mockVariantIds[Math.floor(Math.random() * mockVariantIds.length)];
+            
+            document.getElementById('manualVariantId').value = randomVariantId;
+            this.lookupInventory(randomVariantId);
+            
+            this.showMessage('scanMessage', `模拟扫码: ${randomVariantId}`, 'success');
+        }, 1000);
+    }
+}
+// 从二维码内容提取商品ID
+extractVariantIdFromQR(qrContent) {
+    // 假设二维码内容是变体ID，如 "V001"
+    // 或者可能是URL格式，需要提取ID
+    if (qrContent.startsWith('http')) {
+        // 如果是URL，尝试提取参数
+        const urlParams = new URL(qrContent).searchParams;
+        return urlParams.get('variant_id') || qrContent;
+    }
+    return qrContent;
+}
 
+// 查找库存信息
+async lookupInventory(variantId) {
+    try {
+        // 先尝试从本地数据查找
+        const variant = this.findVariantById(variantId);
+        
+        if (!variant) {
+            this.showMessage('scanMessage', '未找到该商品，请检查ID是否正确', 'error');
+            return;
+        }
+        
+        // 找到商品对应的产品系列
+        const product = this.products.find(p => 
+            this.productVariants[p.model_id]?.some(v => v.variant_id === variantId)
+        );
+        
+        if (!product) {
+            this.showMessage('scanMessage', '商品信息不完整', 'error');
+            return;
+        }
+        
+        // 存储当前选中的变体和产品
+        this.selectedVariant = variant;
+        this.selectedProduct = product;
+        
+        // 显示库存信息
+        this.showInventoryInfo(variant, product);
+        
+    } catch (error) {
+        console.error('查找库存失败:', error);
+        this.showMessage('scanMessage', '查找失败: ' + error.message, 'error');
+    }
+}
+
+// 显示库存信息
+showInventoryInfo(variant, product) {
+    const inventoryInfo = document.getElementById('inventoryInfo');
+    
+    // 更新显示信息
+    document.getElementById('inventoryProductName').textContent = product.model_name;
+    document.getElementById('inventoryProductColor').textContent = `颜色: ${variant.color}`;
+    document.getElementById('inventoryProductModel').textContent = `型号: ${product.model_id} | 变体ID: ${variant.variant_id}`;
+    document.getElementById('currentStock').textContent = variant.stock;
+    
+    // 更新最后更新时间
+    const now = new Date();
+    document.getElementById('lastUpdated').textContent = 
+        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    
+    // 显示库存信息区域
+    inventoryInfo.style.display = 'block';
+    
+    // 滚动到库存区域
+    inventoryInfo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    this.showMessage('scanMessage', `已找到: ${product.model_name} - ${variant.color}`, 'success');
+}
+
+// 隐藏库存信息
+hideInventoryInfo() {
+    document.getElementById('inventoryInfo').style.display = 'none';
+    document.getElementById('manualVariantId').value = '';
+    this.showMessage('scanMessage', '已取消操作', 'warning');
+}
+
+// 确认库存调整
+async confirmInventoryAdjustment() {
+    const variant = this.selectedVariant;
+    if (!variant) {
+        this.showMessage('scanMessage', '请先选择商品', 'error');
+        return;
+    }
+    
+    const adjustType = document.getElementById('adjustType').value;
+    const quantity = parseInt(document.getElementById('adjustQuantity').value);
+    const reason = document.getElementById('adjustReason').value;
+    const remark = document.getElementById('adjustRemark').value.trim();
+    
+    if (!quantity || quantity < 1) {
+        this.showMessage('scanMessage', '请输入有效的数量', 'error');
+        return;
+    }
+    
+    let newStock = variant.stock;
+    let operation = '';
+    
+    switch (adjustType) {
+        case 'increase':
+            newStock += quantity;
+            operation = '增加';
+            break;
+        case 'decrease':
+            if (variant.stock < quantity) {
+                this.showMessage('scanMessage', `库存不足，当前库存: ${variant.stock}`, 'error');
+                return;
+            }
+            newStock -= quantity;
+            operation = '减少';
+            break;
+        case 'set':
+            newStock = quantity;
+            operation = '设置';
+            break;
+    }
+    
+    if (this.useTestMode) {
+        // 测试模式 - 模拟更新
+        variant.stock = newStock;
+        this.showInventoryInfo(variant, this.selectedProduct);
+        this.showMessage('scanMessage', `测试模式: ${operation}库存成功！新库存: ${newStock}`, 'success');
+        return;
+    }
+    
+    try {
+        // 实际API调用
+        const params = new URLSearchParams();
+        params.append('action', 'updateStock');
+        params.append('variant_id', variant.variant_id);
+        params.append('new_stock', newStock.toString());
+        params.append('adjustment', quantity.toString());
+        params.append('operation', adjustType);
+        params.append('reason', reason);
+        params.append('remark', remark);
+        params.append('operator', '管理员');
+        
+        const response = await fetch(`${API_BASE_URL}?${params}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            // 更新本地数据
+            variant.stock = newStock;
+            this.showInventoryInfo(variant, this.selectedProduct);
+            this.showMessage('scanMessage', `${operation}库存成功！新库存: ${newStock}`, 'success');
+            
+            // 重置表单
+            document.getElementById('adjustQuantity').value = 1;
+            document.getElementById('adjustRemark').value = '';
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        console.error('库存调整失败:', error);
+        this.showMessage('scanMessage', '库存调整失败: ' + error.message, 'error');
+    }
+}
             showMessage(containerId, message, type) {
                 const container = document.getElementById(containerId);
                 container.innerHTML = `<div class="message ${type}">${message}</div>`;
