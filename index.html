@@ -1743,12 +1743,20 @@ async loadAllVariants() {
         console.log(`批量加载完成，共 ${allVariants.length} 个变体`);
         
     } catch (error) {
-        console.error('批量加载变体失败:', error);
-        // 回退到原来的逐个加载方式
-        for (const product of this.products) {
-            await this.loadProductVariants(product.model_id);
+    console.error('批量加载变体失败，尝试逐个加载:', error);
+    // 回退到原来的逐个加载方式，并确保填充 allVariants
+    const allVariants = []; // 创建临时数组收集
+    for (const product of this.products) {
+        await this.loadProductVariants(product.model_id); // 这个方法会填充 this.productVariants
+        // 将刚加载的变体也加入到总列表
+        if (this.productVariants[product.model_id]) {
+            allVariants.push(...this.productVariants[product.model_id]);
         }
     }
+    // 将收集到的所有变体存入 this.allVariants
+    this.allVariants = allVariants;
+    console.log(`回退加载完成，共 ${allVariants.length} 个变体`);
+}
 }
 
             // === 新增方法：加载客户所有专属价格 ===
@@ -1809,13 +1817,22 @@ async loadCustomerPrices(customerId) {
                 }
             }
 
-            findVariantById(variantId) {
-                for (const modelId in this.productVariants) {
-                    const variant = this.productVariants[modelId].find(v => v.variant_id === variantId);
-                    if (variant) return variant;
-                }
-                return null;
-            }
+           findVariantById(variantId) {
+    // 1. 首先在总列表 allVariants 中查找（速度快）
+    let variant = this.allVariants.find(v => v.variant_id === variantId);
+    if (variant) return variant;
+    
+    // 2. 如果没找到，再遍历 productVariants 结构查找（确保不遗漏）
+    for (const modelId in this.productVariants) {
+        variant = this.productVariants[modelId].find(v => v.variant_id === variantId);
+        if (variant) {
+            // 顺便把它加入 allVariants 缓存，下次就快了
+            this.allVariants.push(variant);
+            return variant;
+        }
+    }
+    return null; // 确实没找到
+}
 
             async loadSalesRecords() {
                 try {
