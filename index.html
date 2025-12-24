@@ -80,7 +80,64 @@
             padding: 40px 20px;
             color: var(--text-muted);
         }
+/* 摄像头扫描框样式 */
+.camera-frame {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 8px;
+}
 
+/* 扫描线动画 */
+.scan-line {
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #667eea, transparent);
+    box-shadow: 0 0 10px #667eea;
+    animation: scan 2s ease-in-out infinite;
+    z-index: 10;
+    top: 20%;
+}
+
+@keyframes scan {
+    0%, 100% {
+        top: 20%;
+        opacity: 0.7;
+    }
+    50% {
+        top: 80%;
+        opacity: 1;
+    }
+}
+
+/* 摄像头叠加层 */
+.camera-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    z-index: 5;
+}
+
+.camera-overlay::before {
+    content: '';
+    position: absolute;
+    top: 20%;
+    left: 10%;
+    right: 10%;
+    bottom: 20%;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.3);
+}
+    
         .spinner {
             border: 3px solid #f3f3f3;
             border-top: 3px solid var(--primary-color);
@@ -1053,6 +1110,36 @@
                 </div>
             </div>
         </div>
+    <!-- 摄像头扫描界面 -->
+<div id="cameraModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>扫描商品二维码</h3>
+            <button class="close-btn" id="closeCameraModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div style="text-align: center;">
+                <!-- 扫码框 -->
+                <div class="camera-frame">
+                    <video id="cameraPreview" autoplay playsinline 
+                           style="width: 100%; max-width: 300px; border-radius: 8px;"></video>
+                    <div class="scan-line"></div>
+                </div>
+                
+                <div id="cameraStatus" style="margin: 15px 0; color: var(--text-muted);">
+                    将二维码放入框内自动识别
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-outline" id="cancelScanBtn">
+                        <i class="fas fa-times"></i>取消扫描
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+        
     </main>
 
     <!-- 产品选择弹窗 -->
@@ -1094,7 +1181,7 @@
         // API配置
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbz_7KJ3iEV8I7ImNIcKikYO0oJLMrKiTOatuqhTT9W0imWdhGWdMMYUkVxT2FFzeeYy2w/exec';        
         class App {
-            constructor() {
+constructor() {
     this.currentPage = 'scan';
     this.saleItems = [];
     this.productVariants = {};
@@ -1105,11 +1192,12 @@ const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbz_7KJ3iEV8I7ImNIc
     this.selectedVariant = null;
     this.useTestMode = false;
     this.productModalSource = null;
+    this.stream = null;  // ← 在这里添加这一行
     
     // 批量价格缓存
-    this.standardPrices = {};      // {variantId: 标准价}
-    this.customerPrices = {};      // {customerId: {variantId: 专属价}}
-    this.allVariants = [];         // 所有变体数据（包含价格）
+    this.standardPrices = {};
+    this.customerPrices = {};
+    this.allVariants = [];
     
     this.currentCustomerId = null;
     this.customerChangeTimeout = null;
@@ -2101,69 +2189,147 @@ updateSaleItemsDisplay() {
             }
             
 async startScan() {
-    console.log('=== 开始测试真实扫码功能 ===');
+    console.log('=== 启动真实摄像头扫码 ===');
     
-    // 1. 检查是否在手机浏览器中
+    // 检查设备类型
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    console.log('是否为手机端:', isMobile);
+    console.log('设备类型:', isMobile ? '移动设备' : '桌面设备');
     
-    if (!isMobile) {
-        this.showMessage('scanMessage', '请在手机浏览器中测试扫码功能', 'warning');
-        this.startMockScan();
-        return;
-    }
-    
-    // 2. 检查浏览器支持
+    // 检查浏览器支持
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         this.showMessage('scanMessage', '您的浏览器不支持摄像头功能', 'error');
         this.startMockScan();
         return;
     }
     
-    // 3. 尝试打开摄像头
+    // 显示摄像头界面
+    this.showCameraScanner();
+}
+
+            // 显示摄像头扫描界面
+showCameraScanner() {
+    const modal = document.getElementById('cameraModal');
+    modal.classList.add('show');
+    
+    // 绑定关闭按钮
+    document.getElementById('closeCameraModal').onclick = () => {
+        this.stopCamera();
+        modal.classList.remove('show');
+    };
+    
+    document.getElementById('cancelScanBtn').onclick = () => {
+        this.stopCamera();
+        modal.classList.remove('show');
+    };
+    
+    // 启动摄像头
+    this.startCamera();
+}
+
+// 启动摄像头
+async startCamera() {
+    const video = document.getElementById('cameraPreview');
+    const status = document.getElementById('cameraStatus');
+    
     try {
-        this.showMessage('scanMessage', '正在请求摄像头权限...', 'success');
+        status.textContent = '正在启动摄像头...';
+        status.style.color = 'var(--warning-color)';
         
-        // 测试是否能访问摄像头
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' } 
+        // 摄像头配置
+        const constraints = {
+            video: {
+                facingMode: 'environment', // 后置摄像头
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            },
+            audio: false
+        };
+        
+        // 获取摄像头权限和视频流
+        this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        // 显示视频流
+        video.srcObject = this.stream;
+        
+        // 等待视频加载
+        await new Promise((resolve) => {
+            video.onloadedmetadata = () => {
+                video.play();
+                resolve();
+            };
         });
         
-        // 如果到这里，说明摄像头权限获取成功
-        console.log('摄像头权限获取成功！');
+        status.textContent = '摄像头已就绪！将二维码放入框内';
+        status.style.color = 'var(--success-color)';
         
-        // 关闭摄像头（暂时）
-        stream.getTracks().forEach(track => track.stop());
-        
-        this.showMessage('scanMessage', '✅ 摄像头测试通过！可以使用真实扫码', 'success');
-        
-        // 提示用户下一步
-        setTimeout(() => {
-            this.showMessage('scanMessage', '请刷新页面，我们已确认扫码功能可用', 'success');
-        }, 3000);
+        console.log('摄像头启动成功，分辨率:', video.videoWidth, 'x', video.videoHeight);
         
     } catch (error) {
-        console.error('摄像头访问失败:', error);
+        console.error('摄像头启动失败:', error);
         
         // 显示具体的错误信息
-        let errorMsg = '摄像头访问失败: ';
-        if (error.name === 'NotAllowedError') {
+        let errorMsg = '摄像头启动失败: ';
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
             errorMsg = '请允许摄像头权限，然后重试';
+            status.textContent = errorMsg;
+            status.style.color = 'var(--danger-color)';
+            
+            // 3秒后关闭
+            setTimeout(() => {
+                document.getElementById('cameraModal').classList.remove('show');
+                this.showMessage('scanMessage', '请允许摄像头权限后重试', 'error');
+            }, 3000);
+            
         } else if (error.name === 'NotFoundError') {
-            errorMsg = '未找到摄像头';
+            errorMsg = '未找到摄像头设备';
+            status.textContent = errorMsg;
+            status.style.color = 'var(--danger-color)';
+            
         } else {
             errorMsg = error.message;
+            status.textContent = '摄像头错误: ' + errorMsg;
+            status.style.color = 'var(--danger-color)';
         }
         
-        this.showMessage('scanMessage', errorMsg, 'error');
-        
-        // 3秒后回退到模拟扫码
+        // 回退到模拟扫码
         setTimeout(() => {
-            this.showMessage('scanMessage', '使用模拟扫码代替', 'warning');
+            document.getElementById('cameraModal').classList.remove('show');
             this.startMockScan();
         }, 3000);
     }
 }
+
+// 停止摄像头
+stopCamera() {
+    if (this.stream) {
+        this.stream.getTracks().forEach(track => {
+            track.stop();
+        });
+        this.stream = null;
+    }
+    
+    const video = document.getElementById('cameraPreview');
+    if (video) {
+        video.srcObject = null;
+    }
+    
+    console.log('摄像头已关闭');
+}
+
+// 模拟扫码（备用）
+startMockScan() {
+    this.showMessage('scanMessage', '使用模拟扫码功能...', 'warning');
+    
+    // 随机选择一个测试商品
+    const mockVariantIds = ['V001', 'V002', 'V003', 'V004'];
+    const randomVariantId = mockVariantIds[Math.floor(Math.random() * mockVariantIds.length)];
+    
+    document.getElementById('manualVariantId').value = randomVariantId;
+    this.lookupInventory(randomVariantId);
+    
+    this.showMessage('scanMessage', `模拟扫码: ${randomVariantId}`, 'success');
+}
+            
 // 从二维码内容提取商品ID
 extractVariantIdFromQR(qrContent) {
     // 假设二维码内容是变体ID，如 "V001"
