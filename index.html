@@ -6,6 +6,7 @@
     <title>赛娜眼镜进销存</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@latest/dist/jsQR.js"></script>
     <style>
         /* 基础重置和变量定义 */
         :root {
@@ -1193,6 +1194,7 @@ constructor() {
     this.useTestMode = false;
     this.productModalSource = null;
     this.stream = null;  // ← 在这里添加这一行
+    this.qrDetectionInterval = null;
     
     // 批量价格缓存
     this.standardPrices = {};
@@ -2263,6 +2265,8 @@ async startCamera() {
         status.style.color = 'var(--success-color)';
         
         console.log('摄像头启动成功，分辨率:', video.videoWidth, 'x', video.videoHeight);
+        // 开始二维码识别
+this.startQRCodeDetection(video);
         
     } catch (error) {
         console.error('摄像头启动失败:', error);
@@ -2299,8 +2303,14 @@ async startCamera() {
     }
 }
 
-// 停止摄像头
 stopCamera() {
+    // 停止二维码识别
+    if (this.qrDetectionInterval) {
+        clearInterval(this.qrDetectionInterval);
+        this.qrDetectionInterval = null;
+    }
+    
+    // 停止摄像头
     if (this.stream) {
         this.stream.getTracks().forEach(track => {
             track.stop();
@@ -2313,8 +2323,116 @@ stopCamera() {
         video.srcObject = null;
     }
     
-    console.log('摄像头已关闭');
+    console.log('摄像头已完全停止');
 }
+           // 开始二维码识别
+startQRCodeDetection(video) {
+    console.log('开始二维码识别...');
+    
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    const status = document.getElementById('cameraStatus');
+    
+    // 保存interval ID，用于清理
+    this.qrDetectionInterval = setInterval(() => {
+        // 检查摄像头是否还在运行
+        if (!this.stream || !video.videoWidth) {
+            console.log('摄像头未就绪，停止识别');
+            clearInterval(this.qrDetectionInterval);
+            return;
+        }
+        
+        try {
+            // 设置canvas尺寸为视频尺寸
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // 绘制当前视频帧到canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // 获取图像数据
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            
+            // 使用jsQR识别二维码
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: "dontInvert",
+            });
+            
+            // 如果识别到二维码
+            if (code) {
+                console.log('识别到二维码:', code.data);
+                clearInterval(this.qrDetectionInterval);
+                this.handleScannedQRCode(code.data);
+            }
+            
+        } catch (error) {
+            console.error('二维码识别出错:', error);
+        }
+        
+    }, 300); // 每300毫秒识别一次
+}
+
+// 处理识别到的二维码
+handleScannedQRCode(qrData) {
+    console.log('处理二维码数据:', qrData);
+    
+    // 播放提示音（可选）
+    this.playScanSuccessSound();
+    
+    // 停止摄像头
+    this.stopCamera();
+    
+    // 关闭摄像头界面
+    document.getElementById('cameraModal').classList.remove('show');
+    
+    // 提取商品ID
+    const variantId = this.extractVariantIdFromQR(qrData);
+    
+    if (variantId) {
+        // 自动填入输入框
+        document.getElementById('manualVariantId').value = variantId;
+        
+        // 自动查询商品
+        setTimeout(() => {
+            this.lookupInventory(variantId);
+        }, 500);
+        
+        this.showMessage('scanMessage', `扫码成功: ${variantId}`, 'success');
+    } else {
+        this.showMessage('scanMessage', '无法识别该二维码格式', 'error');
+        
+        // 3秒后重新启动扫码
+        setTimeout(() => {
+            this.showCameraScanner();
+        }, 3000);
+    }
+}
+
+// 播放扫码成功音效（可选）
+playScanSuccessSound() {
+    try {
+        // 创建短暂的提示音
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.5);
+        
+    } catch (error) {
+        console.log('音效播放失败:', error);
+        // 不影响主要功能
+    }
+} 
 
 // 模拟扫码（备用）
 startMockScan() {
