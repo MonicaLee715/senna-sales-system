@@ -1524,15 +1524,15 @@ async selectVariant(variantId, source) {
                 }
             }
             
-            updatePageTitle(page) {
-                const titles = {
-                    'scan': '库存管理',
-                    'sale': '线下销售', 
-                    'data': '数据查看',
-                    'base': '基础数据'
-                };
-                document.getElementById('pageTitle').textContent = titles[page] || '赛娜眼镜进销存';
-            }
+           updatePageTitle(page) {
+    const titles = {
+        'scan': '库存管理',
+        'sale': '线下销售', 
+        'data': '数据查看',
+        'base': '基础数据'
+    };
+    document.getElementById('pageTitle').textContent = titles[page] || '赛娜眼镜进销存';
+}
             
             hideLoading() {
                 document.getElementById('loading').style.display = 'none';
