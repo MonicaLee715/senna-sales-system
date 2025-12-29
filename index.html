@@ -1199,7 +1199,7 @@
 
     <script>
         // API配置
-const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyBFrMzrp-ltyPgeJouw87rww10zmpj4GWUXM7cL-U9_LEginVt00R6uRwjK3gixNxGVg/exec';        
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbznOJysZgkb1YZ89m7mGuqbBBy3CT0gTXC5dIQYPDUhhMXZDgz1yUOFAkxPnJQhyoWI8g/exec';        
         class App {
 constructor() {
     this.currentPage = 'scan';
@@ -2882,28 +2882,7 @@ showProductAllVariants(modelId) {
                             </div>
                         </div>
                         
-                        <div style="margin-bottom: 8px;">
-                            <label style="
-                                display: block;
-                                font-size: 0.75rem;
-                                margin-bottom: 4px;
-                                color: var(--text-muted);
-                            ">调整原因</label>
-                            <select class="adjust-reason" style="
-                                width: 100%;
-                                padding: 6px;
-                                border-radius: 4px;
-                                border: 1px solid var(--border-color);
-                                font-size: 0.85rem;
-                            ">
-                                <option value="sale">销售出库</option>
-                                <option value="purchase">采购入库</option>
-                                <option value="return">客户退货</option>
-                                <option value="damage">商品报损</option>
-                                <option value="adjustment">盘点调整</option>
-                                <option value="other">其他</option>
-                            </select>
-                        </div>
+                    
                         
                         <div style="margin-bottom: 10px;">
                             <label style="
@@ -3036,7 +3015,6 @@ async confirmProductVariantAdjustment(variantId) {
     const form = document.getElementById(`adjust-form-${variantId}`);
     const adjustType = form.querySelector('.adjust-type').value;
     const quantity = parseInt(form.querySelector('.adjust-quantity').value);
-    const reason = form.querySelector('.adjust-reason').value;
     const remark = form.querySelector('.adjust-remark').value.trim();
     
     if (!quantity || quantity < 1) {
@@ -3074,7 +3052,6 @@ async confirmProductVariantAdjustment(variantId) {
         params.append('new_stock', newStock.toString());
         params.append('adjustment', quantity.toString());
         params.append('operation', adjustType);
-        params.append('reason', reason);
         params.append('remark', remark);
         params.append('operator', '管理员');
         
