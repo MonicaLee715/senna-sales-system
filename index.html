@@ -2652,6 +2652,7 @@ async confirmInventoryAdjustment() {
 }
 
             // === 第3步：显示产品所有变体 ===
+// 替换现有的 showProductAllVariants 方法
 showProductAllVariants(modelId) {
     try {
         // 查找产品信息
@@ -2672,71 +2673,262 @@ showProductAllVariants(modelId) {
         const inventoryInfo = document.getElementById('inventoryInfo');
         
         let html = `
-            <div class="product-header" style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color);">
-                <h3 style="margin-bottom: 5px;">${product.model_name}</h3>
-                <div style="color: var(--text-muted);">
-                    <span style="margin-right: 15px;">产品型号: ${modelId}</span>
-                    <span>颜色变体: ${variants.length} 个</span>
+            <div class="product-header" style="
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid var(--border-color);
+            ">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="
+                        width: 50px;
+                        height: 50px;
+                        background: #f0f0f0;
+                        border-radius: 8px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 1.2rem;
+                        color: var(--primary-color);
+                        flex-shrink: 0;
+                    ">
+                        <i class="fas fa-glasses"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0 0 4px 0; font-size: 1.2rem;">${product.model_name}</h3>
+                        <div style="color: var(--text-muted); font-size: 0.85rem;">
+                            <span style="margin-right: 12px;">型号: ${modelId}</span>
+                            <span>变体: ${variants.length} 个</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <div class="variants-list" style="margin-bottom: 20px;">
-                <h4 style="margin-bottom: 15px;">颜色变体及库存</h4>
+            <div class="variants-list" style="margin-bottom: 15px;">
+                <div style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 12px;
+                ">
+                    <h4 style="margin: 0; font-size: 1.1rem;">颜色变体</h4>
+                    <button class="btn" onclick="app.hideInventoryInfo()" style="padding: 6px 12px; font-size: 0.85rem;">
+                        <i class="fas fa-times"></i> 返回
+                    </button>
+                </div>
         `;
         
         // 显示每个颜色变体
         variants.forEach(variant => {
             const stockStatus = variant.stock <= 5 ? 'stock-low' : 
                                variant.stock <= 10 ? 'stock-warning' : 'stock-normal';
-            const statusText = variant.stock <= 5 ? '库存紧张' : 
-                              variant.stock <= 10 ? '库存较少' : '库存充足';
+            const statusText = variant.stock <= 5 ? '紧张' : 
+                              variant.stock <= 10 ? '较少' : '充足';
             
             html += `
-                <div class="variant-card" style="
+                <div class="variant-card" data-variant-id="${variant.variant_id}" style="
                     background: white;
                     border-radius: 8px;
-                    padding: 15px;
-                    margin-bottom: 10px;
+                    padding: 12px;
+                    margin-bottom: 8px;
                     border: 1px solid var(--border-color);
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    transition: all 0.3s ease;
-                " data-variant-id="${variant.variant_id}">
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                ">
+                    <!-- 变体信息行 -->
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
                             <div style="
-                                width: 30px;
-                                height: 30px;
-                                border-radius: 50%;
-                                background: #f0f0f0;
+                                width: 36px;
+                                height: 36px;
+                                border-radius: 6px;
+                                background: #f8f9fa;
                                 display: flex;
                                 align-items: center;
                                 justify-content: center;
                                 font-weight: 600;
                                 color: var(--text-color);
+                                font-size: 0.9rem;
+                                flex-shrink: 0;
                             ">${variant.color.charAt(0)}</div>
-                            <div>
-                                <div style="font-weight: 600; font-size: 1.1rem;">${variant.color}</div>
-                                <div style="font-size: 0.85rem; color: var(--text-muted);">
-                                    变体ID: ${variant.variant_id} | 价格: ¥${variant.price}
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 8px;
+                                    margin-bottom: 2px;
+                                ">
+                                    <div style="font-weight: 600; font-size: 1rem; color: var(--text-color);">
+                                        ${variant.color}
+                                    </div>
+                                    <div style="
+                                        font-size: 0.75rem;
+                                        padding: 1px 6px;
+                                        background: ${stockStatus === 'stock-low' ? '#fee2e2' : 
+                                                    stockStatus === 'stock-warning' ? '#fef3c7' : '#dcfce7'};
+                                        color: ${stockStatus === 'stock-low' ? '#991b1b' : 
+                                               stockStatus === 'stock-warning' ? '#92400e' : '#166534'};
+                                        border-radius: 10px;
+                                        font-weight: 500;
+                                    ">
+                                        ${statusText}
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                    <div style="display: flex; gap: 8px;">
+                                        <span>ID: ${variant.variant_id}</span>
+                                        <span>¥${variant.price}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        
+                        <div style="
+                            display: flex;
+                            flex-direction: column;
+                            align-items: flex-end;
+                            gap: 6px;
+                            margin-left: 10px;
+                        ">
+                            <div style="
+                                font-size: 1.3rem;
+                                font-weight: 700;
+                                color: ${stockStatus === 'stock-low' ? 'var(--danger-color)' : 
+                                       stockStatus === 'stock-warning' ? 'var(--warning-color)' : 'var(--success-color)'};
+                            ">
+                                ${variant.stock}
+                            </div>
+                            <button class="btn adjust-toggle-btn" 
+                                    data-variant-id="${variant.variant_id}"
+                                    style="
+                                        padding: 4px 8px;
+                                        font-size: 0.8rem;
+                                        background: #f8f9fa;
+                                        color: var(--primary-color);
+                                        border: 1px solid var(--border-color);
+                                    ">
+                                <i class="fas fa-edit" style="font-size: 0.8rem;"></i> 调整
+                            </button>
+                        </div>
                     </div>
                     
-                    <div style="text-align: right;">
-                        <div style="font-size: 1.5rem; font-weight: 600; margin-bottom: 5px;" class="${stockStatus}">
-                            ${variant.stock}
+                    <!-- 调整表单（默认隐藏） -->
+                    <div class="adjust-form" id="adjust-form-${variant.variant_id}" style="
+                        display: none;
+                        padding: 12px;
+                        background: #f8f9fa;
+                        border-radius: 6px;
+                        margin-top: 10px;
+                    ">
+                        <div style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            margin-bottom: 8px;
+                        ">
+                            <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-color);">
+                                调整 ${variant.color} 库存
+                            </div>
+                            <button class="cancel-adjust-btn" 
+                                    data-variant-id="${variant.variant_id}"
+                                    style="
+                                        background: none;
+                                        border: none;
+                                        color: var(--text-muted);
+                                        font-size: 1.1rem;
+                                        cursor: pointer;
+                                        padding: 0;
+                                    ">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted);">
-                            ${statusText}
+                        
+                        <div style="
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 8px;
+                            margin-bottom: 8px;
+                        ">
+                            <div>
+                                <label style="
+                                    display: block;
+                                    font-size: 0.75rem;
+                                    margin-bottom: 4px;
+                                    color: var(--text-muted);
+                                ">调整类型</label>
+                                <select class="adjust-type" style="
+                                    width: 100%;
+                                    padding: 6px;
+                                    border-radius: 4px;
+                                    border: 1px solid var(--border-color);
+                                    font-size: 0.85rem;
+                                ">
+                                    <option value="increase">增加</option>
+                                    <option value="decrease">减少</option>
+                                    <option value="set">设置</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="
+                                    display: block;
+                                    font-size: 0.75rem;
+                                    margin-bottom: 4px;
+                                    color: var(--text-muted);
+                                ">数量</label>
+                                <input type="number" class="adjust-quantity" value="1" min="1" style="
+                                    width: 100%;
+                                    padding: 6px;
+                                    border-radius: 4px;
+                                    border: 1px solid var(--border-color);
+                                    font-size: 0.85rem;
+                                ">
+                            </div>
                         </div>
-                        <button class="btn adjust-single-btn" 
+                        
+                        <div style="margin-bottom: 8px;">
+                            <label style="
+                                display: block;
+                                font-size: 0.75rem;
+                                margin-bottom: 4px;
+                                color: var(--text-muted);
+                            ">调整原因</label>
+                            <select class="adjust-reason" style="
+                                width: 100%;
+                                padding: 6px;
+                                border-radius: 4px;
+                                border: 1px solid var(--border-color);
+                                font-size: 0.85rem;
+                            ">
+                                <option value="sale">销售出库</option>
+                                <option value="purchase">采购入库</option>
+                                <option value="return">客户退货</option>
+                                <option value="damage">商品报损</option>
+                                <option value="adjustment">盘点调整</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 10px;">
+                            <label style="
+                                display: block;
+                                font-size: 0.75rem;
+                                margin-bottom: 4px;
+                                color: var(--text-muted);
+                            ">备注</label>
+                            <input type="text" class="adjust-remark" placeholder="选填" style="
+                                width: 100%;
+                                padding: 6px;
+                                border-radius: 4px;
+                                border: 1px solid var(--border-color);
+                                font-size: 0.85rem;
+                            ">
+                        </div>
+                        
+                        <button class="btn btn-success confirm-adjust-btn" 
                                 data-variant-id="${variant.variant_id}"
-                                style="margin-top: 10px; padding: 6px 12px; font-size: 0.85rem;"
-                                onclick="app.showSingleVariantAdjustment('${variant.variant_id}')">
-                            <i class="fas fa-edit"></i> 调整库存
+                                style="
+                                    width: 100%;
+                                    padding: 8px;
+                                    font-size: 0.85rem;
+                                ">
+                            <i class="fas fa-check" style="margin-right: 4px;"></i> 确认调整
                         </button>
                     </div>
                 </div>
@@ -2746,19 +2938,16 @@ showProductAllVariants(modelId) {
         html += `
             </div>
             
-            <!-- 快速操作 -->
-            <div class="quick-actions" style="
+            <div style="
                 background: #f8f9fa;
                 border-radius: 8px;
-                padding: 15px;
-                margin-top: 20px;
+                padding: 12px;
+                font-size: 0.85rem;
+                color: var(--text-muted);
+                text-align: center;
             ">
-                <h4 style="margin-bottom: 15px;">快速操作</h4>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn" onclick="app.hideInventoryInfo()" style="flex: 1;">
-                        <i class="fas fa-times"></i> 返回
-                    </button>
-                </div>
+                <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
+                点击"调整"按钮修改对应颜色的库存
             </div>
         `;
         
@@ -2768,9 +2957,189 @@ showProductAllVariants(modelId) {
         // 滚动到显示区域
         inventoryInfo.scrollIntoView({ behavior: 'smooth', block: 'start' });
         
+        // 绑定事件
+        this.bindProductVariantEvents();
+        
     } catch (error) {
         console.error('显示产品变体失败:', error);
         this.showMessage('scanMessage', '加载失败: ' + error.message, 'error');
+    }
+}
+
+            // 在 showProductAllVariants 方法之后添加
+bindProductVariantEvents() {
+    // 切换调整表单显示/隐藏
+    document.querySelectorAll('.adjust-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const variantId = e.target.closest('button').dataset.variantId;
+            const form = document.getElementById(`adjust-form-${variantId}`);
+            
+            // 隐藏其他所有调整表单
+            document.querySelectorAll('.adjust-form').forEach(f => {
+                f.style.display = 'none';
+            });
+            
+            // 重置所有调整按钮文本
+            document.querySelectorAll('.adjust-toggle-btn').forEach(b => {
+                b.innerHTML = '<i class="fas fa-edit" style="font-size: 0.8rem;"></i> 调整';
+                b.style.background = '#f8f9fa';
+                b.style.color = 'var(--primary-color)';
+            });
+            
+            if (form.style.display === 'none') {
+                form.style.display = 'block';
+                e.target.innerHTML = '<i class="fas fa-times" style="font-size: 0.8rem;"></i> 关闭';
+                e.target.style.background = 'var(--primary-color)';
+                e.target.style.color = 'white';
+            } else {
+                form.style.display = 'none';
+                e.target.innerHTML = '<i class="fas fa-edit" style="font-size: 0.8rem;"></i> 调整';
+                e.target.style.background = '#f8f9fa';
+                e.target.style.color = 'var(--primary-color)';
+            }
+        });
+    });
+    
+    // 确认调整
+    document.querySelectorAll('.confirm-adjust-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const variantId = e.target.closest('button').dataset.variantId;
+            this.confirmProductVariantAdjustment(variantId);
+        });
+    });
+    
+    // 取消调整
+    document.querySelectorAll('.cancel-adjust-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const variantId = e.target.closest('button').dataset.variantId;
+            const form = document.getElementById(`adjust-form-${variantId}`);
+            form.style.display = 'none';
+            
+            // 重置按钮
+            const toggleBtn = document.querySelector(`.adjust-toggle-btn[data-variant-id="${variantId}"]`);
+            if (toggleBtn) {
+                toggleBtn.innerHTML = '<i class="fas fa-edit" style="font-size: 0.8rem;"></i> 调整';
+                toggleBtn.style.background = '#f8f9fa';
+                toggleBtn.style.color = 'var(--primary-color)';
+            }
+        });
+    });
+}
+            // 在 bindProductVariantEvents 方法之后添加
+async confirmProductVariantAdjustment(variantId) {
+    const variant = this.findVariantById(variantId);
+    if (!variant) {
+        this.showMessage('scanMessage', '未找到该商品变体', 'error');
+        return;
+    }
+    
+    const form = document.getElementById(`adjust-form-${variantId}`);
+    const adjustType = form.querySelector('.adjust-type').value;
+    const quantity = parseInt(form.querySelector('.adjust-quantity').value);
+    const reason = form.querySelector('.adjust-reason').value;
+    const remark = form.querySelector('.adjust-remark').value.trim();
+    
+    if (!quantity || quantity < 1) {
+        this.showMessage('scanMessage', '请输入有效的数量', 'error');
+        return;
+    }
+    
+    let newStock = variant.stock;
+    let operation = '';
+    
+    switch (adjustType) {
+        case 'increase':
+            newStock += quantity;
+            operation = '增加';
+            break;
+        case 'decrease':
+            if (variant.stock < quantity) {
+                this.showMessage('scanMessage', `库存不足，当前库存: ${variant.stock}`, 'error');
+                return;
+            }
+            newStock -= quantity;
+            operation = '减少';
+            break;
+        case 'set':
+            newStock = quantity;
+            operation = '设置';
+            break;
+    }
+    
+    try {
+        // API调用
+        const params = new URLSearchParams();
+        params.append('action', 'updateStock');
+        params.append('variant_id', variantId);
+        params.append('new_stock', newStock.toString());
+        params.append('adjustment', quantity.toString());
+        params.append('operation', adjustType);
+        params.append('reason', reason);
+        params.append('remark', remark);
+        params.append('operator', '管理员');
+        
+        const response = await fetch(`${API_BASE_URL}?${params}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            // 更新本地数据
+            variant.stock = newStock;
+            
+            // 更新显示
+            this.updateVariantDisplay(variantId, newStock);
+            
+            // 隐藏表单
+            form.style.display = 'none';
+            const toggleBtn = document.querySelector(`.adjust-toggle-btn[data-variant-id="${variantId}"]`);
+            if (toggleBtn) {
+                toggleBtn.innerHTML = '<i class="fas fa-edit" style="font-size: 0.8rem;"></i> 调整';
+                toggleBtn.style.background = '#f8f9fa';
+                toggleBtn.style.color = 'var(--primary-color)';
+            }
+            
+            // 重置表单
+            form.querySelector('.adjust-quantity').value = 1;
+            form.querySelector('.adjust-remark').value = '';
+            
+            this.showMessage('scanMessage', `${operation}库存成功！新库存: ${newStock}`, 'success');
+        } else {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        console.error('库存调整失败:', error);
+        this.showMessage('scanMessage', '库存调整失败: ' + error.message, 'error');
+    }
+}
+
+// 更新变体显示
+updateVariantDisplay(variantId, newStock) {
+    const variantCard = document.querySelector(`.variant-card[data-variant-id="${variantId}"]`);
+    if (!variantCard) return;
+    
+    // 更新库存数字
+    const stockElement = variantCard.querySelector('[style*="font-size: 1.3rem"]');
+    if (stockElement) {
+        stockElement.textContent = newStock;
+        
+        // 更新库存状态
+        const stockStatus = newStock <= 5 ? 'stock-low' : 
+                           newStock <= 10 ? 'stock-warning' : 'stock-normal';
+        const statusText = newStock <= 5 ? '紧张' : 
+                          newStock <= 10 ? '较少' : '充足';
+        
+        // 更新颜色
+        stockElement.style.color = stockStatus === 'stock-low' ? 'var(--danger-color)' : 
+                                  stockStatus === 'stock-warning' ? 'var(--warning-color)' : 'var(--success-color)';
+        
+        // 更新状态标签
+        const statusTag = variantCard.querySelector('[style*="font-size: 0.75rem"]');
+        if (statusTag) {
+            statusTag.textContent = statusText;
+            statusTag.style.background = stockStatus === 'stock-low' ? '#fee2e2' : 
+                                        stockStatus === 'stock-warning' ? '#fef3c7' : '#dcfce7';
+            statusTag.style.color = stockStatus === 'stock-low' ? '#991b1b' : 
+                                   stockStatus === 'stock-warning' ? '#92400e' : '#166534';
+        }
     }
 }
 
