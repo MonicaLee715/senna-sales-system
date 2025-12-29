@@ -322,11 +322,30 @@
     margin-bottom: 12px;  /* 从15px改为12px */
     border-left: 4px solid var(--primary-color);
 }
+        
 /* === 新增的紧凑布局样式 === */
 .selected-product-header {
     display: flex;
     align-items: center;
     gap: 10px;
+}
+        .stock-low {
+    color: var(--danger-color);
+}
+
+.stock-warning {
+    color: var(--warning-color);
+}
+
+.stock-normal {
+    color: var(--success-color);
+}
+
+/* 变体卡片悬停效果 */
+.variant-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: var(--primary-color);
 }
 
 .product-image-small {
@@ -2402,21 +2421,16 @@ handleScannedQRCode(qrData) {
     // 关闭摄像头界面
     document.getElementById('cameraModal').classList.remove('show');
     
-    // 提取商品ID
-    const variantId = this.extractVariantIdFromQR(qrData);
+    // 提取产品型号（改为提取model_id）
+    const modelId = this.extractModelIdFromQR(qrData);
     
-    if (variantId) {
-        // 自动填入输入框
-        document.getElementById('manualVariantId').value = variantId;
+    if (modelId && modelId.startsWith('M')) {
+        // 显示产品所有变体
+        this.showProductAllVariants(modelId);
         
-        // 自动查询商品
-        setTimeout(() => {
-            this.lookupInventory(variantId);
-        }, 500);
-        
-        this.showMessage('scanMessage', `扫码成功: ${variantId}`, 'success');
+        this.showMessage('scanMessage', `扫码成功: ${modelId}`, 'success');
     } else {
-        this.showMessage('scanMessage', '无法识别该二维码格式', 'error');
+        this.showMessage('scanMessage', '无法识别的产品二维码（请扫描M开头的产品码）', 'error');
         
         // 3秒后重新启动扫码
         setTimeout(() => {
@@ -2466,48 +2480,62 @@ startMockScan() {
 }
             
 // 从二维码内容提取商品ID
-extractVariantIdFromQR(qrContent) {
-    // 假设二维码内容是变体ID，如 "V001"
-    // 或者可能是URL格式，需要提取ID
-    if (qrContent.startsWith('http')) {
-        // 如果是URL，尝试提取参数
-        const urlParams = new URL(qrContent).searchParams;
-        return urlParams.get('variant_id') || qrContent;
+extractModelIdFromQR(qrContent) {
+    console.log('解析二维码内容:', qrContent);
+    
+    // 1. 直接是M001格式
+    const mPattern = /M\d+/;
+    const mMatch = qrContent.match(mPattern);
+    if (mMatch) {
+        return mMatch[0]; // 返回M001
     }
+    
+    // 2. 包含在URL参数中，如 ?model=M001
+    if (qrContent.includes('model=')) {
+        const url = new URL(qrContent);
+        return url.searchParams.get('model') || qrContent;
+    }
+    
+    // 3. 其他格式，尝试提取
+    // 先尝试匹配M开头
+    if (qrContent.includes('M')) {
+        const parts = qrContent.split(/[,\s]/);
+        const mPart = parts.find(part => part.startsWith('M'));
+        if (mPart) {
+            return mPart;
+        }
+    }
+    
+    // 如果都没匹配到，返回原内容
     return qrContent;
 }
 
 // 查找库存信息
-async lookupInventory(variantId) {
-    try {
-        // 先尝试从本地数据查找
-        const variant = this.findVariantById(variantId);
-        
-        if (!variant) {
-            this.showMessage('scanMessage', '未找到该商品，请检查ID是否正确', 'error');
-            return;
+async lookupInventory(input) {
+    const trimmedInput = input.trim();
+    
+    // 如果是M开头，显示产品所有变体
+    if (trimmedInput.startsWith('M')) {
+        this.showProductAllVariants(trimmedInput);
+    } 
+    // 如果是V开头，显示单个变体
+    else if (trimmedInput.startsWith('V')) {
+        const variant = this.findVariantById(trimmedInput);
+        if (variant) {
+            const product = this.products.find(p => p.model_id === variant.model_id);
+            this.showInventoryInfo(variant, product);
+        } else {
+            this.showMessage('scanMessage', '未找到该商品变体', 'error');
         }
-        
-        // 找到商品对应的产品系列
-        const product = this.products.find(p => 
-            this.productVariants[p.model_id]?.some(v => v.variant_id === variantId)
-        );
-        
-        if (!product) {
-            this.showMessage('scanMessage', '商品信息不完整', 'error');
-            return;
+    }
+    // 其他情况，先尝试作为model_id查找
+    else {
+        const product = this.products.find(p => p.model_id === trimmedInput);
+        if (product) {
+            this.showProductAllVariants(trimmedInput);
+        } else {
+            this.showMessage('scanMessage', '请输入正确的商品ID（M001或V001格式）', 'error');
         }
-        
-        // 存储当前选中的变体和产品
-        this.selectedVariant = variant;
-        this.selectedProduct = product;
-        
-        // 显示库存信息
-        this.showInventoryInfo(variant, product);
-        
-    } catch (error) {
-        console.error('查找库存失败:', error);
-        this.showMessage('scanMessage', '查找失败: ' + error.message, 'error');
     }
 }
 
@@ -2622,6 +2650,158 @@ async confirmInventoryAdjustment() {
         this.showMessage('scanMessage', '库存调整失败: ' + error.message, 'error');
     }
 }
+
+            // === 第3步：显示产品所有变体 ===
+showProductAllVariants(modelId) {
+    try {
+        // 查找产品信息
+        const product = this.products.find(p => p.model_id === modelId);
+        if (!product) {
+            this.showMessage('scanMessage', `未找到产品: ${modelId}`, 'error');
+            return;
+        }
+        
+        // 获取该产品的所有变体
+        const variants = this.productVariants[modelId] || [];
+        if (variants.length === 0) {
+            this.showMessage('scanMessage', `${product.model_name} 暂无颜色变体`, 'warning');
+            return;
+        }
+        
+        // 显示产品信息区域
+        const inventoryInfo = document.getElementById('inventoryInfo');
+        
+        let html = `
+            <div class="product-header" style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color);">
+                <h3 style="margin-bottom: 5px;">${product.model_name}</h3>
+                <div style="color: var(--text-muted);">
+                    <span style="margin-right: 15px;">产品型号: ${modelId}</span>
+                    <span>颜色变体: ${variants.length} 个</span>
+                </div>
+            </div>
+            
+            <div class="variants-list" style="margin-bottom: 20px;">
+                <h4 style="margin-bottom: 15px;">颜色变体及库存</h4>
+        `;
+        
+        // 显示每个颜色变体
+        variants.forEach(variant => {
+            const stockStatus = variant.stock <= 5 ? 'stock-low' : 
+                               variant.stock <= 10 ? 'stock-warning' : 'stock-normal';
+            const statusText = variant.stock <= 5 ? '库存紧张' : 
+                              variant.stock <= 10 ? '库存较少' : '库存充足';
+            
+            html += `
+                <div class="variant-card" style="
+                    background: white;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin-bottom: 10px;
+                    border: 1px solid var(--border-color);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    transition: all 0.3s ease;
+                " data-variant-id="${variant.variant_id}">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                            <div style="
+                                width: 30px;
+                                height: 30px;
+                                border-radius: 50%;
+                                background: #f0f0f0;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-weight: 600;
+                                color: var(--text-color);
+                            ">${variant.color.charAt(0)}</div>
+                            <div>
+                                <div style="font-weight: 600; font-size: 1.1rem;">${variant.color}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                                    变体ID: ${variant.variant_id} | 价格: ¥${variant.price}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.5rem; font-weight: 600; margin-bottom: 5px;" class="${stockStatus}">
+                            ${variant.stock}
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">
+                            ${statusText}
+                        </div>
+                        <button class="btn adjust-single-btn" 
+                                data-variant-id="${variant.variant_id}"
+                                style="margin-top: 10px; padding: 6px 12px; font-size: 0.85rem;"
+                                onclick="app.showSingleVariantAdjustment('${variant.variant_id}')">
+                            <i class="fas fa-edit"></i> 调整库存
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `
+            </div>
+            
+            <!-- 快速操作 -->
+            <div class="quick-actions" style="
+                background: #f8f9fa;
+                border-radius: 8px;
+                padding: 15px;
+                margin-top: 20px;
+            ">
+                <h4 style="margin-bottom: 15px;">快速操作</h4>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn" onclick="app.hideInventoryInfo()" style="flex: 1;">
+                        <i class="fas fa-times"></i> 返回
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        inventoryInfo.innerHTML = html;
+        inventoryInfo.style.display = 'block';
+        
+        // 滚动到显示区域
+        inventoryInfo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+    } catch (error) {
+        console.error('显示产品变体失败:', error);
+        this.showMessage('scanMessage', '加载失败: ' + error.message, 'error');
+    }
+}
+
+// === 第4步：显示单个变体调整 ===
+showSingleVariantAdjustment(variantId) {
+    const variant = this.findVariantById(variantId);
+    if (!variant) {
+        this.showMessage('scanMessage', '未找到该商品变体', 'error');
+        return;
+    }
+    
+    const product = this.products.find(p => p.model_id === variant.model_id);
+    if (!product) {
+        this.showMessage('scanMessage', '未找到产品信息', 'error');
+        return;
+    }
+    
+    // 显示单个变体的调整界面（使用你原有的showInventoryInfo方法）
+    this.showInventoryInfo(variant, product);
+}
+
+// === 原来的 showMessage 方法 ===
+showMessage(containerId, message, type) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = `<div class="message ${type}">${message}</div>`;
+    
+    setTimeout(() => {
+        container.innerHTML = '';
+    }, 5000);
+}
+            
             showMessage(containerId, message, type) {
                 const container = document.getElementById(containerId);
                 container.innerHTML = `<div class="message ${type}">${message}</div>`;
