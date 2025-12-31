@@ -2609,6 +2609,20 @@ async confirmInventoryAdjustment() {
             operation = '设置';
             break;
     }
+
+    // ===== 从这里开始，插入以下代码 =====
+// 计算要发送给后端的调整量 (adjustment)
+let adjustment;
+if (adjustType === 'set') {
+    // 如果是“设置”，调整量 = 新库存 - 老库存
+    adjustment = newStock - variant.stock;
+} else if (adjustType === 'increase') {
+    // 如果是“增加”，调整量为正数
+    adjustment = quantity;
+} else if (adjustType === 'decrease') {
+    // 如果是“减少”，调整量为负数！！！这是关键
+    adjustment = -quantity;
+}
     
     if (this.useTestMode) {
         // 测试模式 - 模拟更新
@@ -2624,7 +2638,7 @@ async confirmInventoryAdjustment() {
         params.append('action', 'updateStock');
         params.append('variant_id', variant.variant_id);
         params.append('new_stock', newStock.toString());
-        params.append('adjustment', quantity.toString());
+        params.append('adjustment', adjustment.toString());
         params.append('operation', adjustType);
         params.append('reason', reason);
         params.append('remark', remark);
@@ -3048,6 +3062,17 @@ async confirmProductVariantAdjustment(variantId) {
             operation = '设置';
             break;
     }
+
+// ===== 从这里开始，插入以下代码 =====
+// 计算要发送给后端的调整量 (adjustment)
+let adjustment;
+if (adjustType === 'set') {
+    adjustment = newStock - variant.stock;
+} else if (adjustType === 'increase') {
+    adjustment = quantity;
+} else if (adjustType === 'decrease') {
+    adjustment = -quantity; // 关键：确保这是负数
+}
     
     try {
         // API调用
@@ -3055,7 +3080,7 @@ async confirmProductVariantAdjustment(variantId) {
         params.append('action', 'updateStock');
         params.append('variant_id', variantId);
         params.append('new_stock', newStock.toString());
-        params.append('adjustment', quantity.toString());
+        params.append('adjustment', adjustment.toString());
         params.append('operation', adjustType);
         params.append('remark', remark);
         params.append('operator', '管理员');
