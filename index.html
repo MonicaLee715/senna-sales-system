@@ -1318,7 +1318,7 @@
     </div>
 </div>
         <!-- 新增商品弹窗 -->
-<div id="addProductModal" class="modal">
+<div id="addProductModal" class="modal" onclick="event.stopPropagation()">
     <div class="modal-content">
         <div class="modal-header">
             <h3>新增商品</h3>
@@ -3924,22 +3924,24 @@ async submitNewProduct() {
     const standardPrice = parseFloat(document.getElementById('newStandardPrice').value) || 0;
     const productImage = document.getElementById('newProductImage').value.trim();
     
-    // 收集颜色和库存
-    const colorRows = document.querySelectorAll('.color-stock-row');
-    const colors = [];      // 颜色名称数组
-    const stocks = [];      // 库存数量数组
+   // 在 submitNewProduct 方法中，修改数据收集部分：
+const colorRows = document.querySelectorAll('.color-stock-row');
+const colors = [];
+const stocks = [];
+
+colorRows.forEach(row => {
+    // 确保这里选择的是正确的输入框
+    const colorInput = row.querySelector('.color-input');
+    const stockInput = row.querySelector('.stock-input');
     
-    colorRows.forEach(row => {
-        const colorInput = row.querySelector('.color-input');
-        const stockInput = row.querySelector('.stock-input');
-        const color = colorInput.value.trim();
-        const stock = parseInt(stockInput.value) || 0;
-        
-        if (color) {
-            colors.push(color);
-            stocks.push(stock);
-        }
-    });
+    const color = colorInput.value.trim();
+    const stock = parseInt(stockInput.value) || 0;
+    
+    if (color) {
+        colors.push(color);
+        stocks.push(stock);
+    }
+});
     
     // 验证数据
     if (!modelId) {
@@ -4003,10 +4005,8 @@ async submitNewProduct() {
     }
 }
 
-// 调用后端API
 async addProductToBackend(productData) {
     try {
-        // 将颜色和库存转换为逗号分隔的字符串
         const colorsString = productData.colors.join(',');
         const stocksString = productData.stocks.join(',');
         
@@ -4014,9 +4014,9 @@ async addProductToBackend(productData) {
         params.append('action', 'addProduct');
         params.append('model_id', productData.modelId);
         params.append('model_name', productData.modelName);
-        params.append('colors', colorsString);    // 颜色字符串
-        params.append('stocks', stocksString);    // 库存字符串
-        params.append('price', productData.price.toString());
+        params.append('colors', colorsString);
+        params.append('stocks', stocksString);
+        params.append('price', productData.standardPrice.toString()); // 注意参数名
         if (productData.productImage) {
             params.append('product_image', productData.productImage);
         }
@@ -4027,13 +4027,31 @@ async addProductToBackend(productData) {
         const result = await response.json();
         console.log('API响应:', result);
         
+        // ========== 新增：处理响应 ==========
+        if (result.success) {
+            // 1. 显示成功消息
+            app.showAddProductMessage(`✅ ${result.message}`, 'success');
+            
+            // 2. 3秒后关闭弹窗
+            setTimeout(() => {
+                document.getElementById('addProductModal').classList.remove('show');
+                // 可选：刷新库存列表
+                app.loadProducts();
+                app.loadStockData();
+            }, 3000);
+        } else {
+            // 显示错误消息
+            app.showAddProductMessage(`❌ ${result.message}`, 'error');
+        }
+        // ========== 新增结束 ==========
+        
         return result;
     } catch (error) {
         console.error('网络请求失败:', error);
+        app.showAddProductMessage(`网络错误: ${error.message}`, 'error'); // 新增
         throw new Error('网络请求失败: ' + error.message);
     }
 }
-
 // 显示新增商品的消息
 showAddProductMessage(message, type) {
     const container = document.getElementById('addProductMessage');
