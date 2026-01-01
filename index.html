@@ -4004,7 +4004,7 @@ async submitNewProduct() {
 // 调用后端API
 async addProductToBackend(productData) {
     try {
-        // 将颜色数据转换为字符串格式：颜色:库存,颜色:库存
+        // 将颜色数据转换为字符串格式：颜色:库存
         const colorStockString = productData.colors
             .map(item => `${item.color}:${item.stock}`)
             .join(',');
