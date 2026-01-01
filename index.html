@@ -1448,14 +1448,23 @@ updateSaleProductDisplay() {
     console.log('=== updateSaleProductDisplay 开始 ===');
     
     const previewElement = document.getElementById('selectedProductPreview');
+    const previewImage = document.getElementById('previewProductImage');
     
     if (this.selectedProduct) {
         console.log('有选中产品，开始更新显示');
         
-        // 显示选中产品区域，但不要隐藏选择按钮
-        previewElement.style.display = 'block';
+        // 直接使用 selectedProduct 的产品图片
+        if (this.selectedProduct.product_image) {
+            previewImage.innerHTML = `
+                <img src="${this.selectedProduct.product_image.replace(/\s+/g, '')}" 
+                     alt="${this.selectedProduct.model_name}" 
+                     style="width: 100%; height: 100%; object-fit: cover;">
+            `;
+        } else {
+            previewImage.innerHTML = '<i class="fas fa-glasses"></i>';
+        }
         
-        // 只更新产品图片和名称，删除其他所有信息
+        previewElement.style.display = 'block';
         document.getElementById('previewProductName').textContent = this.selectedProduct.model_name;
         
         console.log('产品基本信息已更新');
@@ -1485,14 +1494,36 @@ async showColorSelection(source) {
     // 遍历所有变体创建颜色选项
     for (const variant of variants) {
         const colorOption = document.createElement('div');
-        colorOption.className = 'color-option';
-        colorOption.dataset.variantId = variant.variant_id;
-        colorOption.innerHTML = `
-            ${variant.color} 
-            <span style="font-size: 0.8rem; color: #666;">
-                (库存: ${variant.stock})
-            </span>
-        `;
+colorOption.className = 'color-option';
+colorOption.dataset.variantId = variant.variant_id;
+colorOption.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="
+            width: 40px;
+            height: 40px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        ">
+            ${this.selectedProduct.product_image ?  // 直接使用产品图片
+                `<img src="${this.selectedProduct.product_image.replace(/\s+/g, '')}" 
+                     alt="${this.selectedProduct.model_name}" 
+                     style="width: 100%; height: 100%; object-fit: cover;">` : 
+                `<i class="fas fa-glasses" style="color: #999; font-size: 1rem;"></i>`
+            }
+        </div>
+        <div style="flex: 1;">
+            <div style="font-weight: 500; font-size: 0.9rem;">${variant.color}</div>
+            <div style="font-size: 0.75rem; color: #666;">
+                库存: ${variant.stock} | ¥${variant.price}
+            </div>
+        </div>
+    </div>
+`;
         
         colorOptions.appendChild(colorOption);
     }
