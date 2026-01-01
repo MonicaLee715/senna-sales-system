@@ -1220,24 +1220,22 @@
             </div>
         </div>
         
-        <!-- 筛选条件 - 简洁版 -->
+        <!-- 筛选条件 - 只保留状态筛选 -->
         <div class="filter-section" style="margin-bottom: 15px;">
             <div style="display: flex; gap: 8px; align-items: center;">
                 <div style="flex: 1;">
-                    <select class="form-select" id="stockFilterModel" style="padding: 8px; font-size: 0.9rem;">
-                        <option value="">所有产品系列</option>
-                    </select>
-                </div>
-                <div style="flex: 1;">
                     <select class="form-select" id="stockFilterStatus" style="padding: 8px; font-size: 0.9rem;">
-                        <option value="">所有状态</option>
-                        <option value="low">库存紧张</option>
-                        <option value="warning">库存较少</option>
-                        <option value="normal">库存充足</option>
+                        <option value="">所有库存状态</option>
+                        <option value="low">库存紧张（≤5）</option>
+                        <option value="warning">库存较少（6-10）</option>
+                        <option value="normal">库存充足（>10）</option>
                     </select>
                 </div>
                 <button class="btn" id="searchStockBtn" style="padding: 8px 16px; white-space: nowrap;">
-                    <i class="fas fa-search"></i>
+                    <i class="fas fa-filter"></i>筛选
+                </button>
+                <button class="btn" id="clearFilterBtn" style="padding: 8px 12px; background: #f8f9fa; color: var(--text-muted);">
+                    <i class="fas fa-times"></i>清除
                 </button>
             </div>
         </div>
