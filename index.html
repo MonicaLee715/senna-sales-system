@@ -3495,7 +3495,26 @@ showStockLoading() {
             }
         }
 
-        // 渲染库存列表
+
+            // 填充产品系列筛选框
+        populateModelFilter() {
+            const modelSelect = document.getElementById('stockFilterModel');
+            if (!modelSelect) return;
+            
+            // 清空只保留第一个选项
+            while (modelSelect.options.length > 1) {
+                modelSelect.remove(1);
+            }
+            
+            // 添加产品系列选项
+            this.products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.model_id;
+                option.textContent = product.model_name;
+                modelSelect.appendChild(option);
+            });
+        }
+            // 渲染库存列表
         renderStockList() {
             if (!this.allStockData || this.allStockData.length === 0) {
                 this.showStockMessage('暂无库存数据', 'warning');
