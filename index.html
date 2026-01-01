@@ -3922,9 +3922,10 @@ async submitNewProduct() {
     const standardPrice = parseFloat(document.getElementById('newStandardPrice').value) || 0;
     const productImage = document.getElementById('newProductImage').value.trim();
     
-    // 收集颜色和库存（修改这里）
+    // 收集颜色和库存
     const colorRows = document.querySelectorAll('.color-stock-row');
-    const colorData = [];
+    const colors = [];      // 颜色名称数组
+    const stocks = [];      // 库存数量数组
     
     colorRows.forEach(row => {
         const colorInput = row.querySelector('.color-input');
@@ -3933,10 +3934,8 @@ async submitNewProduct() {
         const stock = parseInt(stockInput.value) || 0;
         
         if (color) {
-            colorData.push({
-                color: color,
-                stock: stock
-            });
+            colors.push(color);
+            stocks.push(stock);
         }
     });
     
@@ -3968,13 +3967,14 @@ async submitNewProduct() {
         return;
     }
     
-    try {
+     try {
         // 调用后端API新增商品
         const result = await this.addProductToBackend({
             modelId,
             modelName,
-            colors: colorData,  // 改为传递对象数组
-            standardPrice,
+            colors: colors,      // 颜色数组
+            stocks: stocks,      // 库存数组（对应每个颜色）
+            price: standardPrice, // 统一价格
             productImage
         });
         
@@ -4004,17 +4004,17 @@ async submitNewProduct() {
 // 调用后端API
 async addProductToBackend(productData) {
     try {
-        // 将颜色数据转换为字符串格式：颜色:库存
-        const colorStockString = productData.colors
-            .map(item => `${item.color}:${item.stock}`)
-            .join(',');
+        // 将颜色和库存转换为逗号分隔的字符串
+        const colorsString = productData.colors.join(',');
+        const stocksString = productData.stocks.join(',');
         
         const params = new URLSearchParams();
         params.append('action', 'addProduct');
         params.append('model_id', productData.modelId);
         params.append('model_name', productData.modelName);
-        params.append('color_stock', colorStockString);  // 改为color_stock参数
-        params.append('price', productData.standardPrice.toString());
+        params.append('colors', colorsString);    // 颜色字符串
+        params.append('stocks', stocksString);    // 库存字符串
+        params.append('price', productData.price.toString());
         if (productData.productImage) {
             params.append('product_image', productData.productImage);
         }
