@@ -1219,9 +1219,7 @@
                 </button>
             </div>
         </div>
-        <button id="addProductBtn" class="btn" style="margin-bottom:10px;">
-    <i class="fas fa-plus"></i> 新增商品
-</button>
+        
         <!-- 筛选条件 - 只保留状态筛选 -->
         <div class="filter-section" style="margin-bottom: 15px;">
             <div style="display: flex; gap: 8px; align-items: center;">
@@ -1241,33 +1239,7 @@
                 </button>
             </div>
         </div>
-
-        <div id="addProductModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); justify-content:center; align-items:center;">
-    <div style="background:white; padding:20px; border-radius:10px; width:300px;">
-        <h3>新增商品</h3>
-        <div>
-            <label>产品型号:</label>
-            <input type="text" id="newProductModelId" style="width:100%;">
-        </div>
-        <div>
-            <label>产品名称:</label>
-            <input type="text" id="newProductModelName" style="width:100%;">
-        </div>
-        <div>
-            <label>颜色:</label>
-            <input type="text" id="newProductColor" style="width:100%;">
-        </div>
-        <div>
-            <label>库存数量:</label>
-            <input type="number" id="newProductStock" value="0" style="width:100%;">
-        </div>
-        <div style="margin-top:10px; text-align:right;">
-            <button onclick="app.submitNewProduct()">确认</button>
-            <button onclick="document.getElementById('addProductModal').style.display='none'">取消</button>
-        </div>
-    </div>
-</div>
-
+        
         <!-- 库存统计 -->
         <div class="stock-summary" style="margin-bottom: 15px;">
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
@@ -1382,8 +1354,8 @@
 
     <script>
         // API配置
-const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbw1uMhlnnlX_6Lmgyh42_4kH80S77hqK_HWWCx2OScOhzRra97qNgoB665MFHZZDPNTGw/exec';        
-        class App {    
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbz8GIoUqiQdjXIuYFkgEVwTLmYcX2bapf2IL7VR4TBPQg76FUn83C-ZeGqhmkWoxkED2A/exec';        
+        class App {
 constructor() {
     this.currentPage = 'scan';
     this.saleItems = [];
@@ -3196,39 +3168,6 @@ showProductAllVariants(modelId) {
         this.showMessage('scanMessage', '加载失败: ' + error.message, 'error');
     }
 }
-showAddProductForm() {
-    document.getElementById('addProductModal').style.display = 'flex';
-}
-
-async submitNewProduct() {
-    const modelId = document.getElementById('newProductModelId').value.trim();
-    const modelName = document.getElementById('newProductModelName').value.trim();
-    const color = document.getElementById('newProductColor').value.trim();
-    const stock = parseInt(document.getElementById('newProductStock').value) || 0;
-
-    if(!modelId || !modelName || !color) {
-        alert('请填写完整信息');
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE_URL}?action=addProduct`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ model_id: modelId, model_name: modelName, color, stock })
-        });
-        const result = await response.json();
-        if(result.success){
-            alert('新增成功');
-            document.getElementById('addProductModal').style.display = 'none';
-            this.loadStockData(); // 刷新库存列表
-        } else {
-            alert('新增失败: ' + result.message);
-        }
-    } catch (error) {
-        alert('请求失败: ' + error.message);
-    }
-}
 
             // 在 showProductAllVariants 方法之后添加
 bindProductVariantEvents() {
@@ -3847,10 +3786,10 @@ showMessage(containerId, message, type) {
         }
 
         // 显示新增商品表单
-       // showAddProductForm() {
-          //  alert '新增商品功能需要后端API支持。\n\n目前可以通过以下方式添加商品：\n1. 在Google Sheet中手动添加新产品数据\n2. 添加后刷新本页面查看最新库存\n3. 或联系技术人员开发新增API接口开);
-    //    }
-    //   }=============== 添加这个方法 ====================
+        showAddProductForm() {
+            alert('新增商品功能需要后端API支持。\n\n目前可以通过以下方式添加商品：\n1. 在Google Sheet中手动添加新产品数据\n2. 添加后刷新本页面查看最新库存\n3. 或联系技术人员开发新增API接口');
+        }
+// ==================== 添加这个方法 ====================
         // 查看产品详情
         viewProductDetails(modelId) {
             // 跳转到库存管理页面并自动查询
