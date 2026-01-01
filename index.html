@@ -3547,7 +3547,8 @@ showAddProductForm() {
     
     // 重置颜色输入
     const colorInputs = document.getElementById('colorInputs');
-    colorInputs.innerHTML = `
+    // 找到设置 colorInputs.innerHTML 的地方，替换为：
+colorInputs.innerHTML = `
     <div class="color-stock-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
         <div style="flex: 1;">
             <input type="text" class="form-input color-input" placeholder="颜色名称，如: 黑色" style="width: 100%; margin-bottom: 5px;">
@@ -3606,14 +3607,11 @@ async submitNewProduct() {
     
    // 在 submitNewProduct 方法中，修改数据收集部分：
 const colorRows = document.querySelectorAll('.color-stock-row');
-const colors = [];
-const stocks = [];
+const colors = [], stocks = [];
 
 colorRows.forEach(row => {
-    // 确保这里选择的是正确的输入框
     const colorInput = row.querySelector('.color-input');
     const stockInput = row.querySelector('.stock-input');
-    
     const color = colorInput.value.trim();
     const stock = parseInt(stockInput.value) || 0;
     
@@ -3639,10 +3637,10 @@ colorRows.forEach(row => {
         return;
     }
     
-    if (colorData.length === 0) {
-        this.showAddProductMessage('请至少添加一个颜色', 'error');
-        return;
-    }
+if (colors.length === 0) {
+    this.showAddProductMessage('请至少添加一个颜色', 'error');
+    return;
+}
     
     // 检查是否已存在该型号
     const existingProduct = this.products.find(p => p.model_id === modelId);
