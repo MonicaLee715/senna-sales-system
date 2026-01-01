@@ -825,8 +825,97 @@
             font-size: 0.8rem;
             color: var(--text-muted);
         }
-  
-      
+        /* 添加在CSS文件的适当位置 */
+.summary-item {
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.summary-item:hover {
+    transform: translateY(-2px);
+}
+
+.stock-item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: var(--primary-color);
+}
+        /* 统计卡片悬停效果 */
+.summary-item {
+    transition: all 0.2s ease;
+}
+
+.summary-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* 库存项悬停效果 */
+.stock-item:hover {
+    border-color: var(--primary-color);
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.1);
+}
+
+/* 紧凑的按钮样式 */
+.btn-compact {
+    padding: 4px 8px !important;
+    font-size: 0.8rem !important;
+    line-height: 1.2;
+}
+        /* 产品卡片网格布局 */
+.product-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+@media (min-width: 768px) {
+    .product-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .product-cards-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* 产品卡片悬停效果 */
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.12);
+    border-color: var(--primary-color);
+}
+
+/* 变体行悬停效果 */
+.variant-row:hover {
+    background: #f0f2f5 !important;
+    transform: translateX(2px);
+}
+
+/* 滚动条样式 */
+.variants-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.variants-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+}
+
+.variants-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+
+.variants-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
         /* 工具类 */
         .text-center { text-align: center; }
         .text-right { text-align: right; }
@@ -1738,11 +1827,6 @@ async selectVariant(variantId, source) {
                 this.showPage(page);
                 this.currentPage = page;
                 this.updatePageTitle(page);
-                    // 添加这4行代码，触发页面切换事件
-    const event = new CustomEvent('pageChanged', {
-        detail: { page: page }
-    });
-    document.dispatchEvent(event);
             }
             
             showPage(page) {
@@ -3707,6 +3791,12 @@ showMessage(containerId, message, type) {
         showAddProductForm() {
             alert('新增商品功能需要后端API支持。\n\n目前可以通过以下方式添加商品：\n1. 在Google Sheet中手动添加新产品数据\n2. 添加后刷新本页面查看最新库存\n3. 或联系技术人员开发新增API接口');
         }
+// ==================== 添加这个方法 ====================
+        // 查看产品详情
+        viewProductDetails(modelId) {
+            // 跳转到库存管理页面并自动查询
+            app.switchPage('scan');
+            
             // 设置手动输入框的值
             setTimeout(() => {
                 document.getElementById('manualVariantId').value = modelId;
