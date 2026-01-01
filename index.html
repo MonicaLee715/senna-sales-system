@@ -297,19 +297,6 @@
     color: var(--text-color);
 }
 
-/* 销售商品清单样式优化 */
-.item-list {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 20px;
-}
-
-.item-list h4 {
-    margin-bottom: 15px;
-    color: var(--text-color);
-}
-
 
         /* 颜色选择 */
 
@@ -573,102 +560,7 @@
             color: var(--text-muted);
         }
 
-        /* 小票样式 */
-        .receipt {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-            font-family: 'Courier New', monospace;
-            max-width: 300px;
-            margin-left: auto;
-            margin-right: auto;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
 
-        .receipt-header {
-            text-align: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px dashed #333;
-        }
-
-        .receipt-title {
-            font-size: 1.3rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .receipt-info {
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-        }
-
-        .receipt-info div {
-            margin-bottom: 3px;
-        }
-
-        .receipt-items {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-
-        .receipt-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
-        }
-
-        .receipt-item-name {
-            flex: 2;
-        }
-
-        .receipt-item-details {
-            flex: 1;
-            text-align: right;
-        }
-
-        .receipt-divider {
-            border-top: 1px dashed #333;
-            margin: 10px 0;
-        }
-
-        .receipt-total {
-            text-align: right;
-            font-weight: bold;
-            font-size: 1.1rem;
-            margin-top: 10px;
-        }
-
-        .receipt-footer {
-            text-align: center;
-            margin-top: 15px;
-            padding-top: 10px;
-            border-top: 1px dashed #333;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .receipt-balance {
-            background: #fff3cd;
-            padding: 8px;
-            border-radius: 4px;
-            margin-top: 10px;
-            font-size: 0.9rem;
-        }
-
-        /* 价格提示 */
-        .price-note {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 5px;
-        }
-
-        .special-price {
-            color: var(--success-color);
-            font-weight: 500;
-        }
 
         /* 消息提示 */
         .message {
@@ -696,15 +588,7 @@
             border: 1px solid #ffeaa7;
         }
 
-        /* 调试信息 */
-        .debug-info {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 6px;
-            margin-top: 10px;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
+       
         /* 添加在CSS文件的适当位置 */
 .summary-item {
     padding: 15px;
@@ -721,92 +605,8 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     border-color: var(--primary-color);
 }
-        /* 统计卡片悬停效果 */
-.summary-item {
-    transition: all 0.2s ease;
-}
+   
 
-.summary-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-/* 库存项悬停效果 */
-.stock-item:hover {
-    border-color: var(--primary-color);
-    background-color: #f8f9fa;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.1);
-}
-
-/* 紧凑的按钮样式 */
-.btn-compact {
-    padding: 4px 8px !important;
-    font-size: 0.8rem !important;
-    line-height: 1.2;
-}
-        /* 产品卡片网格布局 */
-.product-cards-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-}
-
-@media (min-width: 768px) {
-    .product-cards-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (min-width: 1200px) {
-    .product-cards-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-/* 产品卡片悬停效果 */
-.product-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.12);
-    border-color: var(--primary-color);
-}
-
-/* 变体行悬停效果 */
-.variant-row:hover {
-    background: #f0f2f5 !important;
-    transform: translateX(2px);
-}
-
-/* 滚动条样式 */
-.variants-list::-webkit-scrollbar {
-    width: 4px;
-}
-
-.variants-list::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 2px;
-}
-
-.variants-list::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 2px;
-}
-
-.variants-list::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
-
-        /* 工具类 */
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .text-success { color: var(--success-color); }
-        .text-danger { color: var(--danger-color); }
-        .text-warning { color: var(--warning-color); }
-        .mt-1 { margin-top: 5px; }
-        .mt-2 { margin-top: 10px; }
-        .mb-1 { margin-bottom: 5px; }
-        .mb-2 { margin-bottom: 10px; }
-        .hidden { display: none; }
 
         /* 响应式设计 */
         @media (max-width: 768px) {
