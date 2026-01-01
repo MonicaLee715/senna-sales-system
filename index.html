@@ -825,6 +825,22 @@
             font-size: 0.8rem;
             color: var(--text-muted);
         }
+        /* 添加在CSS文件的适当位置 */
+.summary-item {
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.summary-item:hover {
+    transform: translateY(-2px);
+}
+
+.stock-item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: var(--primary-color);
+}
 
         /* 工具类 */
         .text-center { text-align: center; }
@@ -1118,19 +1134,87 @@
     </div>
 </div>
 
-            <!-- 数据查看页面 -->
-            <div id="data-page" class="page">
-                <div class="card">
-                    <div class="feature-icon" style="text-align: center; font-size: 2rem; color: var(--primary-color); margin-bottom: 15px;">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    <h3 style="text-align: center;">数据查看</h3>
-                    <p style="text-align: center; color: var(--text-muted); margin-bottom: 20px;">销售记录、库存查询等功能</p>
-                    <div class="status-badge" style="background: #fff3cd; color: #856404; padding: 8px 12px; border-radius: 6px; text-align: center;">
-                        功能开发中
-                    </div>
+           <!-- 库存情况页面 -->
+<div id="data-page" class="page">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">库存情况</h3>
+            <button class="btn" id="refreshStockBtn">
+                <i class="fas fa-sync-alt"></i>刷新
+            </button>
+        </div>
+        
+        <!-- 筛选条件 -->
+        <div class="filter-section">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">产品系列</label>
+                    <select class="form-select" id="stockFilterModel">
+                        <option value="">所有产品系列</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">库存状态</label>
+                    <select class="form-select" id="stockFilterStatus">
+                        <option value="">所有状态</option>
+                        <option value="low">库存紧张（≤5）</option>
+                        <option value="warning">库存较少（6-10）</option>
+                        <option value="normal">库存充足（≥11）</option>
+                    </select>
                 </div>
             </div>
+            
+            <button class="btn btn-block" id="searchStockBtn">
+                <i class="fas fa-search"></i>查询库存
+            </button>
+        </div>
+        
+        <!-- 库存统计 -->
+        <div class="stock-summary" style="
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        ">
+            <div class="summary-item" id="stockNormal">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #166534;">0</div>
+                <div style="font-size: 0.9rem; color: #166534;">库存充足</div>
+            </div>
+            <div class="summary-item" id="stockWarning">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #92400e;">0</div>
+                <div style="font-size: 0.9rem; color: #92400e;">库存较少</div>
+            </div>
+            <div class="summary-item" id="stockLow">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #991b1b;">0</div>
+                <div style="font-size: 0.9rem; color: #991b1b;">库存紧张</div>
+            </div>
+        </div>
+        
+        <!-- 库存列表 -->
+        <div id="stockListContent">
+            <div style="text-align: center; padding: 40px 20px; color: #666;">
+                <i class="fas fa-boxes" style="font-size: 3rem; margin-bottom: 15px; color: var(--text-muted);"></i>
+                <p>点击"查询库存"查看库存情况</p>
+                <button class="btn" id="initialLoadStock" style="margin-top: 15px;">
+                    <i class="fas fa-sync-alt"></i>加载库存数据
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 新增商品按钮 -->
+    <div style="position: fixed; bottom: 80px; right: 20px; z-index: 100;">
+        <button class="btn btn-success" id="addProductBtn" style="
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        ">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+</div>
 
             <!-- 基础数据页面 -->
             <div id="base-page" class="page">
@@ -1204,9 +1288,9 @@
             <span>线下销售</span>
         </a>
         <a href="#data" class="nav-item" data-page="data">
-            <i class="fas fa-chart-bar"></i>
-            <span>数据查看</span>
-        </a>
+    <i class="fas fa-boxes"></i>  <!-- 改为库存图标 -->
+    <span>库存情况</span>  <!-- 改为库存情况 -->
+</a>
         <a href="#base" class="nav-item" data-page="base">
             <i class="fas fa-cog"></i>
             <span>基础数据</span>
@@ -1247,6 +1331,10 @@ init() {
     this.bindInventoryEvents();  // 添加这一行
     this.hideLoading();
     this.loadInitialData();
+    // 新增：绑定库存页面事件
+    setTimeout(() => {
+        this.bindStockEvents();
+    }, 1000);
 }
             
             bindEvents() {
@@ -3239,6 +3327,425 @@ showMessage(containerId, message, type) {
         container.innerHTML = '';
     }, 5000);
 }
+
+        // ==================== 库存情况页面方法 ====================
+        
+        bindStockEvents() {
+            // 使用延迟绑定，确保元素存在
+            setTimeout(() => {
+                // 初始加载按钮
+                const initialLoadBtn = document.getElementById('initialLoadStock');
+                if (initialLoadBtn) {
+                    initialLoadBtn.addEventListener('click', () => {
+                        this.loadStockData();
+                    });
+                }
+                
+                // 刷新按钮
+                const refreshBtn = document.getElementById('refreshStockBtn');
+                if (refreshBtn) {
+                    refreshBtn.addEventListener('click', () => {
+                        this.loadStockData();
+                    });
+                }
+                
+                // 查询按钮
+                const searchBtn = document.getElementById('searchStockBtn');
+                if (searchBtn) {
+                    searchBtn.addEventListener('click', () => {
+                        this.loadStockData();
+                    });
+                }
+                
+                // 新增商品按钮
+                const addProductBtn = document.getElementById('addProductBtn');
+                if (addProductBtn) {
+                    addProductBtn.addEventListener('click', () => {
+                        this.showAddProductForm();
+                    });
+                }
+                
+                // 页面切换时自动加载（如果还没有数据）
+                document.addEventListener('pageChanged', (e) => {
+                    if (e.detail.page === 'data' && (!this.allStockData || this.allStockData.length === 0)) {
+                        setTimeout(() => {
+                            this.loadStockData();
+                        }, 500);
+                    }
+                });
+            }, 500);
+        }
+
+        // 加载库存数据
+        async loadStockData() {
+            try {
+                this.showStockLoading();
+                
+                // 收集所有变体的库存数据
+                const allStockData = [];
+                
+                for (const product of this.products) {
+                    const variants = this.productVariants[product.model_id] || [];
+                    for (const variant of variants) {
+                        allStockData.push({
+                            model_id: product.model_id,
+                            model_name: product.model_name,
+                            variant_id: variant.variant_id,
+                            color: variant.color,
+                            stock: variant.stock || 0,
+                            price: variant.price || 0,
+                            product_image: product.product_image || ''  // 使用产品图片
+                        });
+                    }
+                }
+                
+                this.allStockData = allStockData;
+                this.renderStockList();
+                
+            } catch (error) {
+                console.error('加载库存失败:', error);
+                this.showStockMessage('加载库存失败: ' + error.message, 'error');
+            }
+        }
+
+        // 显示加载中状态
+        showStockLoading() {
+            const container = document.getElementById('stockListContent');
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div class="spinner" style="width: 40px; height: 40px; margin: 0 auto 15px;"></div>
+                        <p style="color: var(--text-muted);">正在加载库存数据...</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 显示库存消息
+        showStockMessage(message, type) {
+            const container = document.getElementById('stockListContent');
+            if (container) {
+                container.innerHTML = `
+                    <div class="message ${type}" style="margin: 20px;">
+                        ${message}
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="btn" onclick="app.loadStockData()">
+                            <i class="fas fa-redo"></i>重新加载
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // 渲染库存列表
+        renderStockList() {
+            if (!this.allStockData || this.allStockData.length === 0) {
+                this.showStockMessage('暂无库存数据', 'warning');
+                return;
+            }
+            
+            const container = document.getElementById('stockListContent');
+            const filterModel = document.getElementById('stockFilterModel')?.value || '';
+            const filterStatus = document.getElementById('stockFilterStatus')?.value || '';
+            
+            // 先填充产品系列筛选框
+            this.populateModelFilter();
+            
+            // 筛选数据
+            let filteredData = this.filterStockData(this.allStockData, filterModel, filterStatus);
+            
+            // 更新统计
+            this.updateStockSummary(filteredData);
+            
+            // 渲染列表
+            if (filteredData.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: #666;">
+                        <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                        <p>没有找到符合条件的商品</p>
+                        <button class="btn" onclick="app.loadStockData()" style="margin-top: 15px;">
+                            <i class="fas fa-redo"></i>重新查询
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 按产品系列分组
+            const groupedData = this.groupStockData(filteredData);
+            
+            let html = '';
+            
+            // 渲染每个产品系列
+            Object.keys(groupedData).forEach(modelId => {
+                const group = groupedData[modelId];
+                const totalStock = group.items.reduce((sum, item) => sum + item.stock, 0);
+                
+                html += this.renderProductGroup(modelId, group, totalStock);
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // 填充产品系列筛选框
+        populateModelFilter() {
+            const modelSelect = document.getElementById('stockFilterModel');
+            if (!modelSelect || modelSelect.options.length > 1) return;
+            
+            // 清空只保留第一个选项
+            while (modelSelect.options.length > 1) {
+                modelSelect.remove(1);
+            }
+            
+            // 添加产品系列选项
+            this.products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.model_id;
+                option.textContent = product.model_name;
+                modelSelect.appendChild(option);
+            });
+        }
+
+        // 筛选库存数据
+        filterStockData(data, filterModel, filterStatus) {
+            let filteredData = [...data];
+            
+            // 筛选产品系列
+            if (filterModel) {
+                filteredData = filteredData.filter(item => item.model_id === filterModel);
+            }
+            
+            // 筛选库存状态
+            if (filterStatus) {
+                filteredData = filteredData.filter(item => {
+                    if (filterStatus === 'low') return item.stock <= 5;
+                    if (filterStatus === 'warning') return item.stock > 5 && item.stock <= 10;
+                    if (filterStatus === 'normal') return item.stock > 10;
+                    return true;
+                });
+            }
+            
+            return filteredData;
+        }
+
+        // 分组库存数据
+        groupStockData(data) {
+            const grouped = {};
+            data.forEach(item => {
+                if (!grouped[item.model_id]) {
+                    grouped[item.model_id] = {
+                        model_name: item.model_name,
+                        items: []
+                    };
+                }
+                grouped[item.model_id].items.push(item);
+            });
+            return grouped;
+        }
+
+        // 渲染产品系列组
+        renderProductGroup(modelId, group, totalStock) {
+            let html = `
+                <div class="product-group" style="margin-bottom: 25px;">
+                    <div style="
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        padding: 12px 15px;
+                        border-radius: 8px;
+                        margin-bottom: 10px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    ">
+                        <div>
+                            <div style="font-weight: bold; font-size: 1rem;">${group.model_name}</div>
+                            <div style="font-size: 0.8rem; opacity: 0.9;">
+                                型号: ${modelId} | 变体: ${group.items.length}个
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 1.2rem; font-weight: bold;">${totalStock}</div>
+                            <div style="font-size: 0.8rem; opacity: 0.9;">总库存</div>
+                        </div>
+                    </div>
+            `;
+            
+            // 渲染每个变体
+            group.items.forEach(item => {
+                html += this.renderStockItem(item);
+            });
+            
+            html += `</div>`;
+            return html;
+        }
+
+        // 渲染单个库存项
+        renderStockItem(item) {
+            const stockStatus = item.stock <= 5 ? 'low' : 
+                               item.stock <= 10 ? 'warning' : 'normal';
+            const statusText = item.stock <= 5 ? '紧张' : 
+                              item.stock <= 10 ? '较少' : '充足';
+            const statusColor = stockStatus === 'low' ? '#991b1b' : 
+                               stockStatus === 'warning' ? '#92400e' : '#166534';
+            const statusBg = stockStatus === 'low' ? '#fee2e2' : 
+                            stockStatus === 'warning' ? '#fef3c7' : '#dcfce7';
+            
+            return `
+                <div class="stock-item" style="
+                    background: white;
+                    border-radius: 8px;
+                    padding: 12px;
+                    margin-bottom: 8px;
+                    border: 1px solid #e0e0e0;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                ">
+                    <!-- 产品图片 -->
+                    <div style="
+                        width: 50px;
+                        height: 50px;
+                        background: #f0f0f0;
+                        border-radius: 6px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        overflow: hidden;
+                        flex-shrink: 0;
+                    ">
+                        ${item.product_image ? 
+                            `<img src="${item.product_image}" alt="${item.model_name}" 
+                                 style="width: 100%; height: 100%; object-fit: cover;">` : 
+                            `<i class="fas fa-glasses" style="color: #999; font-size: 1.2rem;"></i>`
+                        }
+                    </div>
+                    
+                    <!-- 产品信息 -->
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                            margin-bottom: 4px;
+                        ">
+                            <div>
+                                <div style="font-weight: bold; font-size: 0.95rem; color: var(--text-color);">
+                                    ${item.color}
+                                </div>
+                                <div style="font-size: 0.8rem; color: #666; margin-top: 2px;">
+                                    ID: ${item.variant_id} | ¥${item.price}
+                                </div>
+                            </div>
+                            
+                            <div style="text-align: right;">
+                                <div style="
+                                    font-size: 1.3rem;
+                                    font-weight: bold;
+                                    color: ${statusColor};
+                                ">
+                                    ${item.stock}
+                                </div>
+                                <div style="
+                                    font-size: 0.75rem;
+                                    padding: 2px 8px;
+                                    background: ${statusBg};
+                                    color: ${statusColor};
+                                    border-radius: 12px;
+                                    margin-top: 2px;
+                                    display: inline-block;
+                                ">
+                                    ${statusText}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 操作按钮 -->
+                        <div style="
+                            display: flex;
+                            gap: 8px;
+                            margin-top: 8px;
+                            padding-top: 8px;
+                            border-top: 1px solid #f0f0f0;
+                        ">
+                            <button class="btn" 
+                                    onclick="app.adjustStockFromList('${item.variant_id}')"
+                                    style="
+                                        padding: 4px 8px;
+                                        font-size: 0.8rem;
+                                        background: var(--light-bg);
+                                        color: var(--primary-color);
+                                        border: 1px solid var(--border-color);
+                                        flex: 1;
+                                    ">
+                                <i class="fas fa-edit" style="margin-right: 4px;"></i>调整库存
+                            </button>
+                            <button class="btn" 
+                                    onclick="app.viewStockDetails('${item.variant_id}')"
+                                    style="
+                                        padding: 4px 8px;
+                                        font-size: 0.8rem;
+                                        background: var(--light-bg);
+                                        color: var(--text-color);
+                                        border: 1px solid var(--border-color);
+                                        flex: 1;
+                                    ">
+                                <i class="fas fa-info-circle" style="margin-right: 4px;"></i>查看详情
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 更新库存统计
+        updateStockSummary(data) {
+            let normal = 0, warning = 0, low = 0;
+            
+            data.forEach(item => {
+                if (item.stock <= 5) low++;
+                else if (item.stock <= 10) warning++;
+                else normal++;
+            });
+            
+            // 更新统计卡片
+            const updateCard = (id, count, color) => {
+                const card = document.getElementById(id);
+                if (card) {
+                    card.innerHTML = `
+                        <div style="font-size: 1.5rem; font-weight: bold; color: ${color};">${count}</div>
+                        <div style="font-size: 0.9rem; color: ${color};">${id === 'stockNormal' ? '库存充足' : id === 'stockWarning' ? '库存较少' : '库存紧张'}</div>
+                    `;
+                }
+            };
+            
+            updateCard('stockNormal', normal, '#166534');
+            updateCard('stockWarning', warning, '#92400e');
+            updateCard('stockLow', low, '#991b1b');
+        }
+
+        // 从库存列表调整库存
+        adjustStockFromList(variantId) {
+            alert(`调整库存功能待开发\n变体ID: ${variantId}\n\n可以通过库存管理页面扫描调整。`);
+        }
+
+        // 查看库存详情
+        viewStockDetails(variantId) {
+            // 跳转到库存管理页面并自动查询
+            app.switchPage('scan');
+            
+            // 设置手动输入框的值
+            setTimeout(() => {
+                document.getElementById('manualVariantId').value = variantId;
+                document.getElementById('manualSearchBtn').click();
+            }, 500);
+        }
+
+        // 显示新增商品表单
+        showAddProductForm() {
+            alert('新增商品功能需要后端API支持。\n\n目前可以通过以下方式添加商品：\n1. 在Google Sheet中手动添加新产品数据\n2. 添加后刷新本页面查看最新库存\n3. 或联系技术人员开发新增API接口');
+        }
+
             
             showMessage(containerId, message, type) {
                 const container = document.getElementById(containerId);
