@@ -1212,13 +1212,16 @@
 <div id="data-page" class="page">
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">库存情况</h3>
-            <div style="display: flex; gap: 8px;">
-                <button class="btn" id="refreshStockBtn" style="padding: 6px 12px; font-size: 0.85rem;">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-            </div>
-        </div>
+    <h3 class="card-title">库存情况</h3>
+    <div style="display: flex; gap: 8px;">
+        <button class="btn" id="refreshStockBtn" style="padding: 6px 12px; font-size: 0.85rem;">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+        <button class="btn btn-success" id="addProductBtn" style="padding: 6px 12px; font-size: 0.85rem;">
+            <i class="fas fa-plus"></i> 新增商品
+        </button>
+    </div>
+</div>
         
         <!-- 筛选条件 - 只保留状态筛选 -->
         <div class="filter-section" style="margin-bottom: 15px;">
@@ -1314,7 +1317,73 @@
         </div>
     </div>
 </div>
-        
+        <!-- 新增商品弹窗 -->
+<div id="addProductModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>新增商品</h3>
+            <button class="close-btn" id="closeAddProductModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="addProductForm">
+                <div class="form-group">
+                    <label class="form-label">产品系列型号 *</label>
+                    <input type="text" class="form-input" id="newModelId" placeholder="如: M001, M002等">
+                    <div class="price-note">格式: M开头后跟数字，如 M001</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">产品系列名称 *</label>
+                    <input type="text" class="form-input" id="newModelName" placeholder="如: 经典金属系列">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">颜色 *</label>
+                    <div id="colorInputs">
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" class="form-input color-input" placeholder="如: 黑色" style="flex: 1;">
+                            <button type="button" class="btn btn-danger" onclick="app.removeColorInput(this)" style="padding: 6px 12px;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline" onclick="app.addColorInput()" style="width: 100%; margin-top: 10px;">
+                        <i class="fas fa-plus"></i> 添加更多颜色
+                    </button>
+                    <div class="price-note">可以添加多个颜色变体</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">初始库存数量 *</label>
+                    <input type="number" class="form-input" id="newStockQuantity" value="0" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">标准价格</label>
+                    <input type="number" class="form-input" id="newStandardPrice" value="0" min="0">
+                    <div class="price-note">可填写价格，如果不填默认为0</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">产品图片URL（选填）</label>
+                    <input type="text" class="form-input" id="newProductImage" placeholder="https://example.com/image.jpg">
+                    <div class="price-note">粘贴产品图片的完整网址</div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-success btn-block" onclick="app.submitNewProduct()">
+                        <i class="fas fa-check"></i> 确认新增商品
+                    </button>
+                    <button class="btn btn-outline btn-block" onclick="app.closeAddProductModal()" style="margin-top: 10px;">
+                        <i class="fas fa-times"></i> 取消
+                    </button>
+                </div>
+                
+                <div id="addProductMessage" style="margin-top: 15px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
     </main>
 
     <!-- 产品选择弹窗 -->
@@ -1354,7 +1423,7 @@
 
     <script>
         // API配置
-const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbz8GIoUqiQdjXIuYFkgEVwTLmYcX2bapf2IL7VR4TBPQg76FUn83C-ZeGqhmkWoxkED2A/exec';        
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxrjmJaAGlUCh9A2mwlGsmU3fqNu28DKCgHAX7QTZHfqZltNUMeLthQtj08soRnBxta2w/exec';        
         class App {
 constructor() {
     this.currentPage = 'scan';
@@ -1368,6 +1437,7 @@ constructor() {
     this.useTestMode = false;
     this.productModalSource = null;
     this.stream = null;  // ← 在这里添加这一行
+    this.colorCount = 1;  // 添加这行
     this.qrDetectionInterval = null;
     
     // 批量价格缓存
@@ -1386,6 +1456,7 @@ init() {
     this.bindInventoryEvents();  // 添加这一行
     this.hideLoading();
     this.loadInitialData();
+    this.bindAddProductEvents();  // 绑定新增商品事件
     // 新增：绑定库存页面事件
     setTimeout(() => {
         this.bindStockEvents();
@@ -3785,10 +3856,186 @@ showMessage(containerId, message, type) {
             }, 500);
         }
 
-        // 显示新增商品表单
-        showAddProductForm() {
-            alert('新增商品功能需要后端API支持。\n\n目前可以通过以下方式添加商品：\n1. 在Google Sheet中手动添加新产品数据\n2. 添加后刷新本页面查看最新库存\n3. 或联系技术人员开发新增API接口');
+// ==================== 新增商品功能 ====================
+
+// 显示新增商品弹窗
+showAddProductForm() {
+    // 重置表单
+    document.getElementById('newModelId').value = '';
+    document.getElementById('newModelName').value = '';
+    document.getElementById('newStockQuantity').value = 0;
+    document.getElementById('newStandardPrice').value = 0;
+    document.getElementById('newProductImage').value = '';
+    
+    // 重置颜色输入
+    const colorInputs = document.getElementById('colorInputs');
+    colorInputs.innerHTML = `
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <input type="text" class="form-input color-input" placeholder="如: 黑色" style="flex: 1;">
+            <button type="button" class="btn btn-danger" onclick="app.removeColorInput(this)" style="padding: 6px 12px;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    this.colorCount = 1;
+    
+    // 显示弹窗
+    document.getElementById('addProductModal').classList.add('show');
+}
+
+// 关闭新增商品弹窗
+closeAddProductModal() {
+    document.getElementById('addProductModal').classList.remove('show');
+}
+
+// 添加颜色输入框
+addColorInput() {
+    const colorInputs = document.getElementById('colorInputs');
+    const newInput = document.createElement('div');
+    newInput.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px;';
+    newInput.innerHTML = `
+        <input type="text" class="form-input color-input" placeholder="如: 银色" style="flex: 1;">
+        <button type="button" class="btn btn-danger" onclick="app.removeColorInput(this)" style="padding: 6px 12px;">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    colorInputs.appendChild(newInput);
+    this.colorCount++;
+}
+
+// 移除颜色输入框
+removeColorInput(button) {
+    if (this.colorCount > 1) {
+        button.parentElement.remove();
+        this.colorCount--;
+    }
+}
+
+// 提交新增商品
+async submitNewProduct() {
+    // 收集表单数据
+    const modelId = document.getElementById('newModelId').value.trim();
+    const modelName = document.getElementById('newModelName').value.trim();
+    const stockQuantity = parseInt(document.getElementById('newStockQuantity').value);
+    const standardPrice = parseFloat(document.getElementById('newStandardPrice').value) || 0;
+    const productImage = document.getElementById('newProductImage').value.trim();
+    
+    // 收集颜色
+    const colorInputs = document.querySelectorAll('.color-input');
+    const colors = [];
+    colorInputs.forEach(input => {
+        const color = input.value.trim();
+        if (color) {
+            colors.push(color);
         }
+    });
+    
+    // 验证数据
+    if (!modelId) {
+        this.showAddProductMessage('请输入产品型号', 'error');
+        return;
+    }
+    
+    if (!modelId.startsWith('M')) {
+        this.showAddProductMessage('产品型号必须以M开头，如 M001', 'error');
+        return;
+    }
+    
+    if (!modelName) {
+        this.showAddProductMessage('请输入产品名称', 'error');
+        return;
+    }
+    
+    if (colors.length === 0) {
+        this.showAddProductMessage('请至少添加一个颜色', 'error');
+        return;
+    }
+    
+    if (isNaN(stockQuantity) || stockQuantity < 0) {
+        this.showAddProductMessage('请输入有效的库存数量', 'error');
+        return;
+    }
+    
+    // 检查是否已存在该型号
+    const existingProduct = this.products.find(p => p.model_id === modelId);
+    if (existingProduct) {
+        this.showAddProductMessage(`产品型号 ${modelId} 已存在`, 'error');
+        return;
+    }
+    
+    try {
+        // 调用后端API新增商品
+        const result = await this.addProductToBackend({
+            modelId,
+            modelName,
+            colors,
+            stockQuantity,
+            standardPrice,
+            productImage
+        });
+        
+        if (result.success) {
+            this.showAddProductMessage('商品新增成功！正在刷新数据...', 'success');
+            
+            // 关闭弹窗
+            setTimeout(() => {
+                this.closeAddProductModal();
+                
+                // 重新加载数据
+                this.loadProducts();
+                this.loadStockData();
+                
+                // 显示成功消息
+                this.showStockMessage('商品新增成功！数据已刷新', 'success');
+            }, 1500);
+        } else {
+            throw new Error(result.message || '新增失败');
+        }
+    } catch (error) {
+        console.error('新增商品失败:', error);
+        this.showAddProductMessage('新增失败: ' + error.message, 'error');
+    }
+}
+
+// 调用后端API
+async addProductToBackend(productData) {
+    try {
+        const params = new URLSearchParams();
+        params.append('action', 'addProduct');
+        params.append('model_id', productData.modelId);
+        params.append('model_name', productData.modelName);
+        params.append('colors', productData.colors.join(','));
+        params.append('stock', productData.stockQuantity.toString());
+        params.append('price', productData.standardPrice.toString());
+        params.append('product_image', productData.productImage || '');
+        
+        const response = await fetch(`${API_BASE_URL}?${params}`);
+        return await response.json();
+    } catch (error) {
+        throw new Error('网络请求失败: ' + error.message);
+    }
+}
+
+// 显示新增商品的消息
+showAddProductMessage(message, type) {
+    const container = document.getElementById('addProductMessage');
+    container.innerHTML = `<div class="message ${type}">${message}</div>`;
+}
+
+// 绑定新增商品弹窗的事件
+bindAddProductEvents() {
+    // 关闭按钮
+    document.getElementById('closeAddProductModal').addEventListener('click', () => {
+        this.closeAddProductModal();
+    });
+    
+    // 点击弹窗外部关闭
+    document.getElementById('addProductModal').addEventListener('click', (e) => {
+        if (e.target.id === 'addProductModal') {
+            this.closeAddProductModal();
+        }
+    });
+}
 // ==================== 添加这个方法 ====================
         // 查看产品详情
         viewProductDetails(modelId) {
