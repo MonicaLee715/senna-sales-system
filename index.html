@@ -916,9 +916,14 @@
             <div id="inventoryInfo" style="display: none;">
                 <div class="selected-product-preview" style="margin-bottom: 20px;">
                     <div class="preview-content">
-                        <div class="preview-image">
-                            <i class="fas fa-glasses"></i>
-                        </div>
+                        <div class="preview-image" id="previewProductImage">
+    ${this.selectedProduct?.product_image ? 
+        `<img src="${this.selectedProduct.product_image.replace(/\s+/g, '')}" 
+             alt="${this.selectedProduct.model_name}" 
+             style="width: 100%; height: 100%; object-fit: cover;">` : 
+        `<i class="fas fa-glasses"></i>`
+    }
+</div>
                         <div class="preview-info">
                             <h5 id="inventoryProductName">产品名称</h5>
                             <p id="inventoryProductColor">颜色: 未选择</p>
@@ -1030,9 +1035,14 @@
                         <h4>已选产品</h4>
                     </div>
                     <div class="preview-content">
-                        <div class="preview-image">
-                            <i class="fas fa-glasses"></i>
-                        </div>
+                        <div class="preview-image" id="previewProductImage">
+    ${this.selectedProduct?.product_image ? 
+        `<img src="${this.selectedProduct.product_image.replace(/\s+/g, '')}" 
+             alt="${this.selectedProduct.model_name}" 
+             style="width: 100%; height: 100%; object-fit: cover;">` : 
+        `<i class="fas fa-glasses"></i>`
+    }
+</div>
                         <div class="preview-info">
                             <h5 id="previewProductName">产品名称</h5>
                         </div>
@@ -1400,12 +1410,17 @@ bindInventoryEvents() {
                     productCard.className = 'product-card';
                     productCard.dataset.modelId = product.model_id;
                     productCard.innerHTML = `
-                        <div class="product-image">
-                            <i class="fas fa-glasses"></i>
-                        </div>
-                        <div class="product-name">${product.model_name}</div>
-                        <div class="product-stock">点击选择</div>
-                    `;
+    <div class="product-image" style="display: flex; align-items: center; justify-content: center; overflow: hidden;">
+        ${product.product_image ? 
+            `<img src="${product.product_image.replace(/\s+/g, '')}" 
+                 alt="${product.model_name}" 
+                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">` : 
+            `<i class="fas fa-glasses" style="font-size: 1.5rem; color: #999;"></i>`
+        }
+    </div>
+    <div class="product-name">${product.model_name}</div>
+    <div class="product-stock">点击选择</div>
+`;
                     
                     productCard.addEventListener('click', () => {
                         this.selectProductInModal(product.model_id);
