@@ -81,28 +81,6 @@
             padding: 40px 20px;
             color: var(--text-muted);
         }
-/* 摄像头扫描框样式 */
-.camera-frame {
-    position: relative;
-    width: 100%;
-    max-width: 300px;
-    margin: 0 auto;
-    overflow: hidden;
-    border-radius: 8px;
-}
-
-/* 扫描线动画 */
-.scan-line {
-    position: absolute;
-    left: 10%;
-    right: 10%;
-    height: 3px;
-    background: linear-gradient(90deg, transparent, #667eea, transparent);
-    box-shadow: 0 0 10px #667eea;
-    animation: scan 2s ease-in-out infinite;
-    z-index: 10;
-    top: 20%;
-}
 
 @keyframes scan {
     0%, 100% {
