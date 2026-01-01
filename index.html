@@ -1511,30 +1511,38 @@ async showColorSelection(source) {
         const colorOption = document.createElement('div');
 colorOption.className = 'color-option';
 colorOption.dataset.variantId = variant.variant_id;
+
+// 根据库存显示不同的样式
+const stockClass = variant.stock <= 5 ? 'stock-low' : 
+                   variant.stock <= 10 ? 'stock-warning' : 'stock-normal';
+const stockText = variant.stock <= 5 ? '紧张' : 
+                  variant.stock <= 10 ? '较少' : '充足';
+
 colorOption.innerHTML = `
-    <div style="display: flex; align-items: center; gap: 8px;">
-        <div style="
-            width: 40px;
-            height: 40px;
-            background: #f0f0f0;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            flex-shrink: 0;
-        ">
-            ${this.selectedProduct.product_image ?  // 直接使用产品图片
-                `<img src="${this.selectedProduct.product_image.replace(/\s+/g, '')}" 
-                     alt="${this.selectedProduct.model_name}" 
-                     style="width: 100%; height: 100%; object-fit: cover;">` : 
-                `<i class="fas fa-glasses" style="color: #999; font-size: 1rem;"></i>`
-            }
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <div style="font-weight: 500; font-size: 0.95rem;">${variant.color}</div>
+            <div style="font-size: 0.8rem; color: #666;">
+                ID: ${variant.variant_id}
+            </div>
         </div>
-        <div style="flex: 1;">
-            <div style="font-weight: 500; font-size: 0.9rem;">${variant.color}</div>
-            <div style="font-size: 0.75rem; color: #666;">
-                库存: ${variant.stock} | ¥${variant.price}
+        <div style="text-align: right;">
+            <div style="font-weight: bold; font-size: 1rem; color: var(--primary-color);">
+                ¥${variant.price}
+            </div>
+            <div style="font-size: 0.8rem; color: #666; display: flex; align-items: center; gap: 5px;">
+                <span>库存: ${variant.stock}</span>
+                <span style="
+                    padding: 1px 6px;
+                    background: ${stockClass === 'stock-low' ? '#fee2e2' : 
+                                 stockClass === 'stock-warning' ? '#fef3c7' : '#dcfce7'};
+                    color: ${stockClass === 'stock-low' ? '#991b1b' : 
+                             stockClass === 'stock-warning' ? '#92400e' : '#166534'};
+                    border-radius: 10px;
+                    font-size: 0.7rem;
+                ">
+                    ${stockText}
+                </span>
             </div>
         </div>
     </div>
