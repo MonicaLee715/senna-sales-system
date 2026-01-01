@@ -3385,7 +3385,7 @@ showMessage(containerId, message, type) {
     }, 5000);
 }
 
-        // ==================== 库存情况页面方法 ====================
+               // ==================== 库存情况页面方法 ====================
         
         bindStockEvents() {
             // 使用延迟绑定，确保元素存在
@@ -3422,7 +3422,7 @@ showMessage(containerId, message, type) {
                     });
                 }
                 
-                // 页面切换时自动加载（如果还没有数据）
+                // 页面切换时自动加载
                 document.addEventListener('pageChanged', (e) => {
                     if (e.detail.page === 'data' && (!this.allStockData || this.allStockData.length === 0)) {
                         setTimeout(() => {
@@ -3451,7 +3451,7 @@ showMessage(containerId, message, type) {
                             color: variant.color,
                             stock: variant.stock || 0,
                             price: variant.price || 0,
-                            product_image: product.product_image || ''  // 使用产品图片
+                            product_image: product.product_image || ''
                         });
                     }
                 }
@@ -3465,18 +3465,18 @@ showMessage(containerId, message, type) {
             }
         }
 
-        // 在 loadStockData 方法中修改初始加载显示
-showStockLoading() {
-    const container = document.getElementById('stockListContent');
-    if (container) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 30px 15px;">
-                <div class="spinner" style="width: 30px; height: 30px; margin: 0 auto 10px;"></div>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">加载中...</p>
-            </div>
-        `;
-    }
-}
+        // 显示加载中状态
+        showStockLoading() {
+            const container = document.getElementById('stockListContent');
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div class="spinner" style="width: 40px; height: 40px; margin: 0 auto 15px;"></div>
+                        <p style="color: var(--text-muted);">正在加载库存数据...</p>
+                    </div>
+                `;
+            }
+        }
 
         // 显示库存消息
         showStockMessage(message, type) {
@@ -3495,26 +3495,7 @@ showStockLoading() {
             }
         }
 
-
-            // 填充产品系列筛选框
-        populateModelFilter() {
-            const modelSelect = document.getElementById('stockFilterModel');
-            if (!modelSelect) return;
-            
-            // 清空只保留第一个选项
-            while (modelSelect.options.length > 1) {
-                modelSelect.remove(1);
-            }
-            
-            // 添加产品系列选项
-            this.products.forEach(product => {
-                const option = document.createElement('option');
-                option.value = product.model_id;
-                option.textContent = product.model_name;
-                modelSelect.appendChild(option);
-            });
-        }
-            // 渲染库存列表
+        // 渲染库存列表 - 产品卡片式布局
         renderStockList() {
             if (!this.allStockData || this.allStockData.length === 0) {
                 this.showStockMessage('暂无库存数据', 'warning');
@@ -3525,17 +3506,27 @@ showStockLoading() {
             const filterModel = document.getElementById('stockFilterModel')?.value || '';
             const filterStatus = document.getElementById('stockFilterStatus')?.value || '';
             
-            // 先填充产品系列筛选框
-            this.populateModelFilter();
-            
             // 筛选数据
             let filteredData = this.filterStockData(this.allStockData, filterModel, filterStatus);
             
             // 更新统计
             this.updateStockSummary(filteredData);
             
-            // 渲染列表
-            if (filteredData.length === 0) {
+            // 按产品分组数据
+            const groupedData = {};
+            filteredData.forEach(item => {
+                if (!groupedData[item.model_id]) {
+                    groupedData[item.model_id] = {
+                        model_name: item.model_name,
+                        product_image: item.product_image,
+                        items: []
+                    };
+                }
+                groupedData[item.model_id].items.push(item);
+            });
+            
+            // 渲染产品卡片
+            if (Object.keys(groupedData).length === 0) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 40px 20px; color: #666;">
                         <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 15px;"></i>
@@ -3548,265 +3539,215 @@ showStockLoading() {
                 return;
             }
             
-            // 按产品系列分组
-            const groupedData = this.groupStockData(filteredData);
+            let html = '<div class="product-cards-grid">';
             
-            let html = '';
-            
-            // 渲染每个产品系列
+            // 渲染每个产品卡片
             Object.keys(groupedData).forEach(modelId => {
                 const group = groupedData[modelId];
-                const totalStock = group.items.reduce((sum, item) => sum + item.stock, 0);
-                
-                html += this.renderProductGroup(modelId, group, totalStock);
+                html += this.renderProductCard(modelId, group);
             });
             
+            html += '</div>';
             container.innerHTML = html;
-        }// 渲染库存列表 - 产品卡片式布局
-renderStockList() {
-    if (!this.allStockData || this.allStockData.length === 0) {
-        this.showStockMessage('暂无库存数据', 'warning');
-        return;
-    }
-    
-    const container = document.getElementById('stockListContent');
-    const filterModel = document.getElementById('stockFilterModel')?.value || '';
-    const filterStatus = document.getElementById('stockFilterStatus')?.value || '';
-    
-    // 先填充产品系列筛选框
-    this.populateModelFilter();
-    
-    // 按产品分组数据
-    const groupedData = {};
-    this.allStockData.forEach(item => {
-        if (!groupedData[item.model_id]) {
-            groupedData[item.model_id] = {
-                model_name: item.model_name,
-                product_image: item.product_image,
-                items: []
-            };
         }
-        groupedData[item.model_id].items.push(item);
-    });
-    
-    // 筛选数据
-    let filteredGroups = {};
-    Object.keys(groupedData).forEach(modelId => {
-        const group = groupedData[modelId];
-        let filteredItems = this.filterStockData(group.items, filterModel, filterStatus);
-        
-        if (filteredItems.length > 0) {
-            filteredGroups[modelId] = {
-                ...group,
-                items: filteredItems
-            };
-        }
-    });
-    
-    // 更新统计
-    this.updateStockSummary(Object.values(filteredGroups).flatMap(g => g.items));
-    
-    // 渲染产品卡片
-    if (Object.keys(filteredGroups).length === 0) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 40px 20px; color: #666;">
-                <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 15px;"></i>
-                <p>没有找到符合条件的商品</p>
-                <button class="btn" onclick="app.loadStockData()" style="margin-top: 15px;">
-                    <i class="fas fa-redo"></i>重新查询
-                </button>
-            </div>
-        `;
-        return;
-    }
-    
-    let html = '<div class="product-cards-grid">';
-    
-    // 渲染每个产品卡片
-    Object.keys(filteredGroups).forEach(modelId => {
-        const group = filteredGroups[modelId];
-        html += this.renderProductCard(modelId, group);
-    });
-    
-    html += '</div>';
-    container.innerHTML = html;
-}
 
-// 渲染产品卡片
-renderProductCard(modelId, group) {
-    // 按库存状态排序：紧张 -> 较少 -> 充足
-    const sortedItems = [...group.items].sort((a, b) => {
-        const getPriority = (stock) => {
-            if (stock <= 5) return 1;  // 紧张最前
-            if (stock <= 10) return 2; // 较少中间
-            return 3;                   // 充足最后
-        };
-        return getPriority(a.stock) - getPriority(b.stock);
-    });
-    
-    return `
-        <div class="product-card" style="
-            background: white;
-            border-radius: 10px;
-            border: 1px solid #e0e0e0;
-            padding: 12px;
-            margin-bottom: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
-        ">
-            <!-- 产品头部：图片和名称 -->
-            <div style="
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                margin-bottom: 12px;
-                padding-bottom: 10px;
-                border-bottom: 1px solid #f0f0f0;
-            ">
-                <!-- 产品图片 -->
-                <div style="
-                    width: 50px;
-                    height: 50px;
-                    background: #f8f9fa;
-                    border-radius: 8px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    overflow: hidden;
-                    border: 1px solid #e9ecef;
-                    flex-shrink: 0;
+        // 筛选库存数据
+        filterStockData(data, filterModel, filterStatus) {
+            let filteredData = [...data];
+            
+            // 筛选产品系列
+            if (filterModel) {
+                filteredData = filteredData.filter(item => item.model_id === filterModel);
+            }
+            
+            // 筛选库存状态
+            if (filterStatus) {
+                filteredData = filteredData.filter(item => {
+                    if (filterStatus === 'low') return item.stock <= 5;
+                    if (filterStatus === 'warning') return item.stock > 5 && item.stock <= 10;
+                    if (filterStatus === 'normal') return item.stock > 10;
+                    return true;
+                });
+            }
+            
+            return filteredData;
+        }
+
+        // 渲染产品卡片
+        renderProductCard(modelId, group) {
+            // 按库存状态排序：紧张 -> 较少 -> 充足
+            const sortedItems = [...group.items].sort((a, b) => {
+                const getPriority = (stock) => {
+                    if (stock <= 5) return 1;  // 紧张最前
+                    if (stock <= 10) return 2; // 较少中间
+                    return 3;                   // 充足最后
+                };
+                return getPriority(a.stock) - getPriority(b.stock);
+            });
+            
+            return `
+                <div class="product-card" style="
+                    background: white;
+                    border-radius: 10px;
+                    border: 1px solid #e0e0e0;
+                    padding: 12px;
+                    margin-bottom: 12px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                    transition: all 0.3s ease;
                 ">
-                    ${group.product_image ? 
-                        `<img src="${group.product_image}" alt="${group.model_name}" 
-                             style="width: 100%; height: 100%; object-fit: cover;">` : 
-                        `<i class="fas fa-glasses" style="color: #adb5bd; font-size: 1.2rem;"></i>`
-                    }
-                </div>
-                
-                <!-- 产品信息 -->
-                <div style="flex: 1;">
+                    <!-- 产品头部：图片和名称 -->
                     <div style="
                         display: flex;
-                        justify-content: space-between;
-                        align-items: flex-start;
+                        align-items: center;
+                        gap: 12px;
+                        margin-bottom: 12px;
+                        padding-bottom: 10px;
+                        border-bottom: 1px solid #f0f0f0;
                     ">
-                        <div>
-                            <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-color);">
-                                ${group.model_name}
-                            </div>
-                            <div style="font-size: 0.75rem; color: #666; margin-top: 2px;">
-                                型号: ${modelId} | 变体: ${group.items.length}种
+                        <!-- 产品图片 -->
+                        <div style="
+                            width: 50px;
+                            height: 50px;
+                            background: #f8f9fa;
+                            border-radius: 8px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            overflow: hidden;
+                            border: 1px solid #e9ecef;
+                            flex-shrink: 0;
+                        ">
+                            ${group.product_image ? 
+                                `<img src="${group.product_image}" alt="${group.model_name}" 
+                                     style="width: 100%; height: 100%; object-fit: cover;">` : 
+                                `<i class="fas fa-glasses" style="color: #adb5bd; font-size: 1.2rem;"></i>`
+                            }
+                        </div>
+                        
+                        <!-- 产品信息 -->
+                        <div style="flex: 1;">
+                            <div style="
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: flex-start;
+                            ">
+                                <div>
+                                    <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-color);">
+                                        ${group.model_name}
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: #666; margin-top: 2px;">
+                                        型号: ${modelId} | 变体: ${group.items.length}种
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- 颜色变体列表 -->
+                    <div class="variants-list" style="max-height: 200px; overflow-y: auto;">
+                        ${sortedItems.map(item => this.renderVariantRow(item)).join('')}
+                    </div>
+                    
+                    <!-- 查看详情按钮 -->
+                    <div style="text-align: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0;">
+                        <button class="btn" 
+                                onclick="app.viewProductDetails('${modelId}')"
+                                style="
+                                    padding: 6px 20px;
+                                    font-size: 0.85rem;
+                                    background: #f8f9fa;
+                                    color: var(--primary-color);
+                                    border: 1px solid var(--border-color);
+                                    width: 100%;
+                                ">
+                            <i class="fas fa-info-circle" style="margin-right: 5px;"></i>查看产品详情
+                        </button>
+                    </div>
                 </div>
-            </div>
-            
-            <!-- 颜色变体列表 -->
-            <div class="variants-list" style="max-height: 200px; overflow-y: auto;">
-                ${sortedItems.map(item => this.renderVariantRow(item)).join('')}
-            </div>
-            
-            <!-- 查看详情按钮 -->
-            <div style="text-align: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0;">
-                <button class="btn" 
-                        onclick="app.viewProductDetails('${modelId}')"
-                        style="
-                            padding: 6px 20px;
-                            font-size: 0.85rem;
-                            background: #f8f9fa;
-                            color: var(--primary-color);
-                            border: 1px solid var(--border-color);
-                            width: 100%;
-                        ">
-                    <i class="fas fa-info-circle" style="margin-right: 5px;"></i>查看产品详情
-                </button>
-            </div>
-        </div>
-    `;
-}
+            `;
+        }
 
-// 渲染变体行（在卡片内）
-renderVariantRow(item) {
-    const stockStatus = item.stock <= 5 ? 'low' : 
-                       item.stock <= 10 ? 'warning' : 'normal';
-    const statusText = item.stock <= 5 ? '紧张' : 
-                      item.stock <= 10 ? '较少' : '充足';
-    const statusColor = stockStatus === 'low' ? '#991b1b' : 
-                       stockStatus === 'warning' ? '#92400e' : '#166534';
-    const statusBg = stockStatus === 'low' ? '#fee2e2' : 
-                    stockStatus === 'warning' ? '#fef3c7' : '#dcfce7';
-    
-    return `
-        <div class="variant-row" style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 8px;
-            margin-bottom: 4px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            border-left: 3px solid ${statusColor};
-        ">
-            <div style="flex: 1;">
-                <div style="
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    margin-bottom: 2px;
-                ">
-                    <span style="
-                        font-weight: 500;
-                        font-size: 0.85rem;
-                        color: var(--text-color);
-                    ">
-                        ${item.color}
-                    </span>
-                    <span style="
-                        font-size: 0.7rem;
-                        color: #666;
-                        background: #e9ecef;
-                        padding: 1px 5px;
-                        border-radius: 3px;
-                    ">
-                        ${item.variant_id}
-                    </span>
-                </div>
-                <div style="font-size: 0.75rem; color: #666;">
-                    ¥${item.price}
-                </div>
-            </div>
+        // 渲染变体行（在卡片内）
+        renderVariantRow(item) {
+            const stockStatus = item.stock <= 5 ? 'low' : 
+                               item.stock <= 10 ? 'warning' : 'normal';
+            const statusText = item.stock <= 5 ? '紧张' : 
+                              item.stock <= 10 ? '较少' : '充足';
+            const statusColor = stockStatus === 'low' ? '#991b1b' : 
+                               stockStatus === 'warning' ? '#92400e' : '#166534';
+            const statusBg = stockStatus === 'low' ? '#fee2e2' : 
+                            stockStatus === 'warning' ? '#fef3c7' : '#dcfce7';
             
-            <div style="
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                text-align: right;
-            ">
-                <div style="
-                    font-size: 1.1rem;
-                    font-weight: 700;
-                    color: ${statusColor};
-                    min-width: 30px;
+            return `
+                <div class="variant-row" style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 6px 8px;
+                    margin-bottom: 4px;
+                    background: #f8f9fa;
+                    border-radius: 6px;
+                    border-left: 3px solid ${statusColor};
                 ">
-                    ${item.stock}
+                    <div style="flex: 1;">
+                        <div style="
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            margin-bottom: 2px;
+                        ">
+                            <span style="
+                                font-weight: 500;
+                                font-size: 0.85rem;
+                                color: var(--text-color);
+                            ">
+                                ${item.color}
+                            </span>
+                            <span style="
+                                font-size: 0.7rem;
+                                color: #666;
+                                background: #e9ecef;
+                                padding: 1px 5px;
+                                border-radius: 3px;
+                            ">
+                                ${item.variant_id}
+                            </span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #666;">
+                            ¥${item.price}
+                        </div>
+                    </div>
+                    
+                    <div style="
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        text-align: right;
+                    ">
+                        <div style="
+                            font-size: 1.1rem;
+                            font-weight: 700;
+                            color: ${statusColor};
+                            min-width: 30px;
+                        ">
+                            ${item.stock}
+                        </div>
+                        <div style="
+                            padding: 2px 6px;
+                            background: ${statusBg};
+                            color: ${statusColor};
+                            border-radius: 10px;
+                            font-size: 0.7rem;
+                            font-weight: 500;
+                            min-width: 40px;
+                            text-align: center;
+                        ">
+                            ${statusText}
+                        </div>
+                    </div>
                 </div>
-                <div style="
-                    padding: 2px 6px;
-                    background: ${statusBg};
-                    color: ${statusColor};
-                    border-radius: 10px;
-                    font-size: 0.7rem;
-                    font-weight: 500;
-                    min-width: 40px;
-                    text-align: center;
-                ">
-                    ${statusText}
-                </div>
-            </div>
-        </div>
-    `;
-}
+            `;
+        }
 
         // 更新库存统计
         updateStockSummary(data) {
@@ -3834,19 +3775,14 @@ renderVariantRow(item) {
             updateCard('stockLow', low, '#991b1b');
         }
 
-        // 从库存列表调整库存
-        adjustStockFromList(variantId) {
-            alert(`调整库存功能待开发\n变体ID: ${variantId}\n\n可以通过库存管理页面扫描调整。`);
-        }
-
-        // 查看库存详情
-        viewStockDetails(variantId) {
+        // 查看产品详情
+        viewProductDetails(modelId) {
             // 跳转到库存管理页面并自动查询
             app.switchPage('scan');
             
             // 设置手动输入框的值
             setTimeout(() => {
-                document.getElementById('manualVariantId').value = variantId;
+                document.getElementById('manualVariantId').value = modelId;
                 document.getElementById('manualSearchBtn').click();
             }, 500);
         }
