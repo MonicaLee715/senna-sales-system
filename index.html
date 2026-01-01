@@ -3868,13 +3868,16 @@ showAddProductForm() {
     // 重置颜色输入
     const colorInputs = document.getElementById('colorInputs');
     colorInputs.innerHTML = `
-        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-            <input type="text" class="form-input color-input" placeholder="如: 黑色" style="flex: 1;">
-            <button type="button" class="btn btn-danger" onclick="app.removeColorInput(this)" style="padding: 6px 12px;">
-                <i class="fas fa-times"></i>
-            </button>
+    <div class="color-stock-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+        <div style="flex: 1;">
+            <input type="text" class="form-input color-input" placeholder="颜色名称，如: 黑色" style="width: 100%; margin-bottom: 5px;">
+            <input type="number" class="form-input stock-input" placeholder="库存数量" value="0" min="0" style="width: 100%;">
         </div>
-    `;
+        <button type="button" class="btn btn-danger" onclick="app.removeColorInput(this)" style="padding: 6px 12px; align-self: center;">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+`;
     this.colorCount = 1;
     
     // 显示弹窗
