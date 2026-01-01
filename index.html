@@ -1338,25 +1338,24 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">颜色 *</label>
-                    <div id="colorInputs">
-                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                            <input type="text" class="form-input color-input" placeholder="如: 黑色" style="flex: 1;">
-                            <button type="button" class="btn btn-danger" onclick="app.removeColorInput(this)" style="padding: 6px 12px;">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-outline" onclick="app.addColorInput()" style="width: 100%; margin-top: 10px;">
-                        <i class="fas fa-plus"></i> 添加更多颜色
-                    </button>
-                    <div class="price-note">可以添加多个颜色变体</div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">初始库存数量 *</label>
-                    <input type="number" class="form-input" id="newStockQuantity" value="0" min="0">
-                </div>
+    <label class="form-label">颜色和库存 *</label>
+    <div id="colorInputs">
+        <div class="color-stock-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+            <div style="flex: 1;">
+                <input type="text" class="form-input color-input" placeholder="颜色名称，如: 黑色" style="width: 100%; margin-bottom: 5px;">
+                <input type="number" class="form-input stock-input" placeholder="库存数量" value="0" min="0" style="width: 100%;">
+            </div>
+            <button type="button" class="btn btn-danger" onclick="app.removeColorInput(this)" style="padding: 6px 12px; align-self: center;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    <button type="button" class="btn btn-outline" onclick="app.addColorInput()" style="width: 100%; margin-top: 10px;">
+        <i class="fas fa-plus"></i> 添加更多颜色
+    </button>
+    <div class="price-note">每个颜色可以设置不同的库存数量</div>
+</div>
+
                 
                 <div class="form-group">
                     <label class="form-label">标准价格</label>
@@ -3888,18 +3887,22 @@ closeAddProductModal() {
     document.getElementById('addProductModal').classList.remove('show');
 }
 
-// 添加颜色输入框
+// 添加颜色输入框（带库存）
 addColorInput() {
     const colorInputs = document.getElementById('colorInputs');
-    const newInput = document.createElement('div');
-    newInput.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px;';
-    newInput.innerHTML = `
-        <input type="text" class="form-input color-input" placeholder="如: 银色" style="flex: 1;">
-        <button type="button" class="btn btn-danger" onclick="app.removeColorInput(this)" style="padding: 6px 12px;">
+    const newRow = document.createElement('div');
+    newRow.className = 'color-stock-row';
+    newRow.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
+    newRow.innerHTML = `
+        <div style="flex: 1;">
+            <input type="text" class="form-input color-input" placeholder="颜色名称，如: 银色" style="width: 100%; margin-bottom: 5px;">
+            <input type="number" class="form-input stock-input" placeholder="库存数量" value="0" min="0" style="width: 100%;">
+        </div>
+        <button type="button" class="btn btn-danger" onclick="app.removeColorInput(this)" style="padding: 6px 12px; align-self: center;">
             <i class="fas fa-times"></i>
         </button>
     `;
-    colorInputs.appendChild(newInput);
+    colorInputs.appendChild(newRow);
     this.colorCount++;
 }
 
@@ -3916,17 +3919,24 @@ async submitNewProduct() {
     // 收集表单数据
     const modelId = document.getElementById('newModelId').value.trim();
     const modelName = document.getElementById('newModelName').value.trim();
-    const stockQuantity = parseInt(document.getElementById('newStockQuantity').value);
     const standardPrice = parseFloat(document.getElementById('newStandardPrice').value) || 0;
     const productImage = document.getElementById('newProductImage').value.trim();
     
-    // 收集颜色
-    const colorInputs = document.querySelectorAll('.color-input');
-    const colors = [];
-    colorInputs.forEach(input => {
-        const color = input.value.trim();
+    // 收集颜色和库存（修改这里）
+    const colorRows = document.querySelectorAll('.color-stock-row');
+    const colorData = [];
+    
+    colorRows.forEach(row => {
+        const colorInput = row.querySelector('.color-input');
+        const stockInput = row.querySelector('.stock-input');
+        const color = colorInput.value.trim();
+        const stock = parseInt(stockInput.value) || 0;
+        
         if (color) {
-            colors.push(color);
+            colorData.push({
+                color: color,
+                stock: stock
+            });
         }
     });
     
@@ -3946,13 +3956,8 @@ async submitNewProduct() {
         return;
     }
     
-    if (colors.length === 0) {
+    if (colorData.length === 0) {
         this.showAddProductMessage('请至少添加一个颜色', 'error');
-        return;
-    }
-    
-    if (isNaN(stockQuantity) || stockQuantity < 0) {
-        this.showAddProductMessage('请输入有效的库存数量', 'error');
         return;
     }
     
@@ -3968,8 +3973,7 @@ async submitNewProduct() {
         const result = await this.addProductToBackend({
             modelId,
             modelName,
-            colors,
-            stockQuantity,
+            colors: colorData,  // 改为传递对象数组
             standardPrice,
             productImage
         });
@@ -4000,18 +4004,30 @@ async submitNewProduct() {
 // 调用后端API
 async addProductToBackend(productData) {
     try {
+        // 将颜色数据转换为字符串格式：颜色:库存,颜色:库存
+        const colorStockString = productData.colors
+            .map(item => `${item.color}:${item.stock}`)
+            .join(',');
+        
         const params = new URLSearchParams();
         params.append('action', 'addProduct');
         params.append('model_id', productData.modelId);
         params.append('model_name', productData.modelName);
-        params.append('colors', productData.colors.join(','));
-        params.append('stock', productData.stockQuantity.toString());
+        params.append('color_stock', colorStockString);  // 改为color_stock参数
         params.append('price', productData.standardPrice.toString());
-        params.append('product_image', productData.productImage || '');
+        if (productData.productImage) {
+            params.append('product_image', productData.productImage);
+        }
+        
+        console.log('发送新增商品请求:', params.toString());
         
         const response = await fetch(`${API_BASE_URL}?${params}`);
-        return await response.json();
+        const result = await response.json();
+        console.log('API响应:', result);
+        
+        return result;
     } catch (error) {
+        console.error('网络请求失败:', error);
         throw new Error('网络请求失败: ' + error.message);
     }
 }
