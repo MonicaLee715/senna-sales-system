@@ -2461,21 +2461,21 @@ handleScannedQRCode(qrData) {
     document.getElementById('cameraModal').classList.remove('show');
     
     // 提取产品型号（改为提取model_id）
-    const modelId = this.extractModelIdFromQR(qrData);
+const modelId = this.extractModelIdFromQR(qrData);
+
+if (modelId) {
+    // 显示产品所有变体
+    this.showProductAllVariants(modelId);
     
-    if (modelId && modelId.startsWith('M')) {
-        // 显示产品所有变体
-        this.showProductAllVariants(modelId);
-        
-        this.showMessage('scanMessage', `扫码成功: ${modelId}`, 'success');
-    } else {
-        this.showMessage('scanMessage', '无法识别的产品二维码（请扫描M开头的产品码）', 'error');
-        
-        // 3秒后重新启动扫码
-        setTimeout(() => {
-            this.showCameraScanner();
-        }, 3000);
-    }
+    this.showMessage('scanMessage', `扫码成功: ${modelId}`, 'success');
+} else {
+    this.showMessage('scanMessage', '无法识别的产品二维码', 'error');
+    
+    // 3秒后重新启动扫码
+    setTimeout(() => {
+        this.showCameraScanner();
+    }, 3000);
+}
 }
 
 // 播放扫码成功音效（可选）
@@ -2522,60 +2522,49 @@ startMockScan() {
 extractModelIdFromQR(qrContent) {
     console.log('解析二维码内容:', qrContent);
     
-    // 1. 直接是M001格式
-    const mPattern = /M\d+/;
-    const mMatch = qrContent.match(mPattern);
-    if (mMatch) {
-        return mMatch[0]; // 返回M001
-    }
+    // 1. 直接返回内容（最简单的方式）
+    const trimmed = qrContent.trim();
     
-    // 2. 包含在URL参数中，如 ?model=M001
-    if (qrContent.includes('model=')) {
-        const url = new URL(qrContent);
-        return url.searchParams.get('model') || qrContent;
-    }
-    
-    // 3. 其他格式，尝试提取
-    // 先尝试匹配M开头
-    if (qrContent.includes('M')) {
-        const parts = qrContent.split(/[,\s]/);
-        const mPart = parts.find(part => part.startsWith('M'));
-        if (mPart) {
-            return mPart;
+    // 2. 如果是URL，尝试提取参数
+    if (trimmed.includes('model_id=')) {
+        const match = trimmed.match(/model_id=([^&]+)/);
+        if (match && match[1]) {
+            return decodeURIComponent(match[1]);
         }
     }
     
-    // 如果都没匹配到，返回原内容
-    return qrContent;
+    if (trimmed.includes('model=')) {
+        const match = trimmed.match(/model=([^&]+)/);
+        if (match && match[1]) {
+            return decodeURIComponent(match[1]);
+        }
+    }
+    
+    // 3. 返回原内容
+    return trimmed;
 }
 
 // 查找库存信息
 async lookupInventory(input) {
     const trimmedInput = input.trim();
     
-    // 如果是M开头，显示产品所有变体
-    if (trimmedInput.startsWith('M')) {
+    // 1. 首先尝试作为产品ID查找
+    const product = this.products.find(p => p.model_id === trimmedInput);
+    if (product) {
         this.showProductAllVariants(trimmedInput);
-    } 
-    // 如果是V开头，显示单个变体
-    else if (trimmedInput.startsWith('V')) {
-        const variant = this.findVariantById(trimmedInput);
-        if (variant) {
-            const product = this.products.find(p => p.model_id === variant.model_id);
-            this.showInventoryInfo(variant, product);
-        } else {
-            this.showMessage('scanMessage', '未找到该商品变体', 'error');
-        }
+        return;
     }
-    // 其他情况，先尝试作为model_id查找
-    else {
-        const product = this.products.find(p => p.model_id === trimmedInput);
-        if (product) {
-            this.showProductAllVariants(trimmedInput);
-        } else {
-            this.showMessage('scanMessage', '请输入正确的商品ID（M001或V001格式）', 'error');
-        }
+    
+    // 2. 尝试作为变体ID查找
+    const variant = this.findVariantById(trimmedInput);
+    if (variant) {
+        const product = this.products.find(p => p.model_id === variant.model_id);
+        this.showInventoryInfo(variant, product);
+        return;
     }
+    
+    // 3. 都没找到，显示错误
+    this.showMessage('scanMessage', '请输入正确的商品ID或变体ID', 'error');
 }
 
 // 显示库存信息
