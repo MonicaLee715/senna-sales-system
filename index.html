@@ -606,7 +606,31 @@
     border-color: var(--primary-color);
 }
    
+/* 新增颜色表单样式 */
+.add-color-form {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+}
 
+.color-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.color-form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.color-form-actions .btn {
+    flex: 1;
+}
 
         /* 响应式设计 */
         @media (max-width: 768px) {
@@ -2685,9 +2709,16 @@ showProductAllVariants(modelId) {
                     margin-bottom: 12px;
                 ">
                     <h4 style="margin: 0; font-size: 1.1rem;">颜色变体</h4>
-                    <button class="btn" onclick="app.hideInventoryInfo()" style="padding: 6px 12px; font-size: 0.85rem;">
-                        <i class="fas fa-times"></i> 返回
-                    </button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn" onclick="app.hideInventoryInfo()" style="padding: 6px 12px; font-size: 0.85rem;">
+                            <i class="fas fa-times"></i> 返回
+                        </button>
+                        <!-- 新增颜色按钮 -->
+                        <button class="btn btn-success" onclick="app.showAddColorForm('${modelId}')" 
+                                style="padding: 6px 12px; font-size: 0.85rem;">
+                            <i class="fas fa-plus"></i> 新增颜色
+                        </button>
+                    </div>
                 </div>
         `;
         
@@ -3774,6 +3805,226 @@ bindAddProductEvents() {
                 document.getElementById('manualSearchBtn').click();
             }, 500);
         }
+
+// === 新增颜色功能 ===
+showAddColorForm(modelId) {
+    // 先隐藏所有调整表单
+    document.querySelectorAll('.adjust-form').forEach(form => {
+        form.style.display = 'none';
+    });
+    
+    // 检查是否已存在新增颜色表单
+    const existingForm = document.querySelector('.add-color-form');
+    if (existingForm) {
+        existingForm.remove();
+        return;
+    }
+    
+    // 创建新增颜色表单
+    const addColorForm = document.createElement('div');
+    addColorForm.className = 'add-color-form';
+    addColorForm.innerHTML = `
+        <div style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        ">
+            <h5 style="margin: 0; color: var(--text-color); font-size: 0.95rem;">
+                <i class="fas fa-plus-circle" style="color: var(--success-color); margin-right: 6px;"></i>
+                新增颜色变体
+            </h5>
+            <button class="close-color-form" style="
+                background: none;
+                border: none;
+                color: var(--text-muted);
+                font-size: 1.1rem;
+                cursor: pointer;
+                padding: 0;
+            ">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="color-form-row">
+            <div>
+                <label style="
+                    display: block;
+                    font-size: 0.8rem;
+                    margin-bottom: 4px;
+                    color: var(--text-muted);
+                ">颜色名称 *</label>
+                <input type="text" class="form-input new-color-name" placeholder="如: 玫瑰金" 
+                       style="width: 100%; padding: 8px; font-size: 0.9rem;">
+            </div>
+            <div>
+                <label style="
+                    display: block;
+                    font-size: 0.8rem;
+                    margin-bottom: 4px;
+                    color: var(--text-muted);
+                ">初始库存 *</label>
+                <input type="number" class="form-input new-color-stock" value="0" min="0" 
+                       style="width: 100%; padding: 8px; font-size: 0.9rem;">
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 10px;">
+            <label style="
+                display: block;
+                font-size: 0.8rem;
+                margin-bottom: 4px;
+                color: var(--text-muted);
+            ">价格</label>
+            <input type="number" class="form-input new-color-price" 
+                   value="${this.getProductStandardPrice(modelId)}" min="0" 
+                   style="width: 100%; padding: 8px; font-size: 0.9rem;">
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                如不填写，将使用产品标准价格
+            </div>
+        </div>
+        
+        <div class="color-form-actions">
+            <button class="btn btn-success confirm-add-color" data-model-id="${modelId}"
+                    style="padding: 8px;">
+                <i class="fas fa-check"></i> 确认新增
+            </button>
+            <button class="btn btn-outline cancel-add-color" style="padding: 8px;">
+                <i class="fas fa-times"></i> 取消
+            </button>
+        </div>
+        
+        <div id="addColorMessage" style="margin-top: 10px;"></div>
+    `;
+    
+    // 插入到颜色列表上方
+    const variantsList = document.querySelector('.variants-list');
+    variantsList.parentNode.insertBefore(addColorForm, variantsList);
+    
+    // 绑定事件
+    this.bindAddColorEvents(modelId);
+}
+
+// 获取产品的标准价格
+getProductStandardPrice(modelId) {
+    // 获取该产品第一个变体的价格作为标准价格
+    const variants = this.productVariants[modelId] || [];
+    if (variants.length > 0) {
+        return variants[0].price || 0;
+    }
+    return 0;
+}
+
+// 绑定新增颜色表单事件
+bindAddColorEvents(modelId) {
+    // 关闭按钮
+    document.querySelector('.close-color-form').addEventListener('click', () => {
+        document.querySelector('.add-color-form').remove();
+    });
+    
+    document.querySelector('.cancel-add-color').addEventListener('click', () => {
+        document.querySelector('.add-color-form').remove();
+    });
+    
+    // 确认新增按钮
+    document.querySelector('.confirm-add-color').addEventListener('click', async () => {
+        await this.confirmAddColor(modelId);
+    });
+}
+
+// 确认新增颜色
+async confirmAddColor(modelId) {
+    const colorName = document.querySelector('.new-color-name').value.trim();
+    const stock = parseInt(document.querySelector('.new-color-stock').value) || 0;
+    const price = parseFloat(document.querySelector('.new-color-price').value) || this.getProductStandardPrice(modelId);
+    
+    // 验证
+    if (!colorName) {
+        this.showAddColorMessage('请输入颜色名称', 'error');
+        return;
+    }
+    
+    if (stock < 0) {
+        this.showAddColorMessage('库存不能为负数', 'error');
+        return;
+    }
+    
+    // 检查是否已存在该颜色
+    const existingVariants = this.productVariants[modelId] || [];
+    const existingColor = existingVariants.find(v => v.color === colorName);
+    if (existingColor) {
+        this.showAddColorMessage(`颜色 "${colorName}" 已存在`, 'error');
+        return;
+    }
+    
+    try {
+        this.showAddColorMessage('正在新增颜色...', 'success');
+        
+        // 生成新的变体ID (格式：产品ID+颜色编号)
+        const existingCount = existingVariants.length;
+        const newVariantId = `${modelId.replace('M', 'V')}${String(existingCount + 1).padStart(2, '0')}`;
+        
+        // 调用API新增颜色变体
+        const params = new URLSearchParams();
+        params.append('action', 'addColorVariant');
+        params.append('model_id', modelId);
+        params.append('color', colorName);
+        params.append('stock', stock.toString());
+        params.append('price', price.toString());
+        params.append('variant_id', newVariantId);
+        
+        console.log('新增颜色参数:', params.toString());
+        
+        const response = await fetch(`${API_BASE_URL}?${params}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            this.showAddColorMessage('颜色新增成功！正在刷新...', 'success');
+            
+            // 更新本地数据
+            const newVariant = {
+                variant_id: newVariantId,
+                model_id: modelId,
+                color: colorName,
+                stock: stock,
+                price: price
+            };
+            
+            if (!this.productVariants[modelId]) {
+                this.productVariants[modelId] = [];
+            }
+            this.productVariants[modelId].push(newVariant);
+            
+            // 更新总变体列表
+            this.allVariants.push(newVariant);
+            
+            // 更新标准价格缓存
+            this.standardPrices[newVariantId] = price;
+            
+            // 重新显示产品详情（刷新界面）
+            setTimeout(() => {
+                document.querySelector('.add-color-form')?.remove();
+                this.showProductAllVariants(modelId);
+                this.showMessage('scanMessage', `颜色 "${colorName}" 新增成功！`, 'success');
+            }, 1500);
+            
+        } else {
+            throw new Error(result.message || '新增失败');
+        }
+        
+    } catch (error) {
+        console.error('新增颜色失败:', error);
+        this.showAddColorMessage('新增失败: ' + error.message, 'error');
+    }
+}
+
+// 显示新增颜色消息
+showAddColorMessage(message, type) {
+    const container = document.getElementById('addColorMessage');
+    if (container) {
+        container.innerHTML = `<div class="message ${type}" style="padding: 8px; font-size: 0.85rem;">${message}</div>`;
+    }
+}
             
             showMessage(containerId, message, type) {
                 const container = document.getElementById(containerId);
