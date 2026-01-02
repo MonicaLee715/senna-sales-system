@@ -3701,7 +3701,14 @@ const colorStock = productData.colors.map((color, index) => {
         stock: productData.stocks[index] || 0
     };
 });
-params.append('color_stock', JSON.stringify(colorStock));
+// 将颜色 + 库存拼成后端原本就能处理的普通字符串
+const colorStockString = productData.colors
+    .map((color, index) => `${color}:${productData.stocks[index] || 0}`)
+    .join('; ');
+
+// 以普通字符串形式传给后端（不再传 JSON）
+params.append('color_stock', colorStockString);
+
         params.append('price', priceValue.toString());
         
         if (productData.productImage) {
