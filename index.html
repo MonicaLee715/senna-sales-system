@@ -3685,9 +3685,7 @@ const result = await this.addProductToBackend({
 
 async addProductToBackend(productData) {
     try {
-        // 将颜色和库存转换为逗号分隔的字符串 ← 必须先定义这两个变量！
-        const colorsString = productData.colors.join(',');
-        const stocksString = productData.stocks.join(',');
+        
         
         // 安全获取价格值 ← 关键修复！
         const priceValue = productData.standardPrice || productData.price || 0;
@@ -3696,8 +3694,14 @@ async addProductToBackend(productData) {
         params.append('action', 'addProduct');
         params.append('model_id', productData.modelId);
         params.append('model_name', productData.modelName);
-        params.append('colors', colorsString);    // 使用定义好的变量
-        params.append('stocks', stocksString);    // 使用定义好的变量
+// ✅ 正确的 color_stock
+const colorStock = productData.colors.map((color, index) => {
+    return {
+        color: color,
+        stock: productData.stocks[index] || 0
+    };
+});
+params.append('color_stock', JSON.stringify(colorStock));
         params.append('price', priceValue.toString());
         
         if (productData.productImage) {
