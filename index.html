@@ -1714,47 +1714,95 @@ async loadAllVariants() {
         const allVariants = [];
         const standardPrices = {};
         
+        // ===== 关键修复：清空现有数据，避免累积 =====
+        this.productVariants = {};
+        // ===========================================
+        
         // 为每个产品系列加载变体
         for (const product of this.products) {
             const response = await fetch(`${API_BASE_URL}?action=getProductVariants&model_id=${product.model_id}&t=${Date.now()}`);
             const data = await response.json();
             
             if (data.success && data.data) {
-                // 添加到总列表
-                allVariants.push(...data.data);
+                // ===== 关键修复：去重逻辑 =====
+                const uniqueVariants = [];
+                const seenVariants = new Set();
                 
-                // 构建标准价缓存
                 data.data.forEach(variant => {
+                    const key = `${variant.variant_id}_${variant.color}`;
+                    if (!seenVariants.has(key)) {
+                        seenVariants.add(key);
+                        uniqueVariants.push(variant);
+                    } else {
+                        console.warn(`发现重复变体，已跳过: ${variant.variant_id} - ${variant.color}`);
+                    }
+                });
+                // ==============================
+                
+                // 添加到总列表（使用去重后的数据）
+                allVariants.push(...uniqueVariants);
+                
+                // 构建标准价缓存（使用去重后的数据）
+                uniqueVariants.forEach(variant => {
                     standardPrices[variant.variant_id] = variant.price;
                     
-                    // 确保productVariants结构正确
+                    // 确保productVariants结构正确（使用去重后的数据）
                     if (!this.productVariants[product.model_id]) {
                         this.productVariants[product.model_id] = [];
                     }
                     this.productVariants[product.model_id].push(variant);
                 });
+                
+                console.log(`产品 ${product.model_id} 加载了 ${uniqueVariants.length} 个唯一变体`);
             }
         }
         
-        this.allVariants = allVariants;
+        // ===== 关键修复：对最终结果也去重一次（安全措施）=====
+        const finalUniqueVariants = [];
+        const finalSeenKeys = new Set();
+        
+        allVariants.forEach(variant => {
+            const key = `${variant.variant_id}_${variant.color}`;
+            if (!finalSeenKeys.has(key)) {
+                finalSeenKeys.add(key);
+                finalUniqueVariants.push(variant);
+            }
+        });
+        // ================================================
+        
+        this.allVariants = finalUniqueVariants;
         this.standardPrices = standardPrices;
-        console.log(`批量加载完成，共 ${allVariants.length} 个变体`);
+        console.log(`批量加载完成，共 ${finalUniqueVariants.length} 个唯一变体`);
         
     } catch (error) {
-    console.error('批量加载变体失败，尝试逐个加载:', error);
-    // 回退到原来的逐个加载方式，并确保填充 allVariants
-    const allVariants = []; // 创建临时数组收集
-    for (const product of this.products) {
-        await this.loadProductVariants(product.model_id); // 这个方法会填充 this.productVariants
-        // 将刚加载的变体也加入到总列表
-        if (this.productVariants[product.model_id]) {
-            allVariants.push(...this.productVariants[product.model_id]);
+        console.error('批量加载变体失败，尝试逐个加载:', error);
+        // 回退到原来的逐个加载方式，并确保填充 allVariants
+        const allVariants = []; // 创建临时数组收集
+        const seenVariants = new Set(); // 添加去重Set
+        
+        // ===== 关键修复：清空现有数据 =====
+        this.productVariants = {};
+        // ================================
+        
+        for (const product of this.products) {
+            await this.loadProductVariants(product.model_id); // 这个方法会填充 this.productVariants
+            
+            // 将刚加载的变体也加入到总列表（需要去重）
+            if (this.productVariants[product.model_id]) {
+                this.productVariants[product.model_id].forEach(variant => {
+                    const key = `${variant.variant_id}_${variant.color}`;
+                    if (!seenVariants.has(key)) {
+                        seenVariants.add(key);
+                        allVariants.push(variant);
+                    }
+                });
+            }
         }
+        
+        // 将收集到的所有变体存入 this.allVariants（已经去重）
+        this.allVariants = allVariants;
+        console.log(`回退加载完成，共 ${allVariants.length} 个唯一变体`);
     }
-    // 将收集到的所有变体存入 this.allVariants
-    this.allVariants = allVariants;
-    console.log(`回退加载完成，共 ${allVariants.length} 个变体`);
-}
 }
 
             // === 新增方法：加载客户所有专属价格 ===
@@ -1800,20 +1848,32 @@ async loadCustomerPrices(customerId) {
             }
 
             async loadProductVariants(modelId) {
-                try {
-                    const response = await fetch(`${API_BASE_URL}?action=getProductVariants&model_id=${modelId}&t=${Date.now()}`);
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        if (!this.productVariants[modelId]) {
-                            this.productVariants[modelId] = [];
-                        }
-                        this.productVariants[modelId] = data.data;
-                    }
-                } catch (error) {
-                    console.error(`加载产品变体失败 (${modelId}):`, error);
+    try {
+        const response = await fetch(`${API_BASE_URL}?action=getProductVariants&model_id=${modelId}&t=${Date.now()}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            // ===== 关键修复：添加去重逻辑 =====
+            const uniqueVariants = [];
+            const seenVariants = new Set();
+            
+            data.data.forEach(variant => {
+                const key = `${variant.variant_id}_${variant.color}`;
+                if (!seenVariants.has(key)) {
+                    seenVariants.add(key);
+                    uniqueVariants.push(variant);
+                } else {
+                    console.warn(`发现重复变体，已跳过: ${variant.variant_id} - ${variant.color}`);
                 }
-            }
+            });
+            // ==============================
+            
+            this.productVariants[modelId] = uniqueVariants;
+        }
+    } catch (error) {
+        console.error(`加载产品变体失败 (${modelId}):`, error);
+    }
+}
 
            findVariantById(variantId) {
     // 1. 首先在总列表 allVariants 中查找（速度快）
