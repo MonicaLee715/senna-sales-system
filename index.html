@@ -3627,11 +3627,6 @@ colorRows.forEach(row => {
         return;
     }
     
-    if (!modelId.startsWith('M')) {
-        this.showAddProductMessage('产品型号必须以M开头，如 M001', 'error');
-        return;
-    }
-    
     if (!modelName) {
         this.showAddProductMessage('请输入产品名称', 'error');
         return;
