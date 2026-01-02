@@ -3650,15 +3650,15 @@ if (colors.length === 0) {
     }
     
      try {
-        // 调用后端API新增商品
-        const result = await this.addProductToBackend({
-            modelId,
-            modelName,
-            colors: colors,      // 颜色数组
-            stocks: stocks,      // 库存数组（对应每个颜色）
-            price: standardPrice, // 统一价格
-            productImage
-        });
+       // 调用后端API新增商品
+const result = await this.addProductToBackend({
+    modelId,
+    modelName,
+    colors: colors,      // 颜色数组
+    stocks: stocks,      // 库存数组
+    standardPrice: standardPrice, // 统一价格 ← 传递 standardPrice
+    productImage
+});
         
         if (result.success) {
             this.showAddProductMessage('商品新增成功！正在刷新数据...', 'success');
@@ -3685,24 +3685,24 @@ if (colors.length === 0) {
 
 async addProductToBackend(productData) {
     try {
-        // 在 addProductToBackend 方法中，修改这部分：
-const colorsString = productData.colors.join(',');
-const stocksString = productData.stocks.join(',');
-
-// 安全获取价格值
-const priceValue = productData.price || productData.standardPrice || 0;
-
-const params = new URLSearchParams();
-params.append('action', 'addProduct');
-params.append('model_id', productData.modelId);
-params.append('model_name', productData.modelName);
-params.append('colors', colorsString);
-params.append('stocks', stocksString);
-params.append('price', priceValue.toString()); // ← 使用安全获取的值
-
-if (productData.productImage) {
-    params.append('product_image', productData.productImage);
-}
+        // 将颜色和库存转换为逗号分隔的字符串 ← 必须先定义这两个变量！
+        const colorsString = productData.colors.join(',');
+        const stocksString = productData.stocks.join(',');
+        
+        // 安全获取价格值 ← 关键修复！
+        const priceValue = productData.standardPrice || productData.price || 0;
+        
+        const params = new URLSearchParams();
+        params.append('action', 'addProduct');
+        params.append('model_id', productData.modelId);
+        params.append('model_name', productData.modelName);
+        params.append('colors', colorsString);    // 使用定义好的变量
+        params.append('stocks', stocksString);    // 使用定义好的变量
+        params.append('price', priceValue.toString());
+        
+        if (productData.productImage) {
+            params.append('product_image', productData.productImage);
+        }
         
         console.log('发送新增商品请求:', params.toString());
         
