@@ -3637,13 +3637,6 @@ if (colors.length === 0) {
     return;
 }
     
-    // 检查是否已存在该型号
-    const existingProduct = this.products.find(p => p.model_id === modelId);
-    if (existingProduct) {
-        this.showAddProductMessage(`产品型号 ${modelId} 已存在`, 'error');
-        return;
-    }
-    
      try {
        // 调用后端API新增商品
 const result = await this.addProductToBackend({
