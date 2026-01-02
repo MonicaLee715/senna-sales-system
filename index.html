@@ -3964,14 +3964,17 @@ async confirmAddColor(modelId) {
         const existingCount = existingVariants.length;
         const newVariantId = `${modelId.replace('M', 'V')}${String(existingCount + 1).padStart(2, '0')}`;
         
-        // 调用API新增颜色变体
-        const params = new URLSearchParams();
-        params.append('action', 'addColorVariant');
-        params.append('model_id', modelId);
-        params.append('color', colorName);
-        params.append('stock', stock.toString());
-        params.append('price', price.toString());
-        params.append('variant_id', newVariantId);
+        // 调用API新增颜色变体 - 使用 updateStock 接口
+const params = new URLSearchParams();
+params.append('action', 'updateStock');  // ← 改为 updateStock
+params.append('model_id', modelId);
+params.append('color', colorName);
+params.append('new_stock', stock.toString());
+params.append('adjustment', stock.toString()); // 因为是新增，所以调整量就是库存值
+params.append('operation', 'add_color'); // 新增操作类型
+params.append('price', price.toString());
+params.append('variant_id', newVariantId);
+params.append('operator', '管理员');
         
         console.log('新增颜色参数:', params.toString());
         
