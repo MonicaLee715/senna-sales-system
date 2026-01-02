@@ -3685,19 +3685,24 @@ if (colors.length === 0) {
 
 async addProductToBackend(productData) {
     try {
-        const colorsString = productData.colors.join(',');
-        const stocksString = productData.stocks.join(',');
-        
-        const params = new URLSearchParams();
-        params.append('action', 'addProduct');
-        params.append('model_id', productData.modelId);
-        params.append('model_name', productData.modelName);
-        params.append('colors', colorsString);
-        params.append('stocks', stocksString);
-        params.append('price', productData.standardPrice.toString()); // 注意参数名
-        if (productData.productImage) {
-            params.append('product_image', productData.productImage);
-        }
+        // 在 addProductToBackend 方法中，修改这部分：
+const colorsString = productData.colors.join(',');
+const stocksString = productData.stocks.join(',');
+
+// 安全获取价格值
+const priceValue = productData.price || productData.standardPrice || 0;
+
+const params = new URLSearchParams();
+params.append('action', 'addProduct');
+params.append('model_id', productData.modelId);
+params.append('model_name', productData.modelName);
+params.append('colors', colorsString);
+params.append('stocks', stocksString);
+params.append('price', priceValue.toString()); // ← 使用安全获取的值
+
+if (productData.productImage) {
+    params.append('product_image', productData.productImage);
+}
         
         console.log('发送新增商品请求:', params.toString());
         
