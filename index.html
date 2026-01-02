@@ -3789,11 +3789,6 @@ async addProductToBackend(productData) {
         // 使用后端期望的参数名 color_stock
         params.append('color_stock', colorStockString);
         
-        // 添加这一行：把 colors 数组传给后台
-colorsArray.forEach(color => params.append('colors[]', color));
-
-// 添加这一行：把 stocks 数组传给后台
-stocksArray.forEach(stock => params.append('stocks[]', stock));
 
         // =================================================
         
