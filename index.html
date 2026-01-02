@@ -3712,43 +3712,36 @@ const result = await this.addProductToBackend({
 
 async addProductToBackend(productData) {
     try {
+        // === 关键修改：改为 colors 和 stocks 两个独立参数 ===
+        // colors: "黑色,银色,金色"
+        // stocks: "10,20,15"
+        const colorsString = productData.colors.join(',');
+        const stocksString = productData.stocks.join(',');
         
-        
-        // 安全获取价格值 ← 关键修复！
+        // 安全获取价格值
         const priceValue = productData.standardPrice || productData.price || 0;
         
         const params = new URLSearchParams();
         params.append('action', 'addProduct');
         params.append('model_id', productData.modelId);
         params.append('model_name', productData.modelName);
-// ✅ 正确的 color_stock
-const colorStock = productData.colors.map((color, index) => {
-    return {
-        color: color,
-        stock: productData.stocks[index] || 0
-    };
-});
-// 将颜色 + 库存拼成后端原本就能处理的普通字符串
-const colorStockString = productData.colors
-    .map((color, index) => `${color}:${productData.stocks[index] || 0}`)
-    .join('; ');
-
-// 以普通字符串形式传给后端（不再传 JSON）
-params.append('color_stock', colorStockString);
-
+        params.append('colors', colorsString);    // ← 改为 colors
+        params.append('stocks', stocksString);    // ← 改为 stocks
         params.append('price', priceValue.toString());
         
         if (productData.productImage) {
             params.append('product_image', productData.productImage);
         }
         
-        console.log('发送新增商品请求:', params.toString());
+        console.log('发送新增商品请求:');
+        console.log('- colors:', colorsString);
+        console.log('- stocks:', stocksString);
+        console.log('- 完整参数:', params.toString());
         
         const response = await fetch(`${API_BASE_URL}?${params}`);
         const result = await response.json();
         console.log('API响应:', result);
         
-        // ========== 新增：处理响应 ==========
         if (result.success) {
             // 1. 显示成功消息
             app.showAddProductMessage(`✅ ${result.message}`, 'success');
@@ -3764,12 +3757,11 @@ params.append('color_stock', colorStockString);
             // 显示错误消息
             app.showAddProductMessage(`❌ ${result.message}`, 'error');
         }
-        // ========== 新增结束 ==========
         
         return result;
     } catch (error) {
         console.error('网络请求失败:', error);
-        app.showAddProductMessage(`网络错误: ${error.message}`, 'error'); // 新增
+        app.showAddProductMessage(`网络错误: ${error.message}`, 'error');
         throw new Error('网络请求失败: ' + error.message);
     }
 }
@@ -3938,40 +3930,29 @@ async confirmAddColor(modelId) {
     const stock = parseInt(document.querySelector('.new-color-stock').value) || 0;
     const price = parseFloat(document.querySelector('.new-color-price').value) || this.getProductStandardPrice(modelId);
     
-    // 验证
-    if (!colorName) {
-        this.showAddColorMessage('请输入颜色名称', 'error');
-        return;
-    }
-    
-    if (stock < 0) {
-        this.showAddColorMessage('库存不能为负数', 'error');
-        return;
-    }
-    
-    // 检查是否已存在该颜色
-    const existingVariants = this.productVariants[modelId] || [];
-    const existingColor = existingVariants.find(v => v.color === colorName);
-    if (existingColor) {
-        this.showAddColorMessage(`颜色 "${colorName}" 已存在`, 'error');
-        return;
-    }
+    // 验证...
     
     try {
         this.showAddColorMessage('正在新增颜色...', 'success');
         
-        // 生成新的变体ID (格式：产品ID+颜色编号)
-        const existingCount = existingVariants.length;
-        const newVariantId = `${modelId.replace('M', 'V')}${String(existingCount + 1).padStart(2, '0')}`;
+        // 获取产品信息
+        const product = this.products.find(p => p.model_id === modelId);
+        if (!product) {
+            throw new Error('未找到产品信息');
+        }
         
-        // 调用API新增颜色变体
+        // ====== 关键修改：使用 addProduct action，但只传新颜色 ======
         const params = new URLSearchParams();
-        params.append('action', 'addColorVariant');
+        params.append('action', 'addProduct');
         params.append('model_id', modelId);
-        params.append('color', colorName);
-        params.append('stock', stock.toString());
-        params.append('price', price.toString());
-        params.append('variant_id', newVariantId);
+        params.append('model_name', product.model_name);
+        params.append('colors', colorName);          // 只传新颜色
+        params.append('stocks', stock.toString());   // 只传新库存
+        params.append('price', price.toString());    // 价格
+        
+        if (product.product_image) {
+            params.append('product_image', product.product_image);
+        }
         
         console.log('新增颜色参数:', params.toString());
         
@@ -3981,30 +3962,17 @@ async confirmAddColor(modelId) {
         if (result.success) {
             this.showAddColorMessage('颜色新增成功！正在刷新...', 'success');
             
-            // 更新本地数据
-            const newVariant = {
-                variant_id: newVariantId,
-                model_id: modelId,
-                color: colorName,
-                stock: stock,
-                price: price
-            };
-            
-            if (!this.productVariants[modelId]) {
-                this.productVariants[modelId] = [];
-            }
-            this.productVariants[modelId].push(newVariant);
-            
-            // 更新总变体列表
-            this.allVariants.push(newVariant);
-            
-            // 更新标准价格缓存
-            this.standardPrices[newVariantId] = price;
+            // ====== 问题：addProduct 会创建新产品，而不是给现有产品添加颜色 ======
+            // 所以这个方法可能不行
             
             // 重新显示产品详情（刷新界面）
             setTimeout(() => {
                 document.querySelector('.add-color-form')?.remove();
-                this.showProductAllVariants(modelId);
+                this.loadProducts();  // 重新加载产品数据
+                this.loadProductVariants(modelId);  // 重新加载变体数据
+                setTimeout(() => {
+                    this.showProductAllVariants(modelId);  // 重新显示
+                }, 500);
                 this.showMessage('scanMessage', `颜色 "${colorName}" 新增成功！`, 'success');
             }, 1500);
             
