@@ -3761,30 +3761,35 @@ const result = await this.addProductToBackend({
 
 async addProductToBackend(productData) {
     try {
-        
-        
-        // 安全获取价格值 ← 关键修复！
+        // 安全获取价格值
         const priceValue = productData.standardPrice || productData.price || 0;
         
         const params = new URLSearchParams();
         params.append('action', 'addProduct');
         params.append('model_id', productData.modelId);
         params.append('model_name', productData.modelName);
-// ✅ 正确的 color_stock
-const colorStock = productData.colors.map((color, index) => {
-    return {
-        color: color,
-        stock: productData.stocks[index] || 0
-    };
-});
-// 将颜色 + 库存拼成后端原本就能处理的普通字符串
-const colorStockString = productData.colors
-    .map((color, index) => `${color}:${productData.stocks[index] || 0}`)
-    .join('; ');
-
-// 以普通字符串形式传给后端（不再传 JSON）
-params.append('color_stock', colorStockString);
-
+        
+        // === 修复：使用后端期望的 color_stock 格式 ===
+        // 确保 colors 和 stocks 是数组
+        const colorsArray = Array.isArray(productData.colors) ? productData.colors : [productData.colors];
+        const stocksArray = Array.isArray(productData.stocks) ? productData.stocks : [productData.stocks];
+        
+        // 构建 color_stock 字符串：格式为 "颜色1:库存1;颜色2:库存2"
+        const colorStockItems = [];
+        for (let i = 0; i < colorsArray.length; i++) {
+            if (colorsArray[i]) { // 确保颜色不为空
+                const color = colorsArray[i].trim();
+                const stock = stocksArray[i] || 0;
+                colorStockItems.push(`${color}:${stock}`);
+            }
+        }
+        
+        const colorStockString = colorStockItems.join('; ');
+        
+        // 使用后端期望的参数名 color_stock
+        params.append('color_stock', colorStockString);
+        // =================================================
+        
         params.append('price', priceValue.toString());
         
         if (productData.productImage) {
@@ -3797,28 +3802,23 @@ params.append('color_stock', colorStockString);
         const result = await response.json();
         console.log('API响应:', result);
         
-        // ========== 新增：处理响应 ==========
+        // 处理响应
         if (result.success) {
-            // 1. 显示成功消息
-            app.showAddProductMessage(`✅ ${result.message}`, 'success');
+            this.showAddProductMessage(`✅ ${result.message}`, 'success');
             
-            // 2. 3秒后关闭弹窗
             setTimeout(() => {
                 document.getElementById('addProductModal').classList.remove('show');
-                // 可选：刷新库存列表
-                app.loadProducts();
-                app.loadStockData();
+                this.loadProducts();
+                this.loadStockData();
             }, 3000);
         } else {
-            // 显示错误消息
-            app.showAddProductMessage(`❌ ${result.message}`, 'error');
+            this.showAddProductMessage(`❌ ${result.message}`, 'error');
         }
-        // ========== 新增结束 ==========
         
         return result;
     } catch (error) {
         console.error('网络请求失败:', error);
-        app.showAddProductMessage(`网络错误: ${error.message}`, 'error'); // 新增
+        this.showAddProductMessage(`网络错误: ${error.message}`, 'error');
         throw new Error('网络请求失败: ' + error.message);
     }
 }
