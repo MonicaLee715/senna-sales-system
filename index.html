@@ -789,6 +789,46 @@
     font-weight: 500;
     letter-spacing: 0.5px;
 }
+        /* 新增扫码动画效果 */
+@keyframes scan {
+    0% {
+        top: 0;
+        opacity: 1;
+    }
+    50% {
+        top: calc(100% - 2px);
+        opacity: 1;
+    }
+    51% {
+        opacity: 0;
+    }
+    100% {
+        top: 0;
+        opacity: 0;
+    }
+}
+
+/* 扫码框闪烁效果 */
+@keyframes blink {
+    0%, 100% { border-color: #4CAF50; }
+    50% { border-color: #8BC34A; }
+}
+
+.scan-box {
+    animation: blink 1.5s infinite;
+}
+
+/* 指导文本 */
+.scan-guide {
+    position: absolute;
+    bottom: -30px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    color: white;
+    font-size: 14px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+}
     </style>
 </head>
 <body>
@@ -1132,17 +1172,55 @@
             <button class="close-btn" id="closeCameraModal">&times;</button>
         </div>
         <div class="modal-body">
-            <div style="text-align: center;">
-                <!-- 扫码框 -->
-                <div class="camera-frame">
-                    <video id="cameraPreview" autoplay playsinline 
-                           style="width: 100%; max-width: 300px; border-radius: 8px;"></video>
-                    <div class="scan-line"></div>
-                </div>
+            <div style="text-align: center; position: relative;">
+    <!-- 扫描区域容器 -->
+    <div class="camera-frame" style="position: relative; display: inline-block;">
+        <video id="cameraPreview" autoplay playsinline 
+               style="width: 100%; max-width: 300px; border-radius: 8px;"></video>
+        
+        <!-- 新增：扫描框叠加层 -->
+        <div class="scan-overlay" style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        ">
+            <!-- 扫描框 -->
+            <div class="scan-box" style="
+                position: absolute;
+                top: 20%;
+                left: 10%;
+                width: 80%;
+                height: 60%;
+                border: 2px solid #4CAF50;
+                border-radius: 8px;
+                box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.4);
+            ">
+                <!-- 四个角 -->
+                <div style="position: absolute; top: 0; left: 0; width: 20px; height: 20px; border-top: 3px solid #4CAF50; border-left: 3px solid #4CAF50; border-radius: 4px 0 0 0;"></div>
+                <div style="position: absolute; top: 0; right: 0; width: 20px; height: 20px; border-top: 3px solid #4CAF50; border-right: 3px solid #4CAF50; border-radius: 0 4px 0 0;"></div>
+                <div style="position: absolute; bottom: 0; left: 0; width: 20px; height: 20px; border-bottom: 3px solid #4CAF50; border-left: 3px solid #4CAF50; border-radius: 0 0 0 4px;"></div>
+                <div style="position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; border-bottom: 3px solid #4CAF50; border-right: 3px solid #4CAF50; border-radius: 0 0 4px 0;"></div>
                 
-                <div id="cameraStatus" style="margin: 15px 0; color: var(--text-muted);">
-                    将二维码放入框内自动识别
-                </div>
+                <!-- 扫描线 -->
+                <div class="scan-line" style="
+                    position: absolute;
+                    top: 0;
+                    left: 10%;
+                    width: 80%;
+                    height: 2px;
+                    background: linear-gradient(90deg, transparent, #4CAF50, transparent);
+                    animation: scan 2s ease-in-out infinite;
+                "></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="cameraStatus" style="margin: 15px 0; color: var(--text-muted);">
+        将二维码放入绿色框内自动识别
+    </div>
                 
                 <div style="margin-top: 20px;">
                     <button class="btn btn-outline" id="cancelScanBtn">
@@ -2385,26 +2463,27 @@ async startCamera() {
     const status = document.getElementById('cameraStatus');
     
     try {
-        status.textContent = '正在启动摄像头...';
+        status.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fas fa-camera"></i>
+                <span>正在启动摄像头...</span>
+            </div>
+        `;
         status.style.color = 'var(--warning-color)';
         
-        // 摄像头配置
+        // 摄像头配置 - 提高分辨率
         const constraints = {
             video: {
                 facingMode: 'environment', // 后置摄像头
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
+                width: { ideal: 1920 },    // 提高分辨率
+                height: { ideal: 1080 }
             },
             audio: false
         };
         
-        // 获取摄像头权限和视频流
         this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-        
-        // 显示视频流
         video.srcObject = this.stream;
         
-        // 等待视频加载
         await new Promise((resolve) => {
             video.onloadedmetadata = () => {
                 video.play();
@@ -2412,38 +2491,50 @@ async startCamera() {
             };
         });
         
-        status.textContent = '摄像头已就绪！将二维码放入框内';
+        // 更好的提示
+        status.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fas fa-qrcode" style="color: #4CAF50;"></i>
+                <span>将二维码放入绿色框内，系统会自动识别</span>
+            </div>
+        `;
         status.style.color = 'var(--success-color)';
         
-        console.log('摄像头启动成功，分辨率:', video.videoWidth, 'x', video.videoHeight);
         // 开始二维码识别
-this.startQRCodeDetection(video);
+        this.startQRCodeDetection(video);
         
     } catch (error) {
         console.error('摄像头启动失败:', error);
         
-        // 显示具体的错误信息
-        let errorMsg = '摄像头启动失败: ';
         if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-            errorMsg = '请允许摄像头权限，然后重试';
-            status.textContent = errorMsg;
-            status.style.color = 'var(--danger-color)';
+            status.innerHTML = `
+                <div style="color: var(--danger-color); text-align: center; padding: 10px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px;"></i><br>
+                    <strong>需要摄像头权限</strong><br>
+                    <small style="font-size: 0.9rem;">请在浏览器设置中允许摄像头访问，然后刷新页面重试</small>
+                </div>
+            `;
             
-            // 3秒后关闭
             setTimeout(() => {
                 document.getElementById('cameraModal').classList.remove('show');
                 this.showMessage('scanMessage', '请允许摄像头权限后重试', 'error');
-            }, 3000);
+            }, 4000);
             
         } else if (error.name === 'NotFoundError') {
-            errorMsg = '未找到摄像头设备';
-            status.textContent = errorMsg;
-            status.style.color = 'var(--danger-color)';
+            status.innerHTML = `
+                <div style="color: var(--danger-color); text-align: center;">
+                    <i class="fas fa-video-slash"></i><br>
+                    未找到摄像头设备
+                </div>
+            `;
             
         } else {
-            errorMsg = error.message;
-            status.textContent = '摄像头错误: ' + errorMsg;
-            status.style.color = 'var(--danger-color)';
+            status.innerHTML = `
+                <div style="color: var(--danger-color); text-align: center;">
+                    <i class="fas fa-exclamation-circle"></i><br>
+                    摄像头错误: ${error.message}
+                </div>
+            `;
         }
         
         // 回退到模拟扫码
@@ -2455,6 +2546,12 @@ this.startQRCodeDetection(video);
 }
 
 stopCamera() {
+    // 停止动画效果
+    const scanLine = document.querySelector('.scan-line');
+    if (scanLine) {
+        scanLine.style.animation = 'none';
+    }
+    
     // 停止二维码识别
     if (this.qrDetectionInterval) {
         clearInterval(this.qrDetectionInterval);
@@ -2484,9 +2581,11 @@ startQRCodeDetection(video) {
     const context = canvas.getContext('2d');
     const status = document.getElementById('cameraStatus');
     
-    // 保存interval ID，用于清理
+    // 设置canvas为固定尺寸，对应扫描框区域
+    canvas.width = 300;  // 固定宽度
+    canvas.height = 300; // 固定高度
+    
     this.qrDetectionInterval = setInterval(() => {
-        // 检查摄像头是否还在运行
         if (!this.stream || !video.videoWidth) {
             console.log('摄像头未就绪，停止识别');
             clearInterval(this.qrDetectionInterval);
@@ -2494,33 +2593,53 @@ startQRCodeDetection(video) {
         }
         
         try {
-            // 设置canvas尺寸为视频尺寸
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            // 只截取扫描框区域的图像进行识别
+            // 计算扫描框在视频中的位置（20% top, 10% left, 80% width, 60% height）
+            const videoWidth = video.videoWidth;
+            const videoHeight = video.videoHeight;
             
-            // 绘制当前视频帧到canvas
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            // 扫描框在视频中的位置和大小
+            const scanBoxX = videoWidth * 0.1;  // 左边距10%
+            const scanBoxY = videoHeight * 0.2; // 上边距20%
+            const scanBoxWidth = videoWidth * 0.8;  // 宽度80%
+            const scanBoxHeight = videoHeight * 0.6; // 高度60%
+            
+            // 绘制扫描框区域到canvas
+            context.drawImage(
+                video, 
+                scanBoxX, scanBoxY, scanBoxWidth, scanBoxHeight,  // 源图像位置和尺寸
+                0, 0, canvas.width, canvas.height                 // 目标canvas位置和尺寸
+            );
             
             // 获取图像数据
             const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
             
             // 使用jsQR识别二维码
-            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            const code = jsQR(imageData.data, canvas.width, canvas.height, {
                 inversionAttempts: "dontInvert",
             });
             
-            // 如果识别到二维码
             if (code) {
                 console.log('识别到二维码:', code.data);
                 clearInterval(this.qrDetectionInterval);
                 this.handleScannedQRCode(code.data);
+                
+                // 添加成功反馈
+                status.textContent = '✓ 扫码成功！';
+                status.style.color = 'var(--success-color)';
+                
+                // 扫描框变绿色闪烁
+                const scanBox = document.querySelector('.scan-box');
+                if (scanBox) {
+                    scanBox.style.borderColor = '#4CAF50';
+                    scanBox.style.boxShadow = '0 0 0 1000px rgba(0, 0, 0, 0.4), 0 0 20px #4CAF50';
+                }
             }
             
         } catch (error) {
             console.error('二维码识别出错:', error);
         }
-        
-    }, 300); // 每300毫秒识别一次
+    }, 200); // 加快扫描频率，每200毫秒一次
 }
 
 // 处理识别到的二维码
