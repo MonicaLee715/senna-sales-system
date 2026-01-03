@@ -1282,6 +1282,13 @@
                     <input type="text" class="form-input" id="newProductImage" placeholder="https://example.com/image.jpg">
                     <div class="price-note">粘贴产品图片的完整网址</div>
                 </div>
+
+                                <!-- 新增：位置输入 -->
+                <div class="form-group">
+                    <label class="form-label">位置（选填）</label>
+                    <input type="text" class="form-input" id="newProductLocation" placeholder="如：A01-1">
+                    <div class="price-note">填写商品存放位置，方便查找</div>
+                </div>
                 
                 <div style="margin-top: 20px;">
                     <button class="btn btn-success btn-block" onclick="app.submitNewProduct()">
@@ -2763,6 +2770,7 @@ async lookupInventory(input) {
 }
 
 // 显示库存信息
+// 显示库存信息
 showInventoryInfo(variant, product) {
     const inventoryInfo = document.getElementById('inventoryInfo');
     
@@ -2889,7 +2897,6 @@ if (adjustType === 'set') {
 }
 
             // === 第3步：显示产品所有变体 ===
-// 替换现有的 showProductAllVariants 方法
 showProductAllVariants(modelId) {
     try {
         // 查找产品信息
@@ -2940,9 +2947,42 @@ showProductAllVariants(modelId) {
                         <div style="color: var(--text-muted); font-size: 0.85rem;">
                             <span style="margin-right: 12px;">型号: ${modelId}</span>
                             <span>变体: ${variants.length} 个</span>
+                            ${product.location ? `<div style="margin-top: 4px; color: #4a5568; display: flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-map-marker-alt" style="font-size: 0.8rem;"></i>
+                                <span>位置: ${product.location}</span>
+                            </div>` : ''}
                         </div>
                     </div>
                 </div>
+            </div>
+            
+            <!-- 新增：位置编辑按钮 -->
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+                padding: 10px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                border: 1px solid var(--border-color);
+            ">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-map-marker-alt" style="color: var(--primary-color); font-size: 0.9rem;"></i>
+                    <div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2px;">
+                            位置信息
+                        </div>
+                        <div style="font-size: 0.9rem; font-weight: 500; color: var(--text-color);">
+                            ${product.location || '未设置位置'}
+                        </div>
+                    </div>
+                </div>
+                <button class="btn edit-location-btn" 
+                        data-model-id="${modelId}"
+                        style="padding: 6px 12px; font-size: 0.8rem;">
+                    <i class="fas fa-edit" style="margin-right: 4px;"></i>编辑位置
+                </button>
             </div>
             
             <div class="variants-list" style="margin-bottom: 15px;">
@@ -2965,6 +3005,7 @@ showProductAllVariants(modelId) {
                     </div>
                 </div>
         `;
+        
         
         // 显示每个颜色变体
         variants.forEach(variant => {
@@ -3250,6 +3291,13 @@ bindProductVariantEvents() {
                 toggleBtn.style.background = '#f8f9fa';
                 toggleBtn.style.color = 'var(--primary-color)';
             }
+        });
+    });
+    // 新增：编辑位置按钮点击事件
+    document.querySelectorAll('.edit-location-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const modelId = e.target.closest('button').dataset.modelId;
+            this.showEditLocationForm(modelId);
         });
     });
 }
@@ -3597,7 +3645,12 @@ showMessage(containerId, message, type) {
         }
 
         // 渲染产品卡片
+                // 渲染产品卡片
         renderProductCard(modelId, group) {
+            // 获取产品位置信息
+            const product = this.products.find(p => p.model_id === modelId);
+            const location = product?.location || '';
+            
             // 按库存状态排序：紧张 -> 较少 -> 充足
             const sortedItems = [...group.items].sort((a, b) => {
                 const getPriority = (stock) => {
@@ -3661,6 +3714,12 @@ showMessage(containerId, message, type) {
                                     <div style="font-size: 0.75rem; color: #666; margin-top: 2px;">
                                         型号: ${modelId} | 变体: ${group.items.length}种
                                     </div>
+                                    ${location ? `
+                                        <div style="font-size: 0.75rem; color: #4a5568; margin-top: 2px; display: flex; align-items: center; gap: 4px;">
+                                            <i class="fas fa-map-marker-alt" style="font-size: 0.7rem;"></i>
+                                            <span>位置: ${location}</span>
+                                        </div>
+                                    ` : ''}
                                 </div>
                             </div>
                         </div>
@@ -3819,6 +3878,7 @@ showAddProductForm() {
     document.getElementById('newModelName').value = '';
     document.getElementById('newStandardPrice').value = 0;
     document.getElementById('newProductImage').value = '';
+    document.getElementById('newProductLocation').value = '';  // 新增：重置位置
     
     // 重置颜色输入
     const colorInputs = document.getElementById('colorInputs');
@@ -3887,6 +3947,8 @@ async submitNewProduct() {
     const modelName = document.getElementById('newModelName').value.trim();
     const standardPrice = parseFloat(document.getElementById('newStandardPrice').value) || 0;
     const productImage = document.getElementById('newProductImage').value.trim();
+    const location = document.getElementById('newProductLocation').value.trim();  // 新增：获取位置
+    
     
     // 收集颜色和库存
     const colorRows = document.querySelectorAll('.color-stock-row');
@@ -3935,7 +3997,8 @@ async submitNewProduct() {
             colors: colors,      // 确保这是数组
             stocks: stocks,      // 确保这是数组
             standardPrice: standardPrice,
-            productImage: productImage
+            productImage: productImage,
+            location: location   // 新增：传递位置
         });
         
         if (result.success) {
@@ -4005,6 +4068,11 @@ async addProductToBackend(productData) {
         
         if (productData.productImage) {
             params.append('product_image', productData.productImage);
+        }
+
+        // 新增：添加位置参数
+        if (productData.location) {
+            params.append('location', productData.location);
         }
         
         console.log('新增商品请求:', params.toString());
@@ -4285,7 +4353,143 @@ showAddColorMessage(message, type) {
         container.innerHTML = `<div class="message ${type}" style="padding: 8px; font-size: 0.85rem;">${message}</div>`;
     }
 }
+            // 显示编辑位置表单
+showEditLocationForm(modelId) {
+    const product = this.products.find(p => p.model_id === modelId);
+    if (!product) return;
+    
+    // 创建编辑位置表单
+    const editForm = `
+        <div class="edit-location-form" style="
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        ">
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 10px;
+            ">
+                <h5 style="margin: 0; color: var(--text-color); font-size: 0.95rem;">
+                    <i class="fas fa-map-marker-alt" style="color: var(--primary-color); margin-right: 6px;"></i>
+                    编辑位置信息
+                </h5>
+                <button class="close-edit-form" style="
+                    background: none;
+                    border: none;
+                    color: var(--text-muted);
+                    font-size: 1.1rem;
+                    cursor: pointer;
+                    padding: 0;
+                ">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
             
+            <div style="margin-bottom: 10px;">
+                <label style="
+                    display: block;
+                    font-size: 0.8rem;
+                    margin-bottom: 4px;
+                    color: var(--text-muted);
+                ">位置</label>
+                <input type="text" class="form-input edit-location-input" 
+                       value="${product.location || ''}" 
+                       placeholder="输入商品存放位置"
+                       style="width: 100%; padding: 8px; font-size: 0.9rem;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                    如：货架A01、仓库2区、展示柜等
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn btn-success save-location-btn" data-model-id="${modelId}"
+                        style="padding: 8px; flex: 1;">
+                    <i class="fas fa-save" style="margin-right: 4px;"></i> 保存位置
+                </button>
+                <button class="btn btn-outline cancel-edit-location" style="padding: 8px; flex: 1;">
+                    <i class="fas fa-times" style="margin-right: 4px;"></i> 取消
+                </button>
+            </div>
+            
+            <div id="editLocationMessage" style="margin-top: 10px;"></div>
+        </div>
+    `;
+    
+    // 替换位置显示区域
+    const locationSection = document.querySelector('.edit-location-btn').closest('div');
+    locationSection.outerHTML = editForm;
+    
+    // 绑定事件
+    this.bindEditLocationEvents(modelId);
+}
+
+// 绑定编辑位置事件
+bindEditLocationEvents(modelId) {
+    // 关闭按钮
+    document.querySelector('.close-edit-form').addEventListener('click', () => {
+        this.cancelEditLocation(modelId);
+    });
+    
+    document.querySelector('.cancel-edit-location').addEventListener('click', () => {
+        this.cancelEditLocation(modelId);
+    });
+    
+    // 保存位置按钮
+    document.querySelector('.save-location-btn').addEventListener('click', async () => {
+        await this.saveProductLocation(modelId);
+    });
+}
+
+// 取消编辑位置
+cancelEditLocation(modelId) {
+    // 重新显示产品详情
+    this.showProductAllVariants(modelId);
+}
+
+// 保存产品位置
+async saveProductLocation(modelId) {
+    const newLocation = document.querySelector('.edit-location-input').value.trim();
+    
+    try {
+        // 调用后端API更新位置
+        const params = new URLSearchParams();
+        params.append('action', 'updateLocation');
+        params.append('model_id', modelId);
+        params.append('location', newLocation);
+        
+        const response = await fetch(`${API_BASE_URL}?${params}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            // 更新本地数据
+            const product = this.products.find(p => p.model_id === modelId);
+            if (product) {
+                product.location = newLocation;
+            }
+            
+            // 显示成功消息
+            const messageDiv = document.getElementById('editLocationMessage');
+            messageDiv.innerHTML = `<div class="message success" style="padding: 8px; font-size: 0.85rem;">位置已更新！</div>`;
+            
+            // 2秒后刷新显示
+            setTimeout(() => {
+                this.showProductAllVariants(modelId);
+                this.showMessage('scanMessage', `位置已更新: ${newLocation || '空'}`, 'success');
+            }, 1500);
+            
+        } else {
+            throw new Error(result.message || '更新失败');
+        }
+    } catch (error) {
+        console.error('更新位置失败:', error);
+        const messageDiv = document.getElementById('editLocationMessage');
+        messageDiv.innerHTML = `<div class="message error" style="padding: 8px; font-size: 0.85rem;">更新失败: ${error.message}</div>`;
+    }
+}
             showMessage(containerId, message, type) {
                 const container = document.getElementById(containerId);
                 container.innerHTML = `<div class="message ${type}">${message}</div>`;
@@ -4294,6 +4498,7 @@ showAddColorMessage(message, type) {
                     container.innerHTML = '';
                 }, 15000);
             }
+            
         }
         
         // 初始化应用
