@@ -432,21 +432,6 @@
             font-weight: bold;
         }
 
-        /* 客户欠款显示 */
-        .customer-balance {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-        }
-
-        .balance-warning {
-            color: #856404;
-            font-weight: 500;
-        }
-
         /* 弹窗样式 */
         .modal {
             display: none;
@@ -783,17 +768,6 @@
     border: 1px solid #e0e0e0;
 }
 
-/* 欠款提醒 */
-.receipt-balance {
-    background: #fffaf0;
-    border: 1px solid #feebc8;
-    border-radius: 7px;
-    padding: 14px;
-    margin: 18px 0;
-    color: #b45309;
-    font-size: 13.5px;
-}
-
 .receipt-balance div {
     margin: 5px 0;
     font-weight: 500;
@@ -978,10 +952,6 @@
                 <select class="form-select" id="customerSelect">
                     <option value="">请选择客户...</option>
                 </select>
-                <div id="customerBalance" class="customer-balance hidden">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span class="balance-warning">该客户有待收款金额: ¥<span id="balanceAmount">0</span></span>
-                </div>
             </div>
 
             <!-- 3. 添加新商品区域 -->
@@ -1345,28 +1315,22 @@ init() {
                 
                 // 销售页面事件
 document.getElementById('customerSelect').addEventListener('change', (e) => {
-    // === 添加防抖处理 ===
     clearTimeout(this.customerChangeTimeout);
     this.customerChangeTimeout = setTimeout(() => {
         this.clearSaleForm();
-        this.updateCustomerBalance(e.target.value);
-        // 如果已选择产品，重新显示颜色选项以更新价格
+        // 只更新价格，不查询欠款
         if (this.selectedProduct) {
             this.showColorSelection('sale');
         }
-        // 如果已选择变体，立即更新价格显示
         if (this.selectedVariant) {
-            // 直接从缓存获取价格并更新显示
             const customerId = e.target.value;
             const price = this.getPrice(this.selectedVariant.variant_id, customerId);
             
-            // 更新价格显示
             const priceDisplay = document.getElementById('priceDisplay');
             if (priceDisplay) {
                 priceDisplay.textContent = price;
             }
             
-            // 更新价格提示
             const priceNote = document.getElementById('priceNote');
             if (priceNote) {
                 if (customerId && this.customerPrices[customerId]?.[this.selectedVariant.variant_id] !== undefined) {
@@ -2105,49 +2069,19 @@ clearSaleForm() {
 }
 
 async updateCustomerBalance(customerId) {
-    const balanceElement = document.getElementById('customerBalance');
-    const balanceAmount = document.getElementById('balanceAmount');
+    if (!customerId) return;
     
-    if (!customerId) {
-        balanceElement.classList.add('hidden');
-        return;
-    }
-    
-    // === 新增第一步：批量加载该客户专属价格 ===
+    // 只加载客户专属价格
     await this.loadCustomerPrices(customerId);
-    // =====================================
     
-    // 确保销售记录数据已加载，如果未加载显示"计算中..."
-    if (!this.salesRecords || this.salesRecords.length === 0) {
-        balanceAmount.textContent = '计算中...';
-        balanceElement.classList.remove('hidden');
-        
-        // 可选：延迟重试一次（3秒后）
-        setTimeout(() => {
-            if (this.salesRecords && this.salesRecords.length > 0) {
-                this.updateCustomerBalance(customerId); // 重新计算
-            }
-        }, 3000);
-        return;
-    }
-    
-    const pendingAmount = this.calculatePendingAmount(customerId);
-    
-    // 无论金额是多少都显示，包括0
-    balanceAmount.textContent = pendingAmount.toFixed(2);
-    balanceElement.classList.remove('hidden');
-    
-    // === 修改这里：如果已经选择了颜色变体，直接从缓存更新价格 ===
+    // 更新价格显示
     if (this.selectedVariant) {
-        // 直接从缓存获取价格
         const price = this.getPrice(this.selectedVariant.variant_id, customerId);
         
-        // 更新价格显示（假设你已经修改了价格显示方式）
         if (document.getElementById('priceDisplay')) {
             document.getElementById('priceDisplay').textContent = price;
         }
         
-        // 更新价格提示
         const priceNote = document.getElementById('priceNote');
         if (priceNote) {
             if (customerId && this.customerPrices[customerId]?.[this.selectedVariant.variant_id] !== undefined) {
@@ -2158,26 +2092,10 @@ async updateCustomerBalance(customerId) {
                 priceNote.className = 'price-note';
             }
         }
-        
-        // 更新颜色选项的显示（不需要重新查询价格）
-        const selectedOption = document.querySelector(`.color-option[data-variant-id="${this.selectedVariant.variant_id}"]`);
-        if (selectedOption) {
-            // 这里不再需要异步获取价格
-            selectedOption.innerHTML = `
-                ${this.selectedVariant.color} 
-                <span style="font-size: 0.8rem; color: #666;">
-                    (库存: ${this.selectedVariant.stock})
-                </span>
-            `;
-        }
     }
 }
 
-            calculatePendingAmount(customerId) {
-                return this.salesRecords
-                    .filter(record => record.customer_id === customerId && record.status === '待收款')
-                    .reduce((sum, record) => sum + record.total_amount, 0);
-            }
+            
 
             updateItemTotal() {
                 // 如果需要实时计算总价可以在这里实现
@@ -2361,7 +2279,6 @@ updateSaleItemsDisplay() {
                 });
 
                 const customerId = document.getElementById('customerSelect').value;
-                const pendingAmount = this.calculatePendingAmount(customerId);
 
                 invoiceContent.innerHTML = `
     <div class="receipt" id="receiptToDownload">
@@ -2391,12 +2308,6 @@ updateSaleItemsDisplay() {
                             合计: ¥${totalAmount.toFixed(2)}
                         </div>
                         
-                        ${pendingAmount > 0 ? `
-                        <div class="receipt-balance">
-                            <div>累计待收款: ¥${pendingAmount.toFixed(2)}</div>
-                            <div>本次后累计: ¥${(pendingAmount + totalAmount).toFixed(2)}</div>
-                        </div>
-                        ` : ''}
                         
                         <div class="receipt-footer">
                             <div>SENNA GLASSES</div>
