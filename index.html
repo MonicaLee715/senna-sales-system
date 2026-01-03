@@ -3707,19 +3707,18 @@ showMessage(containerId, message, type) {
                                 justify-content: space-between;
                                 align-items: flex-start;
                             ">
-                                <div>
+                                                                <div>
                                     <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-color);">
                                         ${group.model_name}
                                     </div>
                                     <div style="font-size: 0.75rem; color: #666; margin-top: 2px;">
-                                        型号: ${modelId} | 变体: ${group.items.length}种
-                                    </div>
-                                    ${location ? `
-                                        <div style="font-size: 0.75rem; color: #4a5568; margin-top: 2px; display: flex; align-items: center; gap: 4px;">
+                                        <div>型号: ${modelId}</div>
+                                        <div style="margin-top: 2px;">变体: ${group.items.length}种</div>
+                                        <div style="margin-top: 2px; display: flex; align-items: center; gap: 4px; color: ${location ? '#4a5568' : '#999'};">
                                             <i class="fas fa-map-marker-alt" style="font-size: 0.7rem;"></i>
-                                           <span>位置: ${location || '空'}</span>
+                                            <span>位置: ${location || '空'}</span>
                                         </div>
-                                    ` : ''}
+                                    </div>
                                 </div>
                             </div>
                         </div>
