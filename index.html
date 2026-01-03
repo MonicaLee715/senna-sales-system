@@ -653,7 +653,7 @@
                 gap: 15px;
             }
         }
-        /* ====== 销售单据样式美化 (紧凑版) ====== */
+       /* ====== 销售单据样式美化 (优化标题版) ====== */
 .receipt {
     max-width: 360px;
     margin: 0 auto;
@@ -665,80 +665,95 @@
     color: #333;
     line-height: 1.4;
     border: 1px solid #eaeaea;
-    font-size: 13px;
+    font-size: 14px; /* 基础字体增大 */
 }
 
-/* 顶部标题区 */
+/* 顶部标题区 - 单行显示 */
 .receipt-header {
     text-align: center;
-    padding-bottom: 12px;
-    margin-bottom: 15px;
-    border-bottom: 1.5px solid #667eea;
+    padding-bottom: 15px;
+    margin-bottom: 18px;
+    border-bottom: 2px solid #667eea;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    flex-wrap: nowrap;
+    gap: 10px;
 }
 
 .receipt-title {
-    font-size: 20px;
+    font-size: 22px; /* 主标题加大 */
     font-weight: 700;
     color: #2d3748;
     letter-spacing: 0.5px;
-    margin-bottom: 4px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    white-space: nowrap;
 }
 
 .receipt-header > div:last-child {
-    font-size: 12px;
+    font-size: 16px; /* 副标题加大 */
     color: #666;
-    font-weight: 500;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
-/* 单据信息区 */
-/* 可选：优化两行信息时的布局 */
+/* 单据信息区 - 文字加大 */
 .receipt-info {
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
-    margin-bottom: 12px;
-    padding: 10px 12px;
+    margin-bottom: 14px;
+    padding: 12px 14px;
     background: #f8f9fa;
-    border-radius: 6px;
+    border-radius: 7px;
     border-left: 3px solid #4fd1c7;
-    font-size: 12px;
+    font-size: 13.5px; /* 信息区字体加大 */
 }
 
-/* 让两行信息各占50%宽度，更整齐 */
 .receipt-info > div {
-    flex: 0 0 48%; /* 每项占约一半宽度 */
-    text-align: left;
     color: #555;
-    margin: 2px 0;
+    margin: 3px 0;
+    font-weight: 500; /* 信息文字加粗 */
+}
+
+/* 单号特别突出 */
+.receipt-info > div:first-child {
+    color: #2d3748;
+    font-weight: 600;
 }
 
 /* 客户信息突出显示 */
 .receipt-info:last-of-type {
     background: #edf2f7;
     border-left-color: #4299e1;
-    padding: 10px 12px;
+    padding: 12px 14px;
+    font-size: 14px; /* 客户信息字体更大 */
+}
+
+.receipt-info:last-of-type > div {
+    font-weight: 600;
+    color: #2d3748;
 }
 
 /* 分隔线 */
 .receipt-divider {
     height: 1px;
     background: linear-gradient(to right, transparent, #ddd, transparent);
-    margin: 16px 0;
+    margin: 18px 0;
 }
 
-/* 商品明细区域 */
+/* 商品明细区域 - 表头文字加大 */
 .receipt-items {
-    margin: 15px 0;
+    margin: 18px 0;
 }
 
 .receipt-item {
     display: flex;
     justify-content: space-between;
-    padding: 8px 0;
+    padding: 9px 0;
     border-bottom: 1px dashed #e0e0e0;
 }
 
@@ -748,26 +763,27 @@
 
 .receipt-item-name {
     flex: 2;
-    font-weight: 500;
+    font-weight: 600; /* 商品名加粗 */
     color: #2d3748;
-    font-size: 13px;
+    font-size: 13.5px; /* 商品名字体加大 */
 }
 
 .receipt-item-details {
     flex: 1;
     text-align: right;
     color: #666;
-    font-size: 12.5px;
+    font-size: 13px; /* 价格信息字体加大 */
+    font-weight: 500;
 }
 
 /* 总计金额 */
 .receipt-total {
     text-align: center;
-    font-size: 18px;
+    font-size: 20px; /* 总金额字体加大 */
     font-weight: 700;
     color: #2d3748;
-    padding: 14px;
-    margin: 18px 0;
+    padding: 16px;
+    margin: 20px 0;
     background: #f8f9fa;
     border-radius: 8px;
     border: 1px solid #e0e0e0;
@@ -777,30 +793,31 @@
 .receipt-balance {
     background: #fffaf0;
     border: 1px solid #feebc8;
-    border-radius: 6px;
-    padding: 12px;
-    margin: 16px 0;
+    border-radius: 7px;
+    padding: 14px;
+    margin: 18px 0;
     color: #b45309;
-    font-size: 12.5px;
+    font-size: 13.5px; /* 欠款信息字体加大 */
 }
 
 .receipt-balance div {
-    margin: 4px 0;
+    margin: 5px 0;
+    font-weight: 500;
 }
 
 .receipt-balance div:last-child {
     color: #c2410c;
-    font-weight: 600;
+    font-weight: 700; /* 最后欠款金额加粗 */
 }
 
 /* 底部品牌信息 */
 .receipt-footer {
     text-align: center;
-    padding-top: 15px;
-    margin-top: 18px;
+    padding-top: 16px;
+    margin-top: 20px;
     border-top: 1px solid #eee;
     color: #888;
-    font-size: 12px;
+    font-size: 12.5px; /* 底部字体稍大 */
     font-weight: 500;
     letter-spacing: 0.5px;
 }
