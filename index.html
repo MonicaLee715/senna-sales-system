@@ -3768,28 +3768,36 @@ async addProductToBackend(productData) {
         params.append('model_id', productData.modelId);
         params.append('model_name', productData.modelName);
         
-        // === 修复：确保使用 color_stock 参数 ===
+        // 确保是数组
         const colorsArray = Array.isArray(productData.colors) ? productData.colors : [productData.colors];
         const stocksArray = Array.isArray(productData.stocks) ? productData.stocks : [productData.stocks];
         
-        // 构建 color_stock 字符串：格式为 "颜色:库存;颜色:库存"
-        const colorStockItems = [];
+        const validColors = [];
+        const validStocks = [];
         
         for (let i = 0; i < colorsArray.length; i++) {
             const color = colorsArray[i];
             if (color && typeof color === 'string' && color.trim()) {
-                const stock = stocksArray[i] || 0;
-                colorStockItems.push(`${color.trim()}:${stock}`);
+                validColors.push(color.trim());
+                validStocks.push(stocksArray[i] || 0);
             }
         }
         
-        if (colorStockItems.length === 0) {
+        if (validColors.length === 0) {
             throw new Error('请至少添加一个有效的颜色');
         }
         
-        const colorStockString = colorStockItems.join('; ');
+        // === 永久修复：同时发送两种格式 ===
+        // 格式1: color_stock (分号分隔)
+        const colorStockString = validColors.map((color, i) => 
+            `${color}:${validStocks[i]}`
+        ).join('; ');
         params.append('color_stock', colorStockString);
-        // ============================================
+        
+        // 格式2: colors 和 stocks (逗号分隔)
+        params.append('colors', validColors.join(','));
+        params.append('stocks', validStocks.join(','));
+        // ===================================
         
         params.append('price', priceValue.toString());
         
@@ -3797,15 +3805,13 @@ async addProductToBackend(productData) {
             params.append('product_image', productData.productImage);
         }
         
-        console.log('发送新增商品请求:', params.toString());
+        console.log('新增商品请求:', params.toString());
         
         const response = await fetch(`${API_BASE_URL}?${params}`);
         const result = await response.json();
-        console.log('API响应:', result);
         
         if (result.success) {
             this.showAddProductMessage(`✅ ${result.message}`, 'success');
-            
             setTimeout(() => {
                 document.getElementById('addProductModal').classList.remove('show');
                 this.loadProducts();
