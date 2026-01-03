@@ -653,6 +653,157 @@
                 gap: 15px;
             }
         }
+        /* ====== 销售单据样式美化 ====== */
+.receipt {
+    max-width: 380px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    color: #333;
+    line-height: 1.5;
+    border: 1px solid #f0f0f0;
+}
+
+/* 顶部标题区 */
+.receipt-header {
+    text-align: center;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #667eea;
+}
+
+.receipt-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #2d3748;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.receipt-header > div:last-child {
+    font-size: 15px;
+    color: #718096;
+    font-weight: 500;
+}
+
+/* 单据信息区 */
+.receipt-info {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding: 14px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border-left: 4px solid #4fd1c7;
+}
+
+.receipt-info > div {
+    font-size: 14px;
+    color: #4a5568;
+    margin: 4px 0;
+}
+
+.receipt-info > div strong {
+    color: #2d3748;
+    font-weight: 600;
+}
+
+/* 客户信息突出显示 */
+.receipt-info:last-of-type {
+    background: #edf2f7;
+    border-left-color: #4299e1;
+    font-size: 15px;
+}
+
+/* 分隔线 */
+.receipt-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+    margin: 22px 0;
+}
+
+/* 商品明细区域 */
+.receipt-items {
+    margin: 20px 0;
+}
+
+.receipt-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+.receipt-item:last-child {
+    border-bottom: none;
+}
+
+.receipt-item-name {
+    flex: 2;
+    font-weight: 500;
+    color: #2d3748;
+}
+
+.receipt-item-details {
+    flex: 1;
+    text-align: right;
+    color: #718096;
+    font-size: 14px;
+}
+
+/* 总计金额 */
+.receipt-total {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: #2d3748;
+    padding: 20px;
+    margin: 25px 0;
+    background: linear-gradient(135deg, #f6f8ff 0%, #f0f4ff 100%);
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.08);
+}
+
+/* 欠款提醒 */
+.receipt-balance {
+    background: #fffaf0;
+    border: 1px solid #feebc8;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 20px 0;
+    color: #dd6b20;
+}
+
+.receipt-balance div {
+    font-size: 14.5px;
+    margin: 6px 0;
+}
+
+.receipt-balance div:last-child {
+    color: #c05621;
+    font-weight: 600;
+}
+
+/* 底部品牌信息 */
+.receipt-footer {
+    text-align: center;
+    padding-top: 20px;
+    margin-top: 25px;
+    border-top: 1px solid #e2e8f0;
+    color: #a0aec0;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
     </style>
 </head>
 <body>
