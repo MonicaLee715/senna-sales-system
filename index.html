@@ -3678,6 +3678,7 @@ removeColorInput(button) {
 }
 
 // 提交新增商品
+// 提交新增商品
 async submitNewProduct() {
     // 收集表单数据
     const modelId = document.getElementById('newModelId').value.trim();
@@ -3685,21 +3686,21 @@ async submitNewProduct() {
     const standardPrice = parseFloat(document.getElementById('newStandardPrice').value) || 0;
     const productImage = document.getElementById('newProductImage').value.trim();
     
-   // 在 submitNewProduct 方法中，修改数据收集部分：
-const colorRows = document.querySelectorAll('.color-stock-row');
-const colors = [], stocks = [];
+    // 收集颜色和库存
+    const colorRows = document.querySelectorAll('.color-stock-row');
+    const colors = [], stocks = [];
 
-colorRows.forEach(row => {
-    const colorInput = row.querySelector('.color-input');
-    const stockInput = row.querySelector('.stock-input');
-    const color = colorInput.value.trim();
-    const stock = parseInt(stockInput.value) || 0;
-    
-    if (color) {
-        colors.push(color);
-        stocks.push(stock);
-    }
-});
+    colorRows.forEach(row => {
+        const colorInput = row.querySelector('.color-input');
+        const stockInput = row.querySelector('.stock-input');
+        const color = colorInput ? colorInput.value.trim() : '';
+        const stock = stockInput ? parseInt(stockInput.value) || 0 : 0;
+        
+        if (color) {  // 只添加非空的颜色
+            colors.push(color);
+            stocks.push(stock);
+        }
+    });
     
     // 验证数据
     if (!modelId) {
@@ -3712,29 +3713,28 @@ colorRows.forEach(row => {
         return;
     }
     
-if (colors.length === 0) {
-    this.showAddProductMessage('请至少添加一个颜色', 'error');
-    return;
-}
-// 检查是否已存在该型号
-const existingProduct = this.products.find(p => p.model_id === modelId);
-if (existingProduct) {
-    this.showAddProductMessage(`产品型号 ${modelId} 已存在`, 'error');
-    return;
-}
-
-
+    if (colors.length === 0) {
+        this.showAddProductMessage('请至少添加一个颜色', 'error');
+        return;
+    }
     
-     try {
-       // 调用后端API新增商品
-const result = await this.addProductToBackend({
-    modelId,
-    modelName,
-    colors: colors,      // 颜色数组
-    stocks: stocks,      // 库存数组
-    standardPrice: standardPrice, // 统一价格 ← 传递 standardPrice
-    productImage
-});
+    // 检查是否已存在该型号
+    const existingProduct = this.products.find(p => p.model_id === modelId);
+    if (existingProduct) {
+        this.showAddProductMessage(`产品型号 ${modelId} 已存在`, 'error');
+        return;
+    }
+
+    try {
+        // 调用后端API新增商品
+        const result = await this.addProductToBackend({
+            modelId: modelId,
+            modelName: modelName,
+            colors: colors,      // 确保这是数组
+            stocks: stocks,      // 确保这是数组
+            standardPrice: standardPrice,
+            productImage: productImage
+        });
         
         if (result.success) {
             this.showAddProductMessage('商品新增成功！正在刷新数据...', 'success');
@@ -3761,7 +3761,6 @@ const result = await this.addProductToBackend({
 
 async addProductToBackend(productData) {
     try {
-        // 安全获取价格值
         const priceValue = productData.standardPrice || productData.price || 0;
         
         const params = new URLSearchParams();
@@ -3769,28 +3768,28 @@ async addProductToBackend(productData) {
         params.append('model_id', productData.modelId);
         params.append('model_name', productData.modelName);
         
-        // === 修复：使用后端期望的 color_stock 格式 ===
-        // 确保 colors 和 stocks 是数组
+        // === 修复：确保使用 color_stock 参数 ===
         const colorsArray = Array.isArray(productData.colors) ? productData.colors : [productData.colors];
         const stocksArray = Array.isArray(productData.stocks) ? productData.stocks : [productData.stocks];
         
-        // 构建 color_stock 字符串：格式为 "颜色1:库存1;颜色2:库存2"
+        // 构建 color_stock 字符串：格式为 "颜色:库存;颜色:库存"
         const colorStockItems = [];
+        
         for (let i = 0; i < colorsArray.length; i++) {
-            if (colorsArray[i]) { // 确保颜色不为空
-                const color = colorsArray[i].trim();
+            const color = colorsArray[i];
+            if (color && typeof color === 'string' && color.trim()) {
                 const stock = stocksArray[i] || 0;
-                colorStockItems.push(`${color}:${stock}`);
+                colorStockItems.push(`${color.trim()}:${stock}`);
             }
         }
         
+        if (colorStockItems.length === 0) {
+            throw new Error('请至少添加一个有效的颜色');
+        }
+        
         const colorStockString = colorStockItems.join('; ');
-        
-        // 使用后端期望的参数名 color_stock
         params.append('color_stock', colorStockString);
-        
-
-        // =================================================
+        // ============================================
         
         params.append('price', priceValue.toString());
         
@@ -3804,7 +3803,6 @@ async addProductToBackend(productData) {
         const result = await response.json();
         console.log('API响应:', result);
         
-        // 处理响应
         if (result.success) {
             this.showAddProductMessage(`✅ ${result.message}`, 'success');
             
@@ -3819,9 +3817,9 @@ async addProductToBackend(productData) {
         
         return result;
     } catch (error) {
-        console.error('网络请求失败:', error);
-        this.showAddProductMessage(`网络错误: ${error.message}`, 'error');
-        throw new Error('网络请求失败: ' + error.message);
+        console.error('新增商品失败:', error);
+        this.showAddProductMessage(`错误: ${error.message}`, 'error');
+        throw error;
     }
 }
 // 显示新增商品的消息
