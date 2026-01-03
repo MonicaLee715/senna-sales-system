@@ -695,6 +695,7 @@
 }
 
 /* 单据信息区 */
+/* 可选：优化两行信息时的布局 */
 .receipt-info {
     display: flex;
     justify-content: space-between;
@@ -707,7 +708,10 @@
     font-size: 12px;
 }
 
+/* 让两行信息各占50%宽度，更整齐 */
 .receipt-info > div {
+    flex: 0 0 48%; /* 每项占约一半宽度 */
+    text-align: left;
     color: #555;
     margin: 2px 0;
 }
@@ -2349,21 +2353,20 @@ updateSaleItemsDisplay() {
                 const pendingAmount = this.calculatePendingAmount(customerId);
 
                 invoiceContent.innerHTML = `
-                    <div class="receipt" id="receiptToDownload">
-                        <div class="receipt-header">
-                            <div class="receipt-title">赛娜眼镜</div>
-                            <div>销售单据</div>
-                        </div>
-                        
-                        <div class="receipt-info">
-                            <div>单号: ${invoiceNumber}</div>
-                            <div>日期: ${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}</div>
-                            <div>时间: ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}</div>
-                        </div>
-                        
-                        <div class="receipt-info">
-                            <div>客户: ${customerName}</div>
-                        </div>
+    <div class="receipt" id="receiptToDownload">
+        <div class="receipt-header">
+            <div class="receipt-title">赛娜眼镜</div>
+            <div>销售单据</div>
+        </div>
+        
+        <div class="receipt-info">
+            <div>单号: ${invoiceNumber}</div>
+            <div>日期: ${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}</div>
+        </div>
+        
+        <div class="receipt-info">
+            <div>客户: ${customerName}</div>
+        </div>
                         
                         <div class="receipt-divider"></div>
                         
