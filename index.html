@@ -1710,6 +1710,10 @@ async selectVariant(variantId, source) {
 // === 新增方法：批量加载所有变体 ===
 async loadAllVariants() {
     try {
+        // ===== 必须有的防护：加载前清空旧数据 =====
+        this.productVariants = {}; // 清空产品-变体索引
+        this.allVariants = [];     // 清空总变体列表
+        // ========================================
         console.log('开始批量加载所有变体...');
         const allVariants = [];
         const standardPrices = {};
